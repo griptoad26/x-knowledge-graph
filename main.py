@@ -282,7 +282,7 @@ def main():
     port = find_port()
     
     print("=" * 50)
-    print("X Knowledge Graph v0.3.19")
+    print("X Knowledge Graph v0.3.23")
     print("=" * 50)
     print(f"Server at: http://localhost:{port}")
     print("\nOpening browser...")
