@@ -12,6 +12,8 @@ from typing import Dict, List, Optional
 from dataclasses import dataclass
 from unittest.mock import Mock, patch
 
+from .amazon_product_linker import extract_product_info
+
 # Priority mapping: XKG priority → Todoist priority (p1=highest, p4=lowest)
 PRIORITY_MAP = {
     'urgent': 1,  # p4 in Todoist (lowest priority number = highest priority)
@@ -52,7 +54,8 @@ class TodoistExporter:
         self.mock_responses = []
     
     def _extract_amazon_link(self, text: str) -> Optional[str]:
-        """Extract Amazon product link from text"""
+        """Extract or generate Amazon product link from text"""
+        # First, look for existing Amazon links
         amazon_patterns = [
             r'(https?://(?:www\.)?amazon\.com/[^\s]+)',
             r'(https?://amzn\.to/[^\s]+)',
@@ -62,6 +65,12 @@ class TodoistExporter:
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
                 return match.group(1)
+        
+        # If no existing link, try to generate one from product mentions
+        product_info = extract_product_info(text)
+        if product_info.get('amazon_link'):
+            return product_info['amazon_link']
+        
         return None
     
     def _extract_source_text(self, action_text: str, source_tweet_id: str) -> str:
