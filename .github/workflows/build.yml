@@ -1,0 +1,65 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [main, feature/**]
+    paths:
+      - '**.py'
+      - 'requirements.txt'
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install pyinstaller
+        
+    - name: Build EXE
+      run: |
+        pyinstaller --onefile --windowed --name XKnowledgeGraph gui.py
+        
+    - name: Create Distribution
+      run: |
+        New-Item -ItemType Directory -Force release
+        Copy-Item "dist/XKnowledgeGraph.exe" release/
+        Copy-Item "README.md" release/
+        Copy-Item "VERSION.txt" release/
+        Copy-Item "requirements.txt" release/
+        Copy-Item -Recurse "core" release/
+        Copy-Item -Recurse "frontend" release/
+        Copy-Item -Recurse "test_data" release/
+        Compress-Archive -Path release/* -DestinationPath x-knowledge-graph-windows.zip release/
+        
+    - name: Upload EXE
+      uses: actions/upload-artifact@v4
+      with:
+        name: XKnowledgeGraph.exe
+        path: dist/XKnowledgeGraph.exe
+        
+    - name: Upload Distribution
+      uses: actions/upload-artifact@v4
+      with:
+        name: x-knowledge-graph-windows.zip
+        path: x-knowledge-graph-windows.zip
+        
+    - name: Create Release
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/XKnowledgeGraph.exe
+          x-knowledge-graph-windows.zip
+        draft: false
+        prerelease: false

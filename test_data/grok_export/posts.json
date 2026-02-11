@@ -1,0 +1,142 @@
+[
+  {
+    "id": "grok_001",
+    "text": "Just deployed a new feature to production. Need to remember to monitor the error logs tomorrow morning.",
+    "created_at": "2024-01-15T09:30:00Z",
+    "author_id": "user_123",
+    "conversation_id": "conv_001",
+    "in_reply_to_id": null,
+    "metrics": {
+      "likes": 15,
+      "shares": 3,
+      "replies": 5
+    },
+    "entities": ["deployment", "monitoring"]
+  },
+  {
+    "id": "grok_002",
+    "text": "TODO: Review the API documentation and update the examples. This is urgent for the upcoming release.",
+    "created_at": "2024-01-15T14:22:00Z",
+    "author_id": "user_123",
+    "conversation_id": "conv_002",
+    "in_reply_to_id": null,
+    "metrics": {
+      "likes": 8,
+      "shares": 1,
+      "replies": 2
+    },
+    "entities": ["documentation", "api"]
+  },
+  {
+    "id": "grok_003",
+    "text": "Need to schedule a meeting with the design team about the new UI components.",
+    "created_at": "2024-01-16T10:15:00Z",
+    "author_id": "user_123",
+    "conversation_id": "conv_003",
+    "in_reply_to_id": null,
+    "metrics": {
+      "likes": 12,
+      "shares": 0,
+      "replies": 4
+    },
+    "entities": ["meeting", "design"]
+  },
+  {
+    "id": "grok_004",
+    "text": "Don't forget to backup the database before the maintenance window tonight.",
+    "created_at": "2024-01-16T18:45:00Z",
+    "author_id": "user_123",
+    "conversation_id": "conv_004",
+    "in_reply_to_id": null,
+    "metrics": {
+      "likes": 20,
+      "shares": 5,
+      "replies": 7
+    },
+    "entities": ["database", "backup", "maintenance"]
+  },
+  {
+    "id": "grok_005",
+    "text": "Going to refactor the authentication module next week. Should improve performance significantly.",
+    "created_at": "2024-01-17T11:00:00Z",
+    "author_id": "user_123",
+    "conversation_id": "conv_005",
+    "in_reply_to_id": null,
+    "metrics": {
+      "likes": 25,
+      "shares": 8,
+      "replies": 10
+    },
+    "entities": ["refactor", "authentication", "performance"]
+  },
+  {
+    "id": "grok_006",
+    "text": "Reply to @alice about the project timeline. She needs an update by Friday.",
+    "created_at": "2024-01-17T15:30:00Z",
+    "author_id": "user_123",
+    "conversation_id": "conv_006",
+    "in_reply_to_id": "grok_010",
+    "metrics": {
+      "likes": 5,
+      "shares": 0,
+      "replies": 1
+    },
+    "entities": ["communication", "timeline"]
+  },
+  {
+    "id": "grok_007",
+    "text": "Action point: Create test cases for the payment integration module. High priority!",
+    "created_at": "2024-01-18T09:00:00Z",
+    "author_id": "user_123",
+    "conversation_id": "conv_007",
+    "in_reply_to_id": null,
+    "metrics": {
+      "likes": 18,
+      "shares": 2,
+      "replies": 6
+    },
+    "entities": ["testing", "payment"]
+  },
+  {
+    "id": "grok_008",
+    "text": "Make sure to update the dependency versions in package.json. Security vulnerability reported.",
+    "created_at": "2024-01-18T14:00:00Z",
+    "author_id": "user_123",
+    "conversation_id": "conv_008",
+    "in_reply_to_id": null,
+    "metrics": {
+      "likes": 30,
+      "shares": 12,
+      "replies": 8
+    },
+    "entities": ["security", "dependencies"]
+  },
+  {
+    "id": "grok_009",
+    "text": "Remember to prepare the demo for tomorrow's client meeting. Should include the new dashboard.",
+    "created_at": "2024-01-19T16:30:00Z",
+    "author_id": "user_123",
+    "conversation_id": "conv_009",
+    "in_reply_to_id": null,
+    "metrics": {
+      "likes": 22,
+      "shares": 3,
+      "replies": 5
+    },
+    "entities": ["demo", "client", "meeting"]
+  },
+  {
+    "id": "grok_010",
+    "text": "Hey team, what's the status on the API endpoint implementation? Need to know if we'll hit the deadline.",
+    "created_at": "2024-01-17T14:00:00Z",
+    "author_id": "alice_456",
+    "conversation_id": "conv_006",
+    "in_reply_to_id": null,
+    "metrics": {
+      "likes": 3,
+      "shares": 0,
+      "replies": 1
+    },
+    "entities": ["team", "api", "deadline"]
+  }
+]

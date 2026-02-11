@@ -1,0 +1,37 @@
+# Progress Log
+Run: 32db8101-bcdb-4741-9462-a7b288447ec4
+Task: Add a dark mode theme option to the X Knowledge Graph UI
+Started: 2026-02-10 21:08
+
+## Codebase Patterns
+- This project uses CSS custom properties (CSS variables) for theming
+- Dark theme is defined in `:root` selector
+- CSS file: `/home/molty/.openclaw/workspace/projects/x-knowledge-graph/frontend/css/layouts.css`
+- Tests run with: `./venv/bin/python -m pytest test_app.py -v`
+- Build with: `./venv/bin/pyinstaller --clean --noconfirm xkg.spec`
+
+---
+
+## 2026-02-10 21:08 - US-001: Add light theme CSS variables to layouts.css
+- Added [data-theme="light"] selector with complete theme variables to layouts.css
+- Light theme uses light backgrounds (#f5f5f5, #ffffff) and dark text (#1a1a2e)
+- Defined all variables: --bg-primary, --bg-secondary, --bg-tertiary, --text-primary, --text-secondary, --accent-primary, --accent-success, --accent-warning, --accent-danger, --border-color, --shadow
+- Dark theme styles remain unchanged and functional in :root
+- Added test_css_theme_variables() test function to test_app.py
+- **Files changed:** frontend/css/layouts.css, test_app.py
+- **Tests:** All 6 tests pass (5 existing + 1 new CSS theme variables test)
+- **Learnings:** The x-knowledge-graph project uses CSS custom properties (variables) for theming, making it easy to add theme support with a simple attribute selector [data-theme="light"]
+
+## 2026-02-10 21:12 - US-002: Add theme toggle button to header
+- Added theme toggle button to header-actions with sun/moon icon
+- Implemented toggleTheme(), applyTheme(), loadThemePreference(), saveThemePreference() functions
+- Added CSS styling for .btn-theme class with hover effects
+- Added light theme specific styles for the button
+- Theme persists to localStorage
+- Added accessibility attributes (aria-label, title)
+- Added test_theme_toggle_button() test function
+- **Files changed:** frontend/index.html, frontend/css/layouts.css, test_app.py
+- **Tests:** All 7 tests pass (6 existing + 1 new theme toggle test)
+- **Build:** Successfully built with pyinstaller
+- **Commit:** 2287ef8
+- **Learnings:** Theme preference stored in localStorage and applied on page load, button icon changes based on current theme (🌙 for dark, ☀️ for light)
