@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-X Knowledge Graph v0.4.5 - Self-Contained Standalone Application
-Features: Graph visualization, action extraction, task flows, Todoist export
+X Knowledge Graph v0.4.6 - Self-Contained Standalone Application
+Features: Graph visualization, action extraction, task flows, Todoist export, Dark Mode
 """
 
 import sys
