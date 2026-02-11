@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-X Knowledge Graph v0.3.23 - Self-Contained Standalone Application
+X Knowledge Graph v0.4.5 - Self-Contained Standalone Application
 Features: Graph visualization, action extraction, task flows, Todoist export
 """
 
@@ -109,7 +109,7 @@ def static_files(filename):
 
 @app.route('/api/health')
 def health():
-    return jsonify({'status': 'ok', 'version': '0.3.17'})
+    return jsonify({'status': 'ok', 'version': '0.4.5'})
 
 @app.route('/api/select-folder', methods=['POST'])
 def select_folder():
