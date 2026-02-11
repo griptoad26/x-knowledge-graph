@@ -20,15 +20,15 @@ STOP_WORDS = frozenset([
     'this', 'that', 'some', 'any', 'good', 'best', 'nice', 'great',
     'really', 'very', 'just', 'still', 'maybe', 'perhaps', 'probably',
     # Context words (what the product is for, not what it is)
-    'desk', 'computer', 'laptop', 'pc', 'home', 'office', 'room',
-    'kitchen', 'bathroom', 'bedroom', 'living', 'car', 'bike',
+    'desk', 'computer', 'pc', 'home', 'office', 'room',
+    'kitchen', 'bathroom', 'bedroom', 'living', 'car',
     'gym', 'workout', 'running', 'hiking', 'camping', 'travel',
     'today', 'tomorrow', 'week', 'month', 'soon', 'ASAP'
 ])
 
 # Common product categories (for context-aware extraction)
 PRODUCT_CATEGORIES = {
-    'electronics': ['mouse', 'keyboard', 'monitor', 'laptop', 'phone', 'tablet', 'headphone', 'speaker', 'camera', 'charger', 'cable', 'adapter'],
+    'electronics': ['mouse', 'keyboard', 'monitor', 'laptop', 'phone', 'tablet', 'headphone', 'speaker', 'camera', 'charger', 'cable', 'adapter', 'coffee', 'coffee maker', 'printer', 'router', 'webcam'],
     'office': ['desk', 'chair', 'paper', 'pen', 'notebook', 'stapler', 'organizer', 'folder', 'binder'],
     'home': ['lamp', 'shelf', 'rug', 'curtain', 'pillow', 'blanket', 'towel', 'mirror', 'clock'],
     'kitchen': ['pot', 'pan', 'knife', 'spoon', 'fork', 'plate', 'bowl', 'cup', 'mug', 'blender', 'toaster'],
@@ -175,3 +175,10 @@ def generate_amazon_url_from_keywords(keywords: list) -> str:
         return ""
     keyword_str = '+'.join(keywords)
     return f"https://www.amazon.com/s?k={keyword_str}"
+
+
+def generate_amazon_url(keywords: str) -> str:
+    """Generate Amazon search URL from keywords string (e.g., 'wireless+mouse')"""
+    if not keywords:
+        return ""
+    return f"https://www.amazon.com/s?k={keywords}"
