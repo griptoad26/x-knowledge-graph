@@ -12,7 +12,10 @@ from typing import Dict, List, Optional
 from dataclasses import dataclass
 from unittest.mock import Mock, patch
 
-from .amazon_product_linker import extract_product_info
+try:
+    from .amazon_product_linker import extract_product_info
+except ImportError:
+    from amazon_product_linker import extract_product_info
 
 # Priority mapping: XKG priority → Todoist priority (p4=highest, p1=lowest)
 PRIORITY_MAP = {
