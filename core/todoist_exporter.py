@@ -308,8 +308,8 @@ def export_to_todoist(actions, api_token: Optional[str] = None) -> Dict:
     Returns:
         Dict with success_count, failed_count, task_ids, and errors
     """
-    # Use mock mode when no real token provided
-    use_mock = not api_token
+    # Use mock mode when no real token provided OR explicitly using 'mock_token'
+    use_mock = not api_token or api_token.lower() == 'mock_token'
     exporter = TodoistExporter(api_token=api_token, use_mock=use_mock)
     return exporter.export_actions(actions)
 
