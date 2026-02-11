@@ -45,6 +45,36 @@
         .footer { grid-column: 1 / -1; background: #16213e; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; }
         .status { color: #00ff88; }
         svg { width: 100%; height: 100%; }
+        
+        /* Light Theme */
+        body.light-theme { background: #f5f5f5; color: #333; }
+        body.light-theme .container { background: #ddd; }
+        body.light-theme .panel { background: #fff; color: #333; }
+        body.light-theme .panel-header { color: #0066cc; }
+        body.light-theme .section-title { color: #666; }
+        body.light-theme .folder-row input { background: #fff; border: 1px solid #ccc; color: #333; }
+        body.light-theme .graph-type { background: #f0f0f0; }
+        body.light-theme .graph-type-title { color: #333; }
+        body.light-theme .graph-type label { color: #444; }
+        body.light-theme .center-panel { background: #fff; }
+        body.light-theme #graph-controls { background: rgba(245, 245, 245, 0.95); }
+        body.light-theme #graph-controls select { background: #fff; color: #333; border: 1px solid #ccc; }
+        body.light-theme #graph-controls button { background: #e0e0e0; color: #0066cc; }
+        body.light-theme #layout-info { background: rgba(245, 245, 245, 0.9); color: #666; }
+        body.light-theme .node-tooltip { background: #fff; border: 1px solid #0066cc; }
+        body.light-theme .node-tooltip-title { color: #0066cc; }
+        body.light-theme .node-tooltip-text { color: #555; }
+        body.light-theme .detail-value { background: #f0f0f0; color: #444; }
+        body.light-theme .footer { background: #e0e0e0; }
+        body.light-theme #graph-svg line { stroke: #bbb; }
+        body.light-theme #graph-svg text { fill: #666; }
+        body.light-theme .status { color: #00aa55; }
+        
+        /* Theme Toggle Button */
+        .theme-toggle { background: #16213e; border: 1px solid #00d9ff; color: #00d9ff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; transition: all 0.2s; margin-right: 8px; }
+        .theme-toggle:hover { background: #1a1a2e; }
+        body.light-theme .theme-toggle { background: #fff; border-color: #0066cc; color: #0066cc; }
+        body.light-theme .theme-toggle:hover { background: #f0f0f0; }
     </style>
 </head>
 <body>
@@ -188,6 +218,7 @@
         <div class="footer">
             <span id="status">Ready</span>
             <div>
+                <button class="theme-toggle" onclick="toggleTheme()">☀️ Light</button>
                 <button class="btn" style="background: #16213e; padding: 6px 12px;" onclick="showHelp()">Help</button>
                 <button class="btn" style="background: #16213e; padding: 6px 12px;" onclick="clearAll()">Clear</button>
             </div>
@@ -524,6 +555,18 @@
         document.getElementById('grok-folder-path').value = '';
         renderGraph();
         document.getElementById('status').textContent = 'Ready';
+    }
+    
+    function toggleTheme() {
+        const body = document.body;
+        const btn = document.querySelector('.theme-toggle');
+        if (body.classList.contains('light-theme')) {
+            body.classList.remove('light-theme');
+            btn.innerHTML = '☀️ Light';
+        } else {
+            body.classList.add('light-theme');
+            btn.innerHTML = '🌙 Dark';
+        }
     }
     </script>
 </body>
