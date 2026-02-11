@@ -14,12 +14,12 @@ from unittest.mock import Mock, patch
 
 from .amazon_product_linker import extract_product_info
 
-# Priority mapping: XKG priority → Todoist priority (p1=highest, p4=lowest)
+# Priority mapping: XKG priority → Todoist priority (p4=highest, p1=lowest)
 PRIORITY_MAP = {
-    'urgent': 1,  # p4 in Todoist (lowest priority number = highest priority)
-    'high': 2,    # p3
-    'medium': 3,  # p2
-    'low': 4,     # p1 (highest priority number = lowest priority)
+    'urgent': 4,  # p4 (highest priority in Todoist)
+    'high': 3,    # p3
+    'medium': 2,  # p2
+    'low': 1,     # p1 (lowest priority in Todoist)
 }
 
 TASK_API_URL = "https://api.todoist.com/rest/v2/tasks"
