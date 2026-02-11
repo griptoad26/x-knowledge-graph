@@ -155,3 +155,23 @@ def get_amazon_link(text: str) -> Optional[str]:
 def extract_product_info(text: str) -> dict:
     """Convenience function to get all product info from action text"""
     return get_linker().process_action_text(text)
+
+
+# Exact function signatures as requested
+def detect_product_mentions(text: str) -> bool:
+    """Check if text mentions a product to buy (alias for detect_product_mention)"""
+    return get_linker().detect_product_mention(text)
+
+
+def extract_product_keywords(text: str) -> list:
+    """Extract product keywords from action text as a list"""
+    result = get_linker().extract_product_keywords(text)
+    return result.split('+') if result else []
+
+
+def generate_amazon_url_from_keywords(keywords: list) -> str:
+    """Generate Amazon search URL from a list of keywords"""
+    if not keywords:
+        return ""
+    keyword_str = '+'.join(keywords)
+    return f"https://www.amazon.com/s?k={keyword_str}"
