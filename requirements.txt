@@ -1,13 +1,10 @@
 # X Knowledge Graph Dependencies
 
-# Web server
-flask>=2.3.0
-flask-cors>=4.0.0
-
 # Core
 networkx>=3.0
 pandas>=2.0
 numpy>=1.24
+matplotlib>=3.7
 
 # Windows EXE build
 pyinstaller>=6.0
