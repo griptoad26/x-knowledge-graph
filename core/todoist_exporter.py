@@ -12,17 +12,12 @@ from typing import Dict, List, Optional
 from dataclasses import dataclass
 from unittest.mock import Mock, patch
 
-try:
-    from .amazon_product_linker import extract_product_info
-except ImportError:
-    from amazon_product_linker import extract_product_info
-
-# Priority mapping: XKG priority → Todoist priority (p4=highest, p1=lowest)
+# Priority mapping: XKG priority → Todoist priority (p1=highest, p4=lowest)
 PRIORITY_MAP = {
-    'urgent': 4,  # p4 (highest priority in Todoist)
-    'high': 3,    # p3
-    'medium': 2,  # p2
-    'low': 1,     # p1 (lowest priority in Todoist)
+    'urgent': 1,  # p4 in Todoist (lowest priority number = highest priority)
+    'high': 2,    # p3
+    'medium': 3,  # p2
+    'low': 4,     # p1 (highest priority number = lowest priority)
 }
 
 TASK_API_URL = "https://api.todoist.com/rest/v2/tasks"
@@ -57,8 +52,7 @@ class TodoistExporter:
         self.mock_responses = []
     
     def _extract_amazon_link(self, text: str) -> Optional[str]:
-        """Extract or generate Amazon product link from text"""
-        # First, look for existing Amazon links
+        """Extract Amazon product link from text"""
         amazon_patterns = [
             r'(https?://(?:www\.)?amazon\.com/[^\s]+)',
             r'(https?://amzn\.to/[^\s]+)',
@@ -68,12 +62,6 @@ class TodoistExporter:
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
                 return match.group(1)
-        
-        # If no existing link, try to generate one from product mentions
-        product_info = extract_product_info(text)
-        if product_info.get('amazon_link'):
-            return product_info['amazon_link']
-        
         return None
     
     def _extract_source_text(self, action_text: str, source_tweet_id: str) -> str:
@@ -308,8 +296,8 @@ def export_to_todoist(actions, api_token: Optional[str] = None) -> Dict:
     Returns:
         Dict with success_count, failed_count, task_ids, and errors
     """
-    # Use mock mode when no real token provided OR explicitly using 'mock_token'
-    use_mock = not api_token or api_token.lower() == 'mock_token'
+    # Use mock mode when no real token provided
+    use_mock = not api_token
     exporter = TodoistExporter(api_token=api_token, use_mock=use_mock)
     return exporter.export_actions(actions)
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-X Knowledge Graph v0.4.19 - Self-Contained Standalone Application
-Features: Graph visualization, action extraction, task flows, Todoist export, Dark Mode
+X Knowledge Graph v0.3.22 - Self-Contained Standalone Application
+Features: Graph visualization, action extraction, task flows, Todoist export
 """
 
 import sys
@@ -11,45 +11,54 @@ import socket
 import threading
 import argparse
 
-# Determine base directory for bundled app
 if getattr(sys, 'frozen', False):
-    # Running as frozen exe - files extracted to temp directory
     BASE_DIR = sys._MEIPASS
-    os.chdir(BASE_DIR)
 else:
-    # Running as Python script
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(BASE_DIR)
+
+os.chdir(BASE_DIR)
 
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
-app = Flask(__name__, 
-            template_folder=os.path.join(BASE_DIR, 'frontend'),
-            static_folder=os.path.join(BASE_DIR, 'frontend'))
+app = Flask(__name__)
 CORS(app)
 
 # ==================== CLI ARGUMENT PARSING ====================
 
 def parse_cli_args():
+    """Parse command line arguments"""
     parser = argparse.ArgumentParser(
         description='X Knowledge Graph - Parse X exports and visualize',
         add_help=False
     )
-    parser.add_argument('--export-todoist', metavar='TOKEN', help='Export actions to Todoist')
-    parser.add_argument('--export-actions', metavar='FILE', help='Export actions to JSON file')
-    parser.add_argument('--export-graph', metavar='FILE', help='Export graph to JSON file')
+    parser.add_argument(
+        '--export-todoist',
+        metavar='TOKEN',
+        help='Export actions to Todoist using the provided API token'
+    )
+    parser.add_argument(
+        '--export-actions',
+        metavar='FILE',
+        help='Export actions to JSON file'
+    )
+    parser.add_argument(
+        '--export-graph',
+        metavar='FILE',
+        help='Export graph to JSON file'
+    )
     return parser.parse_known_args()
 
 CLI_ARGS, _ = parse_cli_args()
+
 graph_data = {'graph': {}, 'actions': [], 'topics': {}, 'flows': {}}
 
-# ==================== FOLDER PICKER ====================
-
+# Native folder picker state
 selected_folder_path = None
 folder_selected_event = threading.Event()
 
 def native_folder_picker():
+    """Thread-safe native folder picker using tkinter"""
     import tkinter as tk
     from tkinter import filedialog
     
@@ -76,60 +85,67 @@ def find_port():
         s.bind(('', 0))
         return s.getsockname()[1]
 
-# ==================== FLASK ROUTES ====================
+def find_file_in_bundle(filename, subdirs=['frontend', 'core', '.']):
+    for subdir in subdirs:
+        path = os.path.join(BASE_DIR, subdir, filename)
+        if os.path.exists(path):
+            return path
+    return None
 
 @app.route('/')
 def index():
-    index_path = os.path.join(BASE_DIR, 'frontend', 'index.html')
-    if os.path.exists(index_path):
+    index_path = find_file_in_bundle('index.html', ['frontend'])
+    if index_path and os.path.exists(index_path):
         with open(index_path, 'r', encoding='utf-8') as f:
             return f.read()
-    return "ERROR: index.html not found in " + BASE_DIR, 500
+    return "ERROR: index.html not found", 500
 
 @app.route('/<path:filename>')
 def static_files(filename):
-    # Serve static files from frontend directory
-    allowed_dirs = ['frontend', 'css', 'js']
-    
-    # Prevent directory traversal
-    if '..' in filename or filename.startswith('/'):
-        return "Forbidden", 403
-    
-    file_path = os.path.join(BASE_DIR, 'frontend', filename)
-    if os.path.exists(file_path) and os.path.isfile(file_path):
+    path = os.path.join(BASE_DIR, 'frontend', filename)
+    if os.path.exists(path):
         return send_from_directory(os.path.join(BASE_DIR, 'frontend'), filename)
-    
     return f"NOT FOUND: {filename}", 404
 
 @app.route('/api/health')
 def health():
-    return jsonify({'status': 'ok', 'version': '0.4.19'})
+    return jsonify({'status': 'ok', 'version': '0.3.17'})
 
 @app.route('/api/select-folder', methods=['POST'])
 def select_folder():
+    """Trigger native folder picker dialog"""
     global selected_folder_path, folder_selected_event
+    
     folder_selected_event.clear()
     selected_folder_path = None
+    
     t = threading.Thread(target=native_folder_picker)
     t.daemon = True
     t.start()
+    
     return jsonify({'status': 'started', 'message': 'Folder picker opened'})
 
 @app.route('/api/get-selected-folder', methods=['GET'])
 def get_selected_folder():
+    """Check if folder has been selected"""
     global selected_folder_path, folder_selected_event
+    
     if folder_selected_event.is_set():
-        return jsonify({'status': 'done', 'path': selected_folder_path if selected_folder_path else None})
-    return jsonify({'status': 'waiting'})
+        return jsonify({
+            'status': 'done',
+            'path': selected_folder_path if selected_folder_path else None
+        })
+    else:
+        return jsonify({'status': 'waiting'})
 
 @app.route('/api/parse-export', methods=['POST'])
 def parse_export():
     global graph_data
     
-    data = request.json or {}
+    data = request.json
     x_path = data.get('x_path', '').strip()
     grok_path = data.get('grok_path', '').strip()
-    export_type = data.get('export_type', 'x')
+    export_type = data.get('export_type', 'x')  # 'x', 'grok', or 'both'
     graph_mode = data.get('graph_mode', 'all')
     
     if x_path and not os.path.exists(x_path):
@@ -140,8 +156,8 @@ def parse_export():
         return jsonify({'error': 'Please select a folder first'}), 400
     
     try:
-        core_path = os.path.join(BASE_DIR, 'core', 'xkg_core.py')
-        if not os.path.exists(core_path):
+        core_path = find_file_in_bundle('xkg_core.py', ['core'])
+        if not core_path or not os.path.exists(core_path):
             return jsonify({'error': 'core/xkg_core.py not found'}), 500
         
         core_dir = os.path.dirname(core_path)
@@ -152,6 +168,7 @@ def parse_export():
         
         kg = KnowledgeGraph()
         
+        # Parse based on export type
         if export_type == 'both' and x_path and grok_path:
             result = kg.build_from_both(x_path, grok_path)
         elif export_type == 'grok' and grok_path:
@@ -166,9 +183,14 @@ def parse_export():
         if 'error' in result:
             return jsonify(result), 400
         
+        tweets_count = result['stats'].get('total_tweets', 0)
+        topics_count = result['stats'].get('topics_count', 0)
+        actions_count = result['stats'].get('total_actions', 0)
+        
         all_nodes = kg.export_for_d3().get('nodes', [])
         all_edges = kg.export_for_d3().get('edges', [])
         
+        # Filter nodes based on graph mode
         if graph_mode == 'twitter':
             nodes = [n for n in all_nodes if n.get('type') in ['tweet', 'action', 'topic']]
         elif graph_mode == 'grok':
@@ -222,6 +244,7 @@ def get_flows():
 
 @app.route('/api/export-todoist', methods=['POST'])
 def export_todoist():
+    """Export actions to Todoist"""
     global graph_data
     
     data = request.json or {}
@@ -255,16 +278,13 @@ def export_todoist():
             'traceback': traceback.format_exc()
         }), 500
 
-# ==================== MAIN ====================
-
 def main():
     port = find_port()
     
     print("=" * 50)
-    print("X Knowledge Graph v0.4.19")
+    print("X Knowledge Graph v0.3.19")
     print("=" * 50)
     print(f"Server at: http://localhost:{port}")
-    print(f"Base dir: {BASE_DIR}")
     print("\nOpening browser...")
     
     webbrowser.open(f'http://localhost:{port}')
