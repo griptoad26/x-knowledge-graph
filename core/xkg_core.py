@@ -1,5 +1,5 @@
 """
-X Knowledge Graph v0.3.12 - Core Engine
+X Knowledge Graph v0.4.5 - Core Engine
 Parses X exports, builds conversation trees, extracts actions, links topics.
 Adds Amazon product linking for action items.
 """
