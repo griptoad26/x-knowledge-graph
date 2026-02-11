@@ -28,7 +28,7 @@ STOP_WORDS = frozenset([
 
 # Common product categories (for context-aware extraction)
 PRODUCT_CATEGORIES = {
-    'electronics': ['mouse', 'keyboard', 'monitor', 'laptop', 'phone', 'tablet', 'headphone', 'speaker', 'camera', 'charger', 'cable', 'adapter', 'coffee', 'coffee maker', 'printer', 'router', 'webcam'],
+    'electronics': ['mouse', 'keyboard', 'monitor', 'laptop', 'phone', 'tablet', 'headphone', 'speaker', 'camera', 'charger', 'cable', 'adapter', 'coffee', 'coffee maker', 'printer', 'router', 'webcam', 'wallet', 'watch', 'earbuds', 'power bank'],
     'office': ['desk', 'chair', 'paper', 'pen', 'notebook', 'stapler', 'organizer', 'folder', 'binder'],
     'home': ['lamp', 'shelf', 'rug', 'curtain', 'pillow', 'blanket', 'towel', 'mirror', 'clock'],
     'kitchen': ['pot', 'pan', 'knife', 'spoon', 'fork', 'plate', 'bowl', 'cup', 'mug', 'blender', 'toaster'],
@@ -177,8 +177,13 @@ def generate_amazon_url_from_keywords(keywords: list) -> str:
     return f"https://www.amazon.com/s?k={keyword_str}"
 
 
-def generate_amazon_url(keywords: str) -> str:
-    """Generate Amazon search URL from keywords string (e.g., 'wireless+mouse')"""
+def generate_amazon_url(text: str) -> str:
+    """Generate Amazon search URL from action text - returns None if not product-related"""
+    linker = get_linker()
+    # Only generate URL if it's actually a product mention
+    if not linker.detect_product_mention(text):
+        return ""
+    keywords = linker.extract_product_keywords(text)
     if not keywords:
         return ""
     return f"https://www.amazon.com/s?k={keywords}"
