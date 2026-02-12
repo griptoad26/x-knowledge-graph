@@ -12,12 +12,12 @@ from typing import Dict, List, Optional
 from dataclasses import dataclass
 from unittest.mock import Mock, patch
 
-# Priority mapping: XKG priority → Todoist priority (p1=highest, p4=lowest)
+# Priority mapping: XKG priority → Todoist priority (p1=lowest, p4=highest)
 PRIORITY_MAP = {
-    'urgent': 1,  # p4 in Todoist (lowest priority number = highest priority)
-    'high': 2,    # p3
-    'medium': 3,  # p2
-    'low': 4,     # p1 (highest priority number = lowest priority)
+    'urgent': 4,  # p4 (highest)
+    'high': 3,    # p3
+    'medium': 2,  # p2
+    'low': 1,     # p1 (lowest)
 }
 
 TASK_API_URL = "https://api.todoist.com/rest/v2/tasks"
