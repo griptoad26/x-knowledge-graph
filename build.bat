@@ -63,16 +63,7 @@ if exist "dist" rmdir /s /q dist 2>nul
 mkdir dist
 
 REM Build with hidden imports for common packages
-%PYTHON_CMD% -m PyInstaller --onefile --windowed --name "XKnowledgeGraph" ^
-    --hidden-import=tkinter ^
-    --hidden-import=tkinter.ttk ^
-    --hidden-import=tkinter.filedialog ^
-    --hidden-import=tkinter.messagebox ^
-    --hidden-import=networkx ^
-    --hidden-import=networkx.classes ^
-    --hidden-import=pandas ^
-    --hidden-import=numpy ^
-    --collect-all gui.py
+%PYTHON_CMD% -m PyInstaller --onefile --windowed --name "XKnowledgeGraph" gui.py --hidden-import tkinter --hidden-import tkinter.ttk --hidden-import tkinter.filedialog --hidden-import tkinter.messagebox --hidden-import networkx --hidden-import pandas --hidden-import numpy
 
 if errorlevel 1 (
     echo.
@@ -91,34 +82,21 @@ if not exist "dist\XKnowledgeGraph.exe" (
 echo EXE built successfully.
 
 REM ============================================================================
-REM Step 4: Prepare Distribution
+REM Step 4: Copy EXE to main folder
 REM ============================================================================
 echo [4/4] Preparing distribution...
 
-REM Copy essential files
-copy /Y requirements.txt dist\ >nul 2>&1
-copy /Y README.md dist\ >nul 2>&1
-
-REM Copy folders
-xcopy /E /Y core dist\core\ >nul 2>&1
-xcopy /E /Y frontend dist\frontend\ >nul 2>&1
-xcopy /E /Y test_data dist\test_data\ >nul 2>&1
-if exist "data" xcopy /E /Y data dist\data\ >nul 2>&1
+echo Copying XKnowledgeGraph.exe to main folder...
+copy /Y dist\XKnowledgeGraph.exe . >nul 2>&1
 
 echo.
 echo ============================================
 echo   BUILD SUCCESSFUL!
 echo ============================================
 echo.
-echo The EXE is ready: dist\XKnowledgeGraph.exe
+echo The EXE is ready: XKnowledgeGraph.exe
 echo.
-echo To distribute:
-echo   1. Copy the 'dist' folder
-echo   2. Recipients only need to run XKnowledgeGraph.exe
-echo   3. No Python or installation required!
-echo.
-echo Test locally:
-echo   dist\XKnowledgeGraph.exe
+echo Just double-click XKnowledgeGraph.exe to run!
 echo.
 pause
 
