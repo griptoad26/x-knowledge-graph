@@ -62,16 +62,27 @@ REM Clean old build
 if exist "dist" rmdir /s /q dist 2>nul
 mkdir dist
 
-REM Build (use --collect-all for all dependencies)
-%PYTHON_CMD% -m PyInstaller --onefile --windowed --name "XKnowledgeGraph" --collect-all gui.py 2>&1 | findstr /I "Building completed"
+REM Build with hidden imports for common packages
+%PYTHON_CMD% -m PyInstaller --onefile --windowed --name "XKnowledgeGraph" ^
+    --hidden-import=tkinter ^
+    --hidden-import=tkinter.ttk ^
+    --hidden-import=tkinter.filedialog ^
+    --hidden-import=tkinter.messagebox ^
+    --hidden-import=networkx ^
+    --hidden-import=networkx.classes ^
+    --hidden-import=pandas ^
+    --hidden-import=numpy ^
+    --collect-all gui.py
 
 if errorlevel 1 (
-    echo ERROR: Build failed - check output above
+    echo.
+    echo ERROR: Build failed - see error above
     pause
     exit /b 1
 )
 
 if not exist "dist\XKnowledgeGraph.exe" (
+    echo.
     echo ERROR: Build failed - exe not created
     pause
     exit /b 1
