@@ -125,8 +125,6 @@ class AmazonProductLinker:
             return '+'.join(found_keywords)
         
         return None
-        
-        return None
     
     def generate_amazon_url(self, text: str) -> Optional[str]:
         """Generate Amazon search URL from action text"""
