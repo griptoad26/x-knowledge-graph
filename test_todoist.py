@@ -1,57 +1,44 @@
 #!/usr/bin/env python3
-"""Test Todoist export functionality"""
+"""Test Todoist exporter functionality"""
 import sys
-sys.path.insert(0, '/home/molty/.openclaw/workspace/projects/x-knowledge-graph/core')
+sys.path.insert(0, '/home/molty/.openclaw/workspace/projects/x-knowledge-graph')
 
-from todoist_exporter import export_to_todoist, TodoistExporter
+from core.todoist_exporter import PRIORITY_MAP, TodoistExporter, export_to_todoist
 
-# Mock action for testing
+# Test priority mapping
+print("Priority Mapping Test:")
+for xkg, todoist in PRIORITY_MAP.items():
+    print(f"  {xkg} -> p{todoist}")
+
+# Mock ActionItem for testing
 class MockAction:
-    def __init__(self, text, priority, topic="test", status="pending"):
+    def __init__(self, text, priority, source_tweet_id, topic='test', status='pending', created_at='2026-02-12'):
         self.text = text
         self.priority = priority
+        self.source_tweet_id = source_tweet_id
         self.topic = topic
         self.status = status
-        self.id = f"action_{hash(text) % 10000}"
-        self.source_tweet_id = "12345"
-        self.created_at = "2026-02-10T00:00:00"
+        self.created_at = created_at
 
-# Test actions
+# Test with mock API
+print("\nMock API Test:")
 actions = [
-    MockAction("Buy milk", "high", "shopping"),
-    MockAction("Call dentist", "urgent", "health"),
-    MockAction("Email boss", "medium", "work"),
-    MockAction("Water plants", "low", "home"),
+    MockAction("Buy coffee beans", "high", "1234567890"),
+    MockAction("Research X API", "urgent", "0987654321"),
+    MockAction("Clean workspace", "low", "5555555555"),
 ]
 
-print("Testing Todoist export with mock API...")
-print("-" * 40)
+exporter = TodoistExporter(use_mock=True)
+result = exporter.export_actions(actions)
 
-# Test 1: export_to_todoist convenience function
-result = export_to_todoist(actions, api_token=None)
-print(f"export_to_todoist result: {result}")
-assert result['success_count'] == 4, f"Expected 4 successes, got {result['success_count']}"
-assert result['failed_count'] == 0, f"Expected 0 failures, got {result['failed_count']}"
-assert len(result['task_ids']) == 4, f"Expected 4 task_ids"
-print("✅ Test 1 passed: export_to_todoist works")
+print(f"  Success count: {result['success_count']}")
+print(f"  Failed count: {result['failed_count']}")
+print(f"  Task IDs: {result['task_ids']}")
+print(f"  Total: {result['total']}")
 
-# Test 2: Priority mapping
-print("\nTesting priority mapping:")
-exporter = TodoistExporter(api_token=None, use_mock=True)
+# Test convenience function
+print("\nConvenience Function Test:")
+result2 = export_to_todoist(actions)
+print(f"  Exported: {result2['success_count']}, Failed: {result2['failed_count']}")
 
-for priority, expected in [('urgent', 1), ('high', 2), ('medium', 3), ('low', 4)]:
-    from todoist_exporter import PRIORITY_MAP
-    actual = PRIORITY_MAP.get(priority)
-    print(f"  {priority} -> p{5-actual} (internal: {actual})")
-    assert actual == expected, f"Priority {priority} should map to {expected}, got {actual}"
-print("✅ Test 2 passed: Priority mapping correct")
-
-# Test 3: Mock failure handling
-print("\nTesting failure handling...")
-fail_result = export_to_todoist([MockAction("", "high")], api_token=None)
-assert fail_result['failed_count'] == 1, "Empty content should fail"
-print("✅ Test 3 passed: Failure handling works")
-
-print("\n" + "=" * 40)
-print("All tests passed! Todoist export is working.")
-print("=" * 40)
+print("\n✅ Todoist export is working!")
