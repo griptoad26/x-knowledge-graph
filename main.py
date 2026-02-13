@@ -109,7 +109,7 @@ def static_files(filename):
 
 @app.route('/api/health')
 def health():
-    return jsonify({'status': 'ok', 'version': '0.3.17'})
+    return jsonify({'status': 'ok', 'version': '0.3.23'})
 
 @app.route('/api/select-folder', methods=['POST'])
 def select_folder():
