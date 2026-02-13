@@ -458,6 +458,9 @@ class ActionExtractor:
         (r'\b(asap|urgent|critical)\b.*?(?:\.|$)', 'urgent'),
         (r'(?:deadline|due)\s+(?:by|on)?\s*(.+?)(?:\.|$)', 'urgent'),
         (r'(?:make sure to?|ensure|verify|check)\s+(.+?)(?:\.|$)', 'medium'),
+        # Product purchase patterns
+        (r'(?:buy|purchase|order|get)\s+(?:a|an|the|new|some)?\s+(.+?)(?:\.|$)', 'medium'),
+        (r'(?:looking for|searching for|need a|need an)\s+(.+?)(?:\.|$)', 'medium'),
     ]
     
     def __init__(self):
@@ -494,7 +497,17 @@ class ActionExtractor:
     
     def _extract_amazon_link(self, action_text: str) -> Optional[str]:
         """Extract Amazon search URL from action text if it mentions a product"""
-        return self.amazon_linker.generate_amazon_url(action_text)
+        # First try with full detection (requires trigger word)
+        url = self.amazon_linker.generate_amazon_url(action_text)
+        if url:
+            return url
+        
+        # Fallback: if it has product keywords, generate URL anyway
+        keywords = self.amazon_linker.extract_product_keywords(action_text)
+        if keywords:
+            return f"https://www.amazon.com/s?k={keywords}"
+        
+        return None
     
     def _extract_topic(self, text: str) -> str:
         text_lower = text.lower()

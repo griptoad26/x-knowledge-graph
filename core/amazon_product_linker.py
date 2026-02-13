@@ -20,7 +20,7 @@ STOP_WORDS = frozenset([
     'this', 'that', 'some', 'any', 'good', 'best', 'nice', 'great',
     'really', 'very', 'just', 'still', 'maybe', 'perhaps', 'probably',
     # Context words (what the product is for, not what it is)
-    'desk', 'computer', 'pc', 'home', 'office', 'room',
+    'computer', 'pc', 'home', 'office', 'room',
     'kitchen', 'bathroom', 'bedroom', 'living', 'car',
     'gym', 'workout', 'running', 'hiking', 'camping', 'travel',
     'today', 'tomorrow', 'week', 'month', 'soon', 'ASAP'
@@ -90,32 +90,43 @@ class AmazonProductLinker:
         """Extract product keywords from action text for Amazon search"""
         text_lower = text.lower()
         
-        # Find the trigger word and extract what follows
+        # First try: find trigger word and extract what follows
         match = self.trigger_pattern.search(text_lower)
-        if not match:
-            return None
+        if match:
+            # Get text after the trigger
+            after_trigger = text_lower[match.end():].strip()
+            
+            # Skip common words at the start
+            words = after_trigger.split()
+            filtered_words = []
+            
+            for word in words:
+                # Remove punctuation
+                clean_word = re.sub(r'[^\w]', '', word)
+                if clean_word and clean_word.lower() not in STOP_WORDS:
+                    filtered_words.append(clean_word.lower())
+            
+            # Get up to 4 meaningful words (product keywords)
+            keywords = filtered_words[:4]
+            
+            if keywords:
+                return '+'.join(keywords)
         
-        # Get text after the trigger
-        after_trigger = text_lower[match.end():].strip()
-        
-        # Skip common words at the start
-        skip_words = ['to', 'a', 'an', 'the', 'my', 'for', 'some', 'any', 'new', ' ', '-']
-        words = after_trigger.split()
-        filtered_words = []
-        
+        # Fallback: extract any known product keywords from the text
+        found_keywords = []
+        words = re.findall(r'\b\w+\b', text_lower)
         for word in words:
-            # Remove punctuation
-            clean_word = re.sub(r'[^\w]', '', word)
-            if clean_word and clean_word.lower() not in STOP_WORDS:
-                filtered_words.append(clean_word.lower())
+            if word in self.all_product_keywords and word not in STOP_WORDS:
+                found_keywords.append(word)
+                if len(found_keywords) >= 4:
+                    break
         
-        # Get up to 4 meaningful words (product keywords)
-        keywords = filtered_words[:4]
+        if found_keywords:
+            return '+'.join(found_keywords)
         
-        if not keywords:
-            return None
+        return None
         
-        return '+'.join(keywords)
+        return None
     
     def generate_amazon_url(self, text: str) -> Optional[str]:
         """Generate Amazon search URL from action text"""
