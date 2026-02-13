@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-X Knowledge Graph v0.3.22 - Self-Contained Standalone Application
+X Knowledge Graph v0.3.23 - Self-Contained Standalone Application
 Features: Graph visualization, action extraction, task flows, Todoist export
 """
 
@@ -282,7 +282,7 @@ def main():
     port = find_port()
     
     print("=" * 50)
-    print("X Knowledge Graph v0.3.22")
+    print("X Knowledge Graph v0.3.23")
     print("=" * 50)
     print(f"Server at: http://localhost:{port}")
     
