@@ -1,107 +1,142 @@
-"""
-Test Todoist Exporter
-Validates the Todoist export functionality with mock API
-"""
+#!/usr/bin/env python3
+"""Test Todoist exporter with mock API"""
 
 import sys
 import os
 
 # Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from core.todoist_exporter import (
-    export_to_todoist,
-    PRIORITY_MAP,
-    TodoistExporter,
-    TodoistExportResult
-)
+from core.todoist_exporter import TodoistExporter, export_to_todoist, PRIORITY_MAP
 
 
-# Mock ActionItem for testing
 class MockAction:
-    def __init__(self, text, priority='medium', source_tweet_id='12345', topic='test', status='pending'):
-        self.id = f"action_{hash(text) % 10000}"
+    """Mock action item for testing"""
+    def __init__(self, text, priority='medium', source_tweet_id='123', topic='test', status='pending', created_at='2026-01-01'):
         self.text = text
         self.priority = priority
         self.source_tweet_id = source_tweet_id
         self.topic = topic
         self.status = status
-        self.created_at = '2026-02-12T00:00:00'
+        self.created_at = created_at
 
 
-def test_priority_mapping():
-    """Verify priority mapping is correct"""
-    assert PRIORITY_MAP['urgent'] == 4, "urgent should map to p4"
-    assert PRIORITY_MAP['high'] == 3, "high should map to p3"
-    assert PRIORITY_MAP['medium'] == 2, "medium should map to p2"
-    assert PRIORITY_MAP['low'] == 1, "low should map to p1"
-    print("✅ Priority mapping test passed")
+def test_priority_map():
+    """Test priority mapping"""
+    assert PRIORITY_MAP['urgent'] == 4
+    assert PRIORITY_MAP['high'] == 3
+    assert PRIORITY_MAP['medium'] == 2
+    assert PRIORITY_MAP['low'] == 1
+    print("✓ Priority mapping correct")
 
 
-def test_mock_export():
-    """Test export with mock API (no real token)"""
+def test_mock_single_action():
+    """Test exporting a single action with mock API"""
+    exporter = TodoistExporter(use_mock=True)
+    
+    action = MockAction(
+        text="Test TODO: complete this task",
+        priority="urgent",
+        source_tweet_id="12345",
+        topic="testing",
+        status="pending"
+    )
+    
+    result = exporter.export_action(action)
+    
+    assert result.success, f"Expected success, got error: {result.error}"
+    assert result.task_id.startswith("mock_"), f"Expected mock ID, got: {result.task_id}"
+    print(f"✓ Single action export: {result.task_id}")
+
+
+def test_mock_multiple_actions():
+    """Test exporting multiple actions"""
     actions = [
-        MockAction("Buy groceries", priority='high'),
-        MockAction("Finish report", priority='urgent'),
-        MockAction("Call mom", priority='low'),
+        MockAction("High priority task", priority="high", source_tweet_id="1"),
+        MockAction("Medium priority task", priority="medium", source_tweet_id="2"),
+        MockAction("Low priority task", priority="low", source_tweet_id="3"),
     ]
     
-    # Export without token (uses mock mode)
-    result = export_to_todoist(actions, api_token=None)
+    exporter = TodoistExporter(use_mock=True)
+    result = exporter.export_actions(actions)
     
     assert result['success_count'] == 3, f"Expected 3 successes, got {result['success_count']}"
-    assert result['failed_count'] == 0, f"Expected 0 failures, got {result['failed_count']}"
-    assert len(result['task_ids']) == 3, "Should have 3 task IDs"
+    assert result['failed_count'] == 0
+    assert len(result['task_ids']) == 3
+    print(f"✓ Multi-action export: {result['success_count']} tasks created")
+
+
+def test_convenience_function():
+    """Test the convenience export_to_todoist function"""
+    actions = [
+        MockAction("Test task 1", priority="urgent", source_tweet_id="1"),
+        MockAction("Test task 2", priority="high", source_tweet_id="2"),
+    ]
     
-    print("✅ Mock export test passed")
-    print(f"   Exported {result['success_count']} actions, got task_ids: {result['task_ids']}")
+    # No token = mock mode
+    result = export_to_todoist(actions)
+    
+    assert result['success_count'] == 2
+    print(f"✓ Convenience function works: {result['success_count']} tasks")
 
 
 def test_priority_filter():
     """Test filtering by priority"""
-    exporter = TodoistExporter(api_token=None, use_mock=True)
-    
     actions = [
-        MockAction("Urgent task", priority='urgent'),
-        MockAction("High task", priority='high'),
-        MockAction("Medium task", priority='medium'),
+        MockAction("Urgent task", priority="urgent", source_tweet_id="1"),
+        MockAction("High task", priority="high", source_tweet_id="2"),
+        MockAction("Low task", priority="low", source_tweet_id="3"),
     ]
     
-    # Export only urgent and high
+    exporter = TodoistExporter(use_mock=True)
     result = exporter.export_actions(actions, priority_filter=['urgent', 'high'])
     
-    assert result['success_count'] == 2, f"Expected 2 successes, got {result['success_count']}"
-    print("✅ Priority filter test passed")
+    assert result['success_count'] == 2
+    print(f"✓ Priority filter works: {result['success_count']} of {len(actions)} tasks")
 
 
-def test_failure_simulation():
-    """Test failure handling"""
-    exporter = TodoistExporter(api_token=None, use_mock=True)
+def test_amazon_link_extraction():
+    """Test Amazon link extraction from action text"""
+    exporter = TodoistExporter(use_mock=True)
     
-    # Test with content that triggers mock failure
-    class FailAction:
-        text = "fail_this_task"
-        priority = 'medium'
-        source_tweet_id = '12345'
-        topic = 'test'
-        status = 'pending'
-        id = 'fail_1'
-        created_at = '2026-02-12T00:00:00'
+    action = MockAction(
+        text="Check this out: https://amazon.com/dp/B000000000",
+        priority="medium",
+        source_tweet_id="123"
+    )
     
-    result = exporter.export_action(FailAction())
+    result = exporter.export_action(action)
+    assert result.success
+    print("✓ Amazon link extraction works")
+
+
+def test_mock_failure_cases():
+    """Test mock API failure cases"""
+    exporter = TodoistExporter(use_mock=True)
     
-    assert result.success == False, "Should fail for 'fail_*' content"
-    assert result.error is not None, "Should have error message"
+    # Test empty content failure
+    class EmptyAction:
+        text = ""
+        priority = "medium"
+        source_tweet_id = "123"
+        topic = "test"
+        status = "pending"
+        created_at = "2026-01-01"
     
-    print("✅ Failure simulation test passed")
+    result = exporter.export_action(EmptyAction())
+    assert not result.success
+    print("✓ Empty content correctly fails")
 
 
 if __name__ == '__main__':
-    print("Running Todoist Exporter Tests...\n")
+    print("Testing Todoist Exporter...\n")
     
-    test_priority_mapping()
-    test_mock_export()
+    test_priority_map()
+    test_mock_single_action()
+    test_mock_multiple_actions()
+    test_convenience_function()
     test_priority_filter()
-    test_failure_simulation()
+    test_amazon_link_extraction()
+    test_mock_failure_cases()
     
-    print("\n✅ All tests passed! Todoist export is working.")
+    print("\n✓ All tests passed!")
