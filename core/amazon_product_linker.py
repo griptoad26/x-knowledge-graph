@@ -186,13 +186,9 @@ def generate_amazon_url_from_keywords(keywords: list) -> str:
     return f"https://www.amazon.com/s?k={keyword_str}"
 
 
-def generate_amazon_url(text: str) -> str:
-    """Generate Amazon search URL from action text - returns None if not product-related"""
-    linker = get_linker()
-    # Only generate URL if it's actually a product mention
-    if not linker.detect_product_mention(text):
-        return ""
-    keywords = linker.extract_product_keywords(text)
+def generate_amazon_url(keywords: list) -> str:
+    """Generate Amazon search URL from keywords list"""
     if not keywords:
         return ""
-    return f"https://www.amazon.com/s?k={keywords}"
+    keyword_str = '+'.join(keywords)
+    return f"https://www.amazon.com/s?k={keyword_str}"
