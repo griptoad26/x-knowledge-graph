@@ -282,9 +282,15 @@ def main():
     port = find_port()
     
     print("=" * 50)
-    print("X Knowledge Graph v0.3.19")
+    print("X Knowledge Graph v0.3.22")
     print("=" * 50)
     print(f"Server at: http://localhost:{port}")
+    
+    # Auto-export to Todoist if token provided via CLI
+    if CLI_ARGS.export_todoist:
+        print(f"\nTodoist token provided via CLI")
+        print("Note: Export will be available via API after parsing actions")
+    
     print("\nOpening browser...")
     
     webbrowser.open(f'http://localhost:{port}')
