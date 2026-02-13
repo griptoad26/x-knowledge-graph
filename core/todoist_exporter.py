@@ -9,6 +9,7 @@ import json
 import requests
 from datetime import datetime
 from typing import Dict, List, Optional
+from .amazon_product_linker import generate_amazon_url, detect_product_mentions
 from dataclasses import dataclass
 from unittest.mock import Mock, patch
 
@@ -52,7 +53,8 @@ class TodoistExporter:
         self.mock_responses = []
     
     def _extract_amazon_link(self, text: str) -> Optional[str]:
-        """Extract Amazon product link from text"""
+        """Extract or generate Amazon product link from text"""
+        # First, try to extract explicit Amazon URL from text
         amazon_patterns = [
             r'(https?://(?:www\.)?amazon\.com/[^\s]+)',
             r'(https?://amzn\.to/[^\s]+)',
@@ -62,6 +64,13 @@ class TodoistExporter:
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
                 return match.group(1)
+        
+        # If no explicit URL, generate one from product mentions
+        if detect_product_mentions(text):
+            generated_url = generate_amazon_url(text)
+            if generated_url:
+                return generated_url
+        
         return None
     
     def _extract_source_text(self, action_text: str, source_tweet_id: str) -> str:
