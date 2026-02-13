@@ -483,27 +483,31 @@ class ActionExtractor:
             matches = re.findall(pattern, text, re.IGNORECASE)
             for match in matches:
                 if match and len(match.strip()) > 3:
+                    action_text = match.strip()[:200]
                     action = ActionItem(
                         id=f"action_{len(actions)}",
-                        text=match.strip()[:200],
+                        text=action_text,
                         source_tweet_id=source_id,
                         topic=self._extract_topic(text),
                         priority=priority,
-                        amazon_link=self._extract_amazon_link(match.strip())
+                        amazon_link=self._extract_amazon_link(text, action_text)
                     )
                     actions.append(action)
         
         return actions
     
-    def _extract_amazon_link(self, action_text: str) -> Optional[str]:
+    def _extract_amazon_link(self, original_text: str, action_text: str = None) -> Optional[str]:
         """Extract Amazon search URL from action text if it mentions a product"""
+        # Use original text for better keyword extraction (has trigger words)
+        text_to_use = original_text if action_text is None else original_text
+        
         # First try with full detection (requires trigger word)
-        url = self.amazon_linker.generate_amazon_url(action_text)
+        url = self.amazon_linker.generate_amazon_url(text_to_use)
         if url:
             return url
         
         # Fallback: if it has product keywords, generate URL anyway
-        keywords = self.amazon_linker.extract_product_keywords(action_text)
+        keywords = self.amazon_linker.extract_product_keywords(text_to_use)
         if keywords:
             return f"https://www.amazon.com/s?k={keywords}"
         
