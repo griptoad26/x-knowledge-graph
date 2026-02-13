@@ -186,8 +186,9 @@ def generate_amazon_url_from_keywords(keywords: list) -> str:
     return f"https://www.amazon.com/s?k={keyword_str}"
 
 
-def generate_amazon_url(keywords: list) -> str:
-    """Generate Amazon search URL from keywords list"""
+def generate_amazon_url(text: str) -> str:
+    """Generate Amazon search URL from action text"""
+    keywords = extract_product_keywords(text)
     if not keywords:
         return ""
     keyword_str = '+'.join(keywords)
