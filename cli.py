@@ -16,6 +16,7 @@ from src.graph_builder import KnowledgeGraph
 from src.action_extractor import ActionExtractor
 from src.topic_modeler import TopicModeler
 from src.task_flow import TaskFlowManager
+from core.todoist_exporter import TodoistExporter
 
 
 @dataclass
@@ -204,6 +205,18 @@ Examples:
     # Shell command
     subparsers.add_parser("shell", help="Interactive mode")
     
+    # Export-todoist command
+    todoist_parser = subparsers.add_parser("export-todoist", help="Export actions to Todoist")
+    todoist_parser.add_argument("token", help="Todoist API token")
+    todoist_parser.add_argument("--graph", default="combined", 
+                                choices=["grok", "tweets", "likes", "combined"],
+                                help="Which graph to export (default: combined)")
+    todoist_parser.add_argument("--priority", nargs="+", 
+                               choices=["urgent", "high", "medium", "low"],
+                               help="Filter by priority")
+    todoist_parser.add_argument("--mock", action="store_true",
+                               help="Use mock API for testing")
+    
     args = parser.parse_args()
     
     if not args.command:
@@ -282,6 +295,39 @@ Examples:
         print()
         
         current_graph = "combined"
+    
+    elif args.command == "export-todoist":
+        kg = manager.graphs.get(args.graph)
+        if not kg:
+            print(f"Error: {args.graph} graph not built. Run 'xkg build {args.graph}' first.")
+            sys.exit(1)
+        
+        actions = kg.get_pending_actions()
+        if not actions:
+            print(f"\n✓ No pending actions in {args.graph} to export")
+        else:
+            # Use mock mode if --mock flag or no real token
+            use_mock = args.mock or args.token.startswith("mock")
+            exporter = TodoistExporter(api_token=args.token if not use_mock else None, 
+                                       use_mock=use_mock)
+            
+            # Filter by priority if specified
+            priority_filter = args.priority
+            
+            result = exporter.export_actions(actions, priority_filter=priority_filter)
+            
+            print(f"\n📦 Todoist Export Results ({args.graph}):")
+            print(f"   Total: {result['total']}")
+            print(f"   Success: {result['success_count']}")
+            print(f"   Failed: {result['failed_count']}")
+            
+            if result['task_ids']:
+                print(f"\n✓ Created {len(result['task_ids'])} tasks in Todoist")
+            
+            if result['errors']:
+                print(f"\n⚠️ Errors:")
+                for err in result['errors'][:5]:
+                    print(f"   - {err['action_id']}: {err['error']}")
         
         while True:
             try:
