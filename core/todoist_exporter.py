@@ -9,7 +9,11 @@ import json
 import requests
 from datetime import datetime
 from typing import Dict, List, Optional
-from .amazon_product_linker import generate_amazon_url, detect_product_mentions
+try:
+    from .amazon_product_linker import generate_amazon_url, detect_product_mentions
+except ImportError:
+    # Fallback for standalone testing
+    from amazon_product_linker import generate_amazon_url, detect_product_mentions
 from dataclasses import dataclass
 from unittest.mock import Mock, patch
 
