@@ -258,7 +258,7 @@ class TodoistExporter:
             else:
                 failed_count += 1
                 errors.append({
-                    'action_id': action.id,
+                    'action_id': getattr(action, 'id', getattr(action, 'source_tweet_id', 'unknown')),
                     'error': result.error
                 })
         
