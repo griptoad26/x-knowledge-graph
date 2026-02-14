@@ -86,32 +86,46 @@ class TodoistExporter:
         Build Todoist task payload from action item
         
         Args:
-            action: ActionItem object with text, priority, source_tweet_id
+            action: ActionItem object or dict with text, priority, source_tweet_id
             
         Returns:
             Dict suitable for Todoist API
         """
+        # Handle both ActionItem objects and dicts
+        if isinstance(action, dict):
+            action_text = action.get('text', '')
+            action_priority = action.get('priority', 'medium')
+            action_source = action.get('source_tweet_id', '')
+            action_topic = action.get('topic', 'general')
+            action_status = action.get('status', 'pending')
+        else:
+            action_text = action.text
+            action_priority = action.priority
+            action_source = action.source_tweet_id
+            action_topic = action.topic
+            action_status = action.status
+        
         # Task name = action text (truncated for Todoist limit)
-        content = action.text[:2000] if len(action.text) > 2000 else action.text
+        content = action_text[:2000] if len(action_text) > 2000 else action_text
         
         # Build description with original post + Amazon link
         description_parts = [
             f"Action from X Knowledge Graph",
-            f"Priority: {action.priority.upper()}",
-            f"Source Tweet ID: {action.source_tweet_id}",
-            f"Topic: {action.topic}",
-            f"Status: {action.status}",
+            f"Priority: {action_priority.upper()}",
+            f"Source Tweet ID: {action_source}",
+            f"Topic: {action_topic}",
+            f"Status: {action_status}",
         ]
         
         # Add Amazon link if found in action text
-        amazon_link = self._extract_amazon_link(action.text)
+        amazon_link = self._extract_amazon_link(action_text)
         if amazon_link:
             description_parts.insert(1, f"Amazon Link: {amazon_link}")
         
         description = "\n".join(description_parts)
         
         # Map priority
-        todoist_priority = PRIORITY_MAP.get(action.priority, 1)
+        todoist_priority = PRIORITY_MAP.get(action_priority, 1)
         
         return {
             'content': content,
