@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """
 X Knowledge Graph - Automated Validation Script
-Tests all API endpoints and reports results
+Tests all API endpoints and uploads results to GitHub Gist
+
+Usage:
+    # Set GitHub token first (once):
+    $env:GITHUB_GIST_TOKEN = "your-github-token"
+    
+    # Run validation:
+    python validate.py
 """
 
 import sys
@@ -13,11 +20,13 @@ import subprocess
 import signal
 from datetime import datetime
 
-# Configuration
-BASE_URL = "http://localhost:PORT"
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
-TEST_DATA_DIR = os.path.join(APP_DIR, "test_data")
-REPORT_FILE = os.path.join(APP_DIR, "validation_report.json")
+# GitHub Gist Configuration - Token from environment variable
+GITHUB_TOKEN = os.environ.get("GITHUB_GIST_TOKEN", "")
+GIST_DESCRIPTION = "X Knowledge Graph Validation Results"
+GIST_FILENAME = "validation_report.json"
+
+# Store Gist URL for polling
+GIST_URL_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".gist_url.txt")
 
 class colors:
     GREEN = '\033[92m'
@@ -25,6 +34,66 @@ class colors:
     YELLOW = '\033[93m'
     BLUE = '\033[94m'
     END = '\033[0m'
+
+def get_gist_url():
+    if os.path.exists(GIST_URL_FILE):
+        with open(GIST_URL_FILE, 'r') as f:
+            return f.read().strip()
+    return None
+
+def save_gist_url(url):
+    with open(GIST_URL_FILE, 'w') as f:
+        f.write(url)
+
+def upload_to_gist(report_json):
+    """Upload validation report to GitHub Gist and return URL"""
+    if not GITHUB_TOKEN:
+        print(f"{colors.YELLOW}GitHub token not set. Skipping Gist upload.{colors.END}")
+        print(f"  Set with: $env:GITHUB_GIST_TOKEN = \"your-token\"")
+        return None
+    
+    gist_url = get_gist_url()
+    
+    if gist_url:
+        gist_id = gist_url.split('/')[-1]
+        url = f"https://api.github.com/gists/{gist_id}"
+        method = "PATCH"
+    else:
+        url = "https://api.github.com/gists"
+        method = "POST"
+    
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    
+    files = {
+        GIST_FILENAME: json.dumps(report_json, indent=2)
+    }
+    
+    data = {
+        "description": f"{GIST_DESCRIPTION} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        "public": True,
+        "files": files
+    }
+    
+    try:
+        if method == "PATCH":
+            response = requests.patch(url, headers=headers, json=data, timeout=30)
+        else:
+            response = requests.post(url, headers=headers, json=data, timeout=30)
+        
+        if response.status_code in [200, 201]:
+            result = response.json()
+            gist_url = result["html_url"]
+            save_gist_url(gist_url)
+            return gist_url
+        else:
+            print(f"{colors.RED}Gist upload failed: {response.status_code}{colors.END}")
+            return None
+    except Exception as e:
+        print(f"{colors.RED}Gist upload error: {e}{colors.END}")
+        return None
 
 def print_result(test_name, passed, message=""):
     status = f"{colors.GREEN}PASS{colors.END}" if passed else f"{colors.RED}FAIL{colors.END}"
@@ -36,17 +105,29 @@ def print_result(test_name, passed, message=""):
 def run_validation():
     results = {
         "timestamp": datetime.now().isoformat(),
+        "version": "0.4.33",
         "tests": [],
-        "summary": {"total": 0, "passed": 0, "failed": 0}
+        "summary": {"total": 0, "passed": 0, "failed": 0},
+        "status": "running"
     }
     
-    # Start Flask app
-    print(f"\n{colors.BLUE}Starting X Knowledge Graph application...{colors.END}\n")
+    print(f"\n{colors.BLUE}Starting X Knowledge Graph validation...{colors.END}\n")
+    print(f"{colors.BLUE}VPS: IONOS Windows Server{colors.END}")
+    print(f"{colors.BLUE}Time: {results['timestamp']}{colors.END}\n")
     
+    if not GITHUB_TOKEN:
+        print(f"{colors.YELLOW}WARNING: GitHub token not set. Results will not be uploaded.{colors.END}")
+        print(f"  Set token: $env:GITHUB_GIST_TOKEN = \"your-github-token-with-gist-scope\"")
+        print()
+    
+    # Start Flask app
+    print(f"{colors.BLUE}Starting Flask application...{colors.END}")
+    
+    app_dir = os.path.dirname(os.path.abspath(__file__))
     port = 5000
     process = subprocess.Popen(
         [sys.executable, "main.py"],
-        cwd=APP_DIR,
+        cwd=app_dir,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         env={**os.environ, "PYTHONUNBUFFERED": "1"}
@@ -58,7 +139,7 @@ def run_validation():
     base_url = f"http://localhost:{port}"
     
     # Test 1: Health Check
-    print(f"{colors.BLUE}Running API Tests...{colors.END}\n")
+    print(f"\n{colors.BLUE}Running API Tests...{colors.END}\n")
     
     try:
         r = requests.get(f"{base_url}/api/health", timeout=10)
@@ -74,7 +155,8 @@ def run_validation():
         print_result("Health Check", False, str(e))
     
     # Test 2: Parse X Export
-    x_path = os.path.join(TEST_DATA_DIR, "x_export")
+    test_data_dir = os.path.join(app_dir, "test_data")
+    x_path = os.path.join(test_data_dir, "x_export")
     if os.path.exists(x_path):
         try:
             r = requests.post(f"{base_url}/api/parse-export", 
@@ -95,9 +177,10 @@ def run_validation():
             print_result("Parse X Export", False, str(e))
     else:
         print_result("Parse X Export", False, f"Test data not found: {x_path}")
+        results["tests"].append({"name": "Parse X Export", "passed": False, "error": f"Path not found: {x_path}"})
     
     # Test 3: Parse Grok Export
-    grok_path = os.path.join(TEST_DATA_DIR, "grok_export")
+    grok_path = os.path.join(test_data_dir, "grok_export")
     if os.path.exists(grok_path):
         try:
             r = requests.post(f"{base_url}/api/parse-export",
@@ -118,6 +201,7 @@ def run_validation():
             print_result("Parse Grok Export", False, str(e))
     else:
         print_result("Parse Grok Export", False, f"Test data not found: {grok_path}")
+        results["tests"].append({"name": "Parse Grok Export", "passed": False, "error": f"Path not found: {grok_path}"})
     
     # Test 4: Get Graph
     try:
@@ -170,11 +254,7 @@ def run_validation():
         r = requests.get(f"{base_url}/api/flows", timeout=10)
         data = r.json()
         passed = r.status_code == 200
-        results["tests"].append({
-            "name": "Get Flows",
-            "passed": passed,
-            "flows": data
-        })
+        results["tests"].append({"name": "Get Flows", "passed": passed})
         print_result("Get Flows", passed)
     except Exception as e:
         results["tests"].append({"name": "Get Flows", "passed": False, "error": str(e)})
@@ -183,19 +263,14 @@ def run_validation():
     # Test 8: Todoist Export (mock)
     try:
         r = requests.post(f"{base_url}/api/export-todoist", json={}, timeout=10)
-        # Should fail gracefully without API token
-        passed = r.status_code in [200, 400]  # 400 = no token (expected)
-        results["tests"].append({
-            "name": "Todoist Export",
-            "passed": passed,
-            "status_code": r.status_code
-        })
+        passed = r.status_code in [200, 400]
+        results["tests"].append({"name": "Todoist Export", "passed": passed, "status_code": r.status_code})
         print_result("Todoist Export", passed, f"Status: {r.status_code}")
     except Exception as e:
         results["tests"].append({"name": "Todoist Export", "passed": False, "error": str(e)})
         print_result("Todoist Export", False, str(e))
     
-    # Cleanup - stop the Flask app
+    # Cleanup
     print(f"\n{colors.BLUE}Stopping application...{colors.END}\n")
     process.terminate()
     try:
@@ -207,16 +282,23 @@ def run_validation():
     results["summary"]["total"] = len(results["tests"])
     results["summary"]["passed"] = sum(1 for t in results["tests"] if t.get("passed"))
     results["summary"]["failed"] = results["summary"]["total"] - results["summary"]["passed"]
+    results["status"] = "completed" if results["summary"]["failed"] == 0 else "failed"
     
     print(f"\n{colors.BLUE}=== VALIDATION SUMMARY ==={colors.END}\n")
     print(f"  Total Tests: {results['summary']['total']}")
     print(f"  {colors.GREEN}Passed: {results['summary']['passed']}{colors.END}")
     print(f"  {colors.RED}Failed: {results['summary']['failed']}{colors.END}")
     
-    # Save report
-    with open(REPORT_FILE, 'w') as f:
-        json.dump(results, f, indent=2)
-    print(f"\n{colors.BLUE}Report saved to: {REPORT_FILE}{colors.END}\n")
+    # Upload to Gist
+    print(f"\n{colors.BLUE}Uploading results to GitHub Gist...{colors.END}")
+    gist_url = upload_to_gist(results)
+    if gist_url:
+        print(f"\n{colors.GREEN}Results uploaded!{colors.END}")
+        print(f"  Gist URL: {gist_url}")
+    else:
+        print(f"\n{colors.YELLOW}Skipped Gist upload (no token){colors.END}")
+    
+    print(f"\n{colors.BLUE}=== Validation Complete ==={colors.END}\n")
     
     return results["summary"]["failed"] == 0
 
