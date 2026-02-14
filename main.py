@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-X Knowledge Graph v0.3.23 - Self-Contained Standalone Application
+X Knowledge Graph v0.4.33 - Self-Contained Standalone Application
 Features: Graph visualization, action extraction, task flows, Todoist export
 """
 
@@ -12,9 +12,16 @@ import threading
 import argparse
 
 if getattr(sys, 'frozen', False):
-    BASE_DIR = sys._MEIPASS
+    # When bundled with PyInstaller --onedir, files are alongside the exe
+    # Use the exe directory as the base - this is where frontend/ and core/ live
+    BASE_DIR = os.path.dirname(sys.executable)
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Add core folder to path for imports
+CORE_DIR = os.path.join(BASE_DIR, 'core')
+if CORE_DIR not in sys.path:
+    sys.path.insert(0, CORE_DIR)
 
 os.chdir(BASE_DIR)
 
@@ -23,6 +30,11 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
+
+# Debug: print paths when running
+print(f"BASE_DIR: {BASE_DIR}")
+print(f"sys.executable: {sys.executable}")
+print(f"Frontend exists: {os.path.exists(os.path.join(BASE_DIR, 'frontend', 'index.html'))}")
 
 # ==================== CLI ARGUMENT PARSING ====================
 
@@ -94,22 +106,38 @@ def find_file_in_bundle(filename, subdirs=['frontend', 'core', '.']):
 
 @app.route('/')
 def index():
-    index_path = find_file_in_bundle('index.html', ['frontend'])
-    if index_path and os.path.exists(index_path):
-        with open(index_path, 'r', encoding='utf-8') as f:
-            return f.read()
-    return "ERROR: index.html not found", 500
+    # Try multiple locations for index.html
+    index_locations = [
+        os.path.join(BASE_DIR, 'frontend', 'index.html'),
+        os.path.join(BASE_DIR, 'index.html'),
+    ]
+    for index_path in index_locations:
+        if os.path.exists(index_path):
+            with open(index_path, 'r', encoding='utf-8') as f:
+                return f.read()
+    # Return helpful error
+    return f"""<!DOCTYPE html>
+<html><head><title>Error</title></head><<body>
+<h1>index.html not found</h1>
+<p>BASE_DIR: {BASE_DIR}</p>
+<p>Frontend exists: {os.path.exists(os.path.join(BASE_DIR, 'frontend'))}</p>
+</body></html>""", 500
 
 @app.route('/<path:filename>')
 def static_files(filename):
+    # Try frontend folder first, then root
     path = os.path.join(BASE_DIR, 'frontend', filename)
     if os.path.exists(path):
         return send_from_directory(os.path.join(BASE_DIR, 'frontend'), filename)
+    # Try root folder
+    path = os.path.join(BASE_DIR, filename)
+    if os.path.exists(path):
+        return send_from_directory(BASE_DIR, filename)
     return f"NOT FOUND: {filename}", 404
 
 @app.route('/api/health')
 def health():
-    return jsonify({'status': 'ok', 'version': '0.3.23'})
+    return jsonify({'status': 'ok', 'version': '0.4.33'})
 
 @app.route('/api/select-folder', methods=['POST'])
 def select_folder():
@@ -172,7 +200,7 @@ def parse_export():
         if export_type == 'both' and x_path and grok_path:
             result = kg.build_from_both(x_path, grok_path)
         elif export_type == 'grok' and grok_path:
-            result = kg.build_from_grok(grok_path)
+            result = kg.build_from_export(grok_path, 'grok')
         elif x_path:
             result = kg.build_from_export(x_path, 'x')
         elif grok_path:
@@ -282,7 +310,7 @@ def main():
     port = find_port()
     
     print("=" * 50)
-    print("X Knowledge Graph v0.3.23")
+    print("X Knowledge Graph v0.4.33")
     print("=" * 50)
     print(f"Server at: http://localhost:{port}")
     

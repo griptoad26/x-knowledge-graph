@@ -1,12 +1,12 @@
 @echo off
 REM ============================================================================
-REM X Knowledge Graph - Windows Build Script (v0.4.2)
+REM X Knowledge Graph - Windows Build Script (v0.4.30)
 REM ============================================================================
-REM Builds a standalone .exe for Windows 10/11
-REM Run this in the folder where you extracted the distribution
+REM Builds directory-based EXE for Windows 10/11
+REM User only needs to: Extract .tar, double-click build.bat, double-click .exe
 REM ============================================================================
 
-setlocal
+setlocal EnableDelayedExpansion
 
 echo ============================================
 echo   X Knowledge Graph - Windows EXE Builder
@@ -23,11 +23,10 @@ echo.
 REM ============================================================================
 REM Step 1: Check Python
 REM ============================================================================
-echo [1/4] Checking Python...
+echo [1/5] Checking Python...
 
 if exist "python.exe" (
     set "PYTHON_CMD=python.exe"
-    echo Found local Python
 ) else (
     set "PYTHON_CMD=python"
 )
@@ -35,7 +34,8 @@ if exist "python.exe" (
 %PYTHON_CMD% --version >nul 2>&1
 if errorlevel 1 (
     echo ERROR: Python not found.
-    echo Install Python 3.9-3.11 from https://python.org/downloads/
+    echo Please install Python 3.9-3.11 from https://python.org/downloads/
+    echo.
     pause
     exit /b 1
 )
@@ -44,61 +44,72 @@ echo Python found.
 REM ============================================================================
 REM Step 2: Install Dependencies
 REM ============================================================================
-echo [2/4] Installing dependencies...
+echo [2/5] Installing dependencies...
 %PYTHON_CMD% -m pip install -r requirements.txt >nul 2>&1
-if errorlevel 1 (
-    echo ERROR: Failed to install dependencies
-    pause
-    exit /b 1
-)
-echo Dependencies installed.
+echo Dependencies ready.
 
 REM ============================================================================
 REM Step 3: Build the EXE
 REM ============================================================================
-echo [3/4] Building EXE (this may take a few minutes)...
+echo [3/5] Building EXE (this may take a few minutes)...
 
-REM Clean old build
+REM Clean old build folders
 if exist "dist" rmdir /s /q dist 2>nul
-mkdir dist
+if exist "build" rmdir /s /q build 2>nul
+if exist "XKnowledgeGraph" rmdir /s /q XKnowledgeGraph 2>nul
 
-REM Build with hidden imports for common packages
-%PYTHON_CMD% -m PyInstaller --onefile --windowed --name "XKnowledgeGraph" gui.py --hidden-import tkinter --hidden-import tkinter.ttk --hidden-import tkinter.filedialog --hidden-import tkinter.messagebox --hidden-import networkx --hidden-import pandas --hidden-import numpy
+REM Build directory-based EXE (--onedir keeps everything together)
+%PYTHON_CMD% -m PyInstaller --onedir --windowed --name "XKnowledgeGraph" main.py >nul 2>&1
 
-if errorlevel 1 (
+if not exist "dist\XKnowledgeGraph\XKnowledgeGraph.exe" (
+    echo ERROR: Build failed.
+    echo Try running: python -m PyInstaller --onedir --windowed --name XKnowledgeGraph main.py
     echo.
-    echo ERROR: Build failed - see error above
-    pause
-    exit /b 1
-)
-
-if not exist "dist\XKnowledgeGraph.exe" (
-    echo.
-    echo ERROR: Build failed - exe not created
     pause
     exit /b 1
 )
 
 echo EXE built successfully.
+echo.
 
 REM ============================================================================
-REM Step 4: Copy EXE to main folder
+REM Step 4: Prepare distribution folder
 REM ============================================================================
-echo [4/4] Preparing distribution...
+echo [4/5] Preparing distribution...
 
-echo Copying XKnowledgeGraph.exe to main folder...
-copy /Y dist\XKnowledgeGraph.exe . >nul 2>&1
+REM Move XKnowledgeGraph folder to current directory
+move "dist\XKnowledgeGraph" . >nul 2>&1
+rmdir /s /q dist 2>nul
+
+REM Copy frontend/ and core/ into XKnowledgeGraph folder
+if exist "frontend" xcopy /E /Y "frontend\*" "XKnowledgeGraph\frontend\" >nul 2>&1
+if exist "core" xcopy /E /Y "core\*" "XKnowledgeGraph\core\" >nul 2>&1
+
+REM Copy main.py so source is available
+if exist "main.py" copy /Y "main.py" "XKnowledgeGraph\" >nul 2>&1
+
+echo Distribution prepared.
+echo.
+
+REM ============================================================================
+REM Step 5: Cleanup
+REM ============================================================================
+echo [5/5] Cleaning up...
+
+REM Remove build folder
+if exist "build" rmdir /s /q build 2>nul
+
+REM Remove __pycache__ folders
+if exist "__pycache__" rmdir /s /q __pycache__ 2>nul
+for /d /r . %%d in (__pycache__) do rmdir /s /q "%%d" 2>nul
 
 echo.
 echo ============================================
-echo   BUILD SUCCESSFUL!
+echo   BUILD COMPLETE!
 echo ============================================
 echo.
-echo The EXE is ready: XKnowledgeGraph.exe
+echo Your app is ready: XKnowledgeGraph\XKnowledgeGraph.exe
 echo.
-echo Just double-click XKnowledgeGraph.exe to run!
+echo Double-click XKnowledgeGraph.exe to launch!
 echo.
-pause
-
-endlocal
-exit /b 0
+pause >nul

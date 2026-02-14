@@ -13,15 +13,21 @@ from typing import Dict, List, Optional, Set
 from dataclasses import dataclass, field
 from collections import defaultdict
 
+# Import Todoist exporter (try relative first, then absolute for bundled exe)
 try:
     from .todoist_exporter import TodoistExporter, export_actions_to_todoist
 except ImportError:
-    # Fallback if todoist_exporter not yet created
-    TodoistExporter = None
-    export_actions_to_todoist = None
+    try:
+        from todoist_exporter import TodoistExporter, export_actions_to_todoist
+    except ImportError:
+        TodoistExporter = None
+        export_actions_to_todoist = None
 
 # Import Amazon product linker
-from .amazon_product_linker import AmazonProductLinker
+try:
+    from .amazon_product_linker import AmazonProductLinker
+except ImportError:
+    from amazon_product_linker import AmazonProductLinker
 
 
 # ==================== DATA MODELS ====================
