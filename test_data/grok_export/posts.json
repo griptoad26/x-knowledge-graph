@@ -1,142 +1,112 @@
 [
   {
     "id": "grok_001",
-    "text": "Just deployed a new feature to production. Need to remember to monitor the error logs tomorrow morning.",
-    "created_at": "2024-01-15T09:30:00Z",
-    "author_id": "user_123",
-    "conversation_id": "conv_001",
+    "text": "Just shipped the new feature to production. Need to monitor the error logs tomorrow morning.",
+    "created_at": "2024-01-15T08:00:00Z",
+    "author_id": "user_001",
+    "conversation_id": null,
     "in_reply_to_id": null,
-    "metrics": {
-      "likes": 15,
-      "shares": 3,
-      "replies": 5
-    },
-    "entities": ["deployment", "monitoring"]
+    "metrics": {"likes": 12, "shares": 3, "replies": 5},
+    "entities": [],
+    "source": "grok"
   },
   {
     "id": "grok_002",
-    "text": "TODO: Review the API documentation and update the examples. This is urgent for the upcoming release.",
-    "created_at": "2024-01-15T14:22:00Z",
-    "author_id": "user_123",
-    "conversation_id": "conv_002",
+    "text": "TODO: Update the API documentation for the new endpoints. Make sure to include code examples.",
+    "created_at": "2024-01-15T11:30:00Z",
+    "author_id": "user_001",
+    "conversation_id": null,
     "in_reply_to_id": null,
-    "metrics": {
-      "likes": 8,
-      "shares": 1,
-      "replies": 2
-    },
-    "entities": ["documentation", "api"]
+    "metrics": {"likes": 8, "shares": 2, "replies": 1},
+    "entities": [],
+    "source": "grok"
   },
   {
     "id": "grok_003",
-    "text": "Need to schedule a meeting with the design team about the new UI components.",
-    "created_at": "2024-01-16T10:15:00Z",
-    "author_id": "user_123",
-    "conversation_id": "conv_003",
+    "text": "Remember to buy a new keyboard for the workstation. The current one is making weird noises.",
+    "created_at": "2024-01-15T14:00:00Z",
+    "author_id": "user_002",
+    "conversation_id": null,
     "in_reply_to_id": null,
-    "metrics": {
-      "likes": 12,
-      "shares": 0,
-      "replies": 4
-    },
-    "entities": ["meeting", "design"]
+    "metrics": {"likes": 3, "shares": 1, "replies": 0},
+    "entities": [],
+    "source": "grok"
   },
   {
     "id": "grok_004",
-    "text": "Don't forget to backup the database before the maintenance window tonight.",
-    "created_at": "2024-01-16T18:45:00Z",
-    "author_id": "user_123",
-    "conversation_id": "conv_004",
+    "text": "Going to schedule a 1:1 with the team lead to discuss project priorities for Q2.",
+    "created_at": "2024-01-16T09:30:00Z",
+    "author_id": "user_001",
+    "conversation_id": null,
     "in_reply_to_id": null,
-    "metrics": {
-      "likes": 20,
-      "shares": 5,
-      "replies": 7
-    },
-    "entities": ["database", "backup", "maintenance"]
+    "metrics": {"likes": 5, "shares": 1, "replies": 2},
+    "entities": [],
+    "source": "grok"
   },
   {
     "id": "grok_005",
-    "text": "Going to refactor the authentication module next week. Should improve performance significantly.",
-    "created_at": "2024-01-17T11:00:00Z",
-    "author_id": "user_123",
-    "conversation_id": "conv_005",
+    "text": "Need to research pricing models for the new SaaS product. Should look at competitor analysis.",
+    "created_at": "2024-01-16T10:15:00Z",
+    "author_id": "user_003",
+    "conversation_id": null,
     "in_reply_to_id": null,
-    "metrics": {
-      "likes": 25,
-      "shares": 8,
-      "replies": 10
-    },
-    "entities": ["refactor", "authentication", "performance"]
+    "metrics": {"likes": 7, "shares": 4, "replies": 3},
+    "entities": [],
+    "source": "grok"
   },
   {
     "id": "grok_006",
-    "text": "Reply to @alice about the project timeline. She needs an update by Friday.",
-    "created_at": "2024-01-17T15:30:00Z",
-    "author_id": "user_123",
-    "conversation_id": "conv_006",
-    "in_reply_to_id": "grok_010",
-    "metrics": {
-      "likes": 5,
-      "shares": 0,
-      "replies": 1
-    },
-    "entities": ["communication", "timeline"]
+    "text": "ASAP: Fix the login bug that's affecting 5% of users. Customer support is getting complaints.",
+    "created_at": "2024-01-16T13:45:00Z",
+    "author_id": "user_001",
+    "conversation_id": null,
+    "in_reply_to_id": null,
+    "metrics": {"likes": 15, "shares": 8, "replies": 6},
+    "entities": [],
+    "source": "grok"
   },
   {
     "id": "grok_007",
-    "text": "Action point: Create test cases for the payment integration module. High priority!",
-    "created_at": "2024-01-18T09:00:00Z",
-    "author_id": "user_123",
-    "conversation_id": "conv_007",
+    "text": "Going to refactor the database queries to improve performance. Should reduce load time by 50%.",
+    "created_at": "2024-01-16T15:30:00Z",
+    "author_id": "user_002",
+    "conversation_id": null,
     "in_reply_to_id": null,
-    "metrics": {
-      "likes": 18,
-      "shares": 2,
-      "replies": 6
-    },
-    "entities": ["testing", "payment"]
+    "metrics": {"likes": 6, "shares": 2, "replies": 1},
+    "entities": [],
+    "source": "grok"
   },
   {
     "id": "grok_008",
-    "text": "Make sure to update the dependency versions in package.json. Security vulnerability reported.",
-    "created_at": "2024-01-18T14:00:00Z",
-    "author_id": "user_123",
-    "conversation_id": "conv_008",
+    "text": "Don't forget to renew the domain names before they expire next month.",
+    "created_at": "2024-01-17T08:00:00Z",
+    "author_id": "user_001",
+    "conversation_id": null,
     "in_reply_to_id": null,
-    "metrics": {
-      "likes": 30,
-      "shares": 12,
-      "replies": 8
-    },
-    "entities": ["security", "dependencies"]
+    "metrics": {"likes": 4, "shares": 1, "replies": 0},
+    "entities": [],
+    "source": "grok"
   },
   {
     "id": "grok_009",
-    "text": "Remember to prepare the demo for tomorrow's client meeting. Should include the new dashboard.",
-    "created_at": "2024-01-19T16:30:00Z",
-    "author_id": "user_123",
-    "conversation_id": "conv_009",
+    "text": "Need to set up automated testing for the CI/CD pipeline. This will catch bugs early.",
+    "created_at": "2024-01-17T11:00:00Z",
+    "author_id": "user_003",
+    "conversation_id": null,
     "in_reply_to_id": null,
-    "metrics": {
-      "likes": 22,
-      "shares": 3,
-      "replies": 5
-    },
-    "entities": ["demo", "client", "meeting"]
+    "metrics": {"likes": 9, "shares": 5, "replies": 4},
+    "entities": [],
+    "source": "grok"
   },
   {
     "id": "grok_010",
-    "text": "Hey team, what's the status on the API endpoint implementation? Need to know if we'll hit the deadline.",
-    "created_at": "2024-01-17T14:00:00Z",
-    "author_id": "alice_456",
-    "conversation_id": "conv_006",
+    "text": "Remember to order office supplies. We're running low on printer paper and toner.",
+    "created_at": "2024-01-17T14:30:00Z",
+    "author_id": "user_002",
+    "conversation_id": null,
     "in_reply_to_id": null,
-    "metrics": {
-      "likes": 3,
-      "shares": 0,
-      "replies": 1
-    },
-    "entities": ["team", "api", "deadline"]
+    "metrics": {"likes": 2, "shares": 0, "replies": 0},
+    "entities": [],
+    "source": "grok"
   }
 ]
