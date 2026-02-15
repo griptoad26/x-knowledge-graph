@@ -1,115 +1,78 @@
 @echo off
-REM ============================================================================
-REM X Knowledge Graph - Windows Build Script (v0.4.30)
-REM ============================================================================
-REM Builds directory-based EXE for Windows 10/11
-REM User only needs to: Extract .tar, double-click build.bat, double-click .exe
-REM ============================================================================
+REM X Knowledge Graph - Windows Build Script
+REM Builds production-ready EXE with PyInstaller
 
-setlocal EnableDelayedExpansion
-
-echo ============================================
-echo   X Knowledge Graph - Windows EXE Builder
-echo ============================================
+echo ========================================
+echo   X Knowledge Graph - Windows Build
+echo ========================================
 echo.
 
-REM Get current directory
-set "CURRENT_DIR=%~dp0"
-cd /d "%CURRENT_DIR%"
+set SCRIPT_DIR=%~dp0
+set APP_NAME=XKnowledgeGraph
+set VERSION_FILE=%SCRIPT_DIR%VERSION.txt
+set BUILD_DIR=%SCRIPT_DIR%build
+set DIST_DIR=%SCRIPT_DIR%dist
 
-echo Working directory: %CURRENT_DIR%
+REM Read version
+for /f "tokens=*" %%a in (%VERSION_FILE%) do set VERSION=%%a
+
+echo Version: %VERSION%
 echo.
 
-REM ============================================================================
-REM Step 1: Check Python
-REM ============================================================================
-echo [1/5] Checking Python...
+REM Clean previous builds
+echo Cleaning previous builds...
+if exist "%BUILD_DIR%" rmdir /s /q "%BUILD_DIR%"
+if exist "%DIST_DIR%" rmdir /s /q "%DIST_DIR%"
 
-if exist "python.exe" (
-    set "PYTHON_CMD=python.exe"
+mkdir "%DIST_DIR%"
+
+REM Install dependencies if needed
+echo Checking dependencies...
+pip install -q pyinstaller flask flask-cors requests 2>nul
+
+REM Run PyInstaller
+echo.
+echo Building EXE with PyInstaller...
+echo.
+
+pyinstaller --onefile ^
+    --name %APP_NAME% ^
+    --windowed ^
+    --clean ^
+    --noconsole ^
+    --add-data "frontend;frontend" ^
+    --add-data "core;core" ^
+    --hidden-import flask ^
+    --hidden-import flask_cors ^
+    --hidden-import requests ^
+    --collect-all flask_cors ^
+    main.py
+
+echo.
+if exist "%DIST_DIR%\%APP_NAME%.exe" (
+    echo ========================================
+    echo   BUILD SUCCESSFUL
+    echo ========================================
+    echo.
+    for %%I in ("%DIST_DIR%\%APP_NAME%.exe") do set SIZE=%%~zI
+    echo File: %DIST_DIR%\%APP_NAME%.exe
+    echo Size: %SIZE% bytes
+    
+    REM Generate checksum
+    echo.
+    echo Generating SHA256 checksum...
+    powershell -Command "(Get-FileHash '%DIST_DIR%\%APP_NAME%.exe' -Algorithm SHA256).Hash | Out-File '%DIST_DIR%\checksum.txt'"
+    echo Checksum saved to: %DIST_DIR%\checksum.txt
+    
+    echo.
+    echo Next steps:
+    echo   1. Test the EXE: %DIST_DIR%\%APP_NAME%.exe
+    echo   2. Run validation: python validate.py
+    echo   3. If passed, run: upload-release.ps1
+    echo.
 ) else (
-    set "PYTHON_CMD=python"
-)
-
-%PYTHON_CMD% --version >nul 2>&1
-if errorlevel 1 (
-    echo ERROR: Python not found.
-    echo Please install Python 3.9-3.11 from https://python.org/downloads/
-    echo.
-    pause
-    exit /b 1
-)
-echo Python found.
-
-REM ============================================================================
-REM Step 2: Install Dependencies
-REM ============================================================================
-echo [2/5] Installing dependencies...
-%PYTHON_CMD% -m pip install -r requirements.txt >nul 2>&1
-echo Dependencies ready.
-
-REM ============================================================================
-REM Step 3: Build the EXE
-REM ============================================================================
-echo [3/5] Building EXE (this may take a few minutes)...
-
-REM Clean old build folders
-if exist "dist" rmdir /s /q dist 2>nul
-if exist "build" rmdir /s /q build 2>nul
-if exist "XKnowledgeGraph" rmdir /s /q XKnowledgeGraph 2>nul
-
-REM Build directory-based EXE (--onedir keeps everything together)
-%PYTHON_CMD% -m PyInstaller --onedir --windowed --name "XKnowledgeGraph" main.py >nul 2>&1
-
-if not exist "dist\XKnowledgeGraph\XKnowledgeGraph.exe" (
-    echo ERROR: Build failed.
-    echo Try running: python -m PyInstaller --onedir --windowed --name XKnowledgeGraph main.py
-    echo.
-    pause
+    echo BUILD FAILED - EXE not found!
     exit /b 1
 )
 
-echo EXE built successfully.
-echo.
-
-REM ============================================================================
-REM Step 4: Prepare distribution folder
-REM ============================================================================
-echo [4/5] Preparing distribution...
-
-REM Move XKnowledgeGraph folder to current directory
-move "dist\XKnowledgeGraph" . >nul 2>&1
-rmdir /s /q dist 2>nul
-
-REM Copy frontend/ and core/ into XKnowledgeGraph folder
-if exist "frontend" xcopy /E /Y "frontend\*" "XKnowledgeGraph\frontend\" >nul 2>&1
-if exist "core" xcopy /E /Y "core\*" "XKnowledgeGraph\core\" >nul 2>&1
-
-REM Copy main.py so source is available
-if exist "main.py" copy /Y "main.py" "XKnowledgeGraph\" >nul 2>&1
-
-echo Distribution prepared.
-echo.
-
-REM ============================================================================
-REM Step 5: Cleanup
-REM ============================================================================
-echo [5/5] Cleaning up...
-
-REM Remove build folder
-if exist "build" rmdir /s /q build 2>nul
-
-REM Remove __pycache__ folders
-if exist "__pycache__" rmdir /s /q __pycache__ 2>nul
-for /d /r . %%d in (__pycache__) do rmdir /s /q "%%d" 2>nul
-
-echo.
-echo ============================================
-echo   BUILD COMPLETE!
-echo ============================================
-echo.
-echo Your app is ready: XKnowledgeGraph\XKnowledgeGraph.exe
-echo.
-echo Double-click XKnowledgeGraph.exe to launch!
-echo.
-pause >nul
+pause
