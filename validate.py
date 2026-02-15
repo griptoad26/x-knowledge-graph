@@ -48,8 +48,10 @@ class colors:
     END = '\033[0m'
 
 
-def log(msg, color=BLUE):
-    print(f"{color}{msg}{END}")
+def log(msg, color=None):
+    if color is None:
+        color = colors.BLUE
+    print(f"{color}{msg}{colors.END}")
 
 
 def log_step(msg):
@@ -59,9 +61,9 @@ def log_step(msg):
 
 def print_header(title):
     print()
-    log("=" * 60, CYAN)
-    log(f"  {title}", CYAN)
-    log("=" * 60, CYAN)
+    log("=" * 60, colors.CYAN)
+    log(f"  {title}", colors.CYAN)
+    log("=" * 60, colors.CYAN)
     print()
 
 
@@ -80,7 +82,7 @@ def save_gist_url(url):
 def upload_to_gist(report_json):
     """Upload validation report to GitHub Gist"""
     if not GITHUB_TOKEN:
-        log("GitHub token not set - skipping Gist upload", YELLOW)
+        log("GitHub token not set - skipping Gist upload", colors.YELLOW)
         return None
     
     gist_url = get_gist_url()
@@ -115,7 +117,7 @@ def upload_to_gist(report_json):
             save_gist_url(gist_url)
             return gist_url
     except Exception as e:
-        log(f"Gist upload error: {e}", RED)
+        log(f"Gist upload error: {e}", colors.RED)
     return None
 
 
@@ -481,8 +483,8 @@ def run_validation():
     passed = sum(1 for _, (name, expected, actual, *_) in all_tests if expected == actual)
     
     print(f"Total Tests: {total}")
-    print(f"{GREEN}Passed: {passed}{END}")
-    print(f"{RED}Failed: {total - passed}{END}")
+    print(f"colors.GREENPassed: {passed}colors.END")
+    print(f"colors.REDFailed: {total - passed}colors.END")
     
     # Save results
     results["tests"] = [{"category": cat, "name": name, "expected": exp, "actual": act} 
@@ -496,9 +498,9 @@ def run_validation():
     log("\nUploading results to GitHub Gist...")
     gist_url = upload_to_gist(results)
     if gist_url:
-        log(f"Results: {gist_url}", GREEN)
+        log(f"Results: {gist_url}", colors.GREEN)
     else:
-        log("Gist upload skipped", YELLOW)
+        log("Gist upload skipped", colors.YELLOW)
     
     print_header("VALIDATION COMPLETE")
     
@@ -510,7 +512,7 @@ def print_results(tests):
     for name, expected, actual, *rest in tests:
         op = rest[0] if rest else "=="
         passed = (expected == actual) or (op == ">=" and actual >= expected)
-        status = f"{GREEN}✓{END}" if passed else f"{RED}✗{END}"
+        status = f"colors.GREEN✓colors.END" if passed else f"colors.RED✗colors.END"
         if op == ">=":
             print(f"  [{status}] {name}: {actual} (>= {expected})")
         else:
