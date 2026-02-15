@@ -336,17 +336,25 @@ def test_performance():
     x_time = time.time() - start
     tests.append((f"X parse < 30s", x_time < 30.0, True))
     
-    # Grok parse time
+    # Grok parse time - may fail if format doesn't match
     start = time.time()
-    kg.build_from_export(str(GROK_EXPORT_DIR), 'grok')
-    grok_time = time.time() - start
-    tests.append((f"Grok parse < 30s", grok_time < 30.0, True))
+    try:
+        kg.build_from_export(str(GROK_EXPORT_DIR), 'grok')
+        grok_time = time.time() - start
+        tests.append((f"Grok parse < 30s", grok_time < 30.0, True))
+    except Exception:
+        grok_time = -1
+        tests.append(("Grok parse", False, True))
     
-    # Combined parse time
+    # Combined parse time - may fail if format doesn't match
     start = time.time()
-    kg.build_from_both(str(X_EXPORT_DIR), str(GROK_EXPORT_DIR))
-    combined_time = time.time() - start
-    tests.append((f"Combined parse < 60s", combined_time < 60.0, True))
+    try:
+        kg.build_from_both(str(X_EXPORT_DIR), str(GROK_EXPORT_DIR))
+        combined_time = time.time() - start
+        tests.append((f"Combined parse < 60s", combined_time < 60.0, True))
+    except Exception:
+        combined_time = -1
+        tests.append(("Combined parse", False, True))
     
     return tests, {"x": x_time, "grok": grok_time, "combined": combined_time}
 
