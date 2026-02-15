@@ -173,14 +173,24 @@ def test_grok_export_populates_graph():
     kg = KnowledgeGraph()
     result = kg.build_from_export(str(GROK_EXPORT_DIR), 'grok')
     
-    # Validate stats - real Grok data should have many posts
-    grok_count = result['stats']['total_tweets']
+    # Check if parsing succeeded (stats may be empty if format doesn't match)
+    grok_count = result.get('stats', {}).get('total_tweets', 0)
     
+    # Validate stats - real Grok data should have posts
     tests = [
         ("Grok posts count", grok_count, 10, ">="),  # Expect at least 10 posts
-        ("Grok actions extracted", result['stats']['total_actions'], 5, ">="),  # Expect at least 5 actions
-        ("Grok topics clustered", result['stats']['topics_count'], 1, ">="),  # Expect at least 1 topic
     ]
+    
+    # If no posts found, skip additional tests
+    if grok_count == 0:
+        log_step("No Grok posts found - format may differ from expected structure")
+        return tests, result
+    
+    # Continue with full validation if posts exist
+    tests.extend([
+        ("Grok actions extracted", result['stats']['total_actions'], 5, ">="),
+        ("Grok topics clustered", result['stats']['topics_count'], 1, ">="),
+    ])
     
     # Validate graph nodes
     d3 = kg.export_for_d3()
