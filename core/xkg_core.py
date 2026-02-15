@@ -109,12 +109,16 @@ def find_all_export_files(directory: str, extensions: List[str] = None) -> List[
     if not directory.exists():
         return files
     
+    # Always recurse into subdirectories
     for path in directory.rglob('*'):
         if path.is_file():
-            if path.suffix.lower() in extensions or any(ext in path.name.lower() for ext in extensions):
+            # Match by extension OR by name containing any of the patterns
+            suffix = path.suffix.lower()
+            name_lower = path.name.lower()
+            if suffix in extensions or any(ext in name_lower for ext in extensions):
                 files.append(str(path))
     
-    return files
+    return sorted(set(files))  # Remove duplicates
 
 
 def detect_export_format(filepath: str) -> str:
@@ -356,21 +360,35 @@ class FlexibleGrokParser:
         self.posts: Dict[str, GrokPost] = {}
     
     def parse(self, export_path: str) -> Dict:
-        """Parse Grok export folder - scans for all JSON files"""
+        """Parse Grok export folder - scans for all JSON files recursively"""
         result = {
             'posts': [],
             'stats': {}
         }
         
-        # Find all potential export files
-        files = find_all_export_files(export_path, ['.json', '.js', 'grok', 'post', 'conversation', 'message', 'prod'])
+        # Find all potential export files (recursive)
+        files = find_all_export_files(export_path, ['.json', '.js'])
+        
+        if not files:
+            # Also try finding any files that might contain conversation/grok data
+            files = find_all_export_files(export_path, ['*'])
+        
+        print(f"Scanning: {export_path}")
+        print(f"Found {len(files)} files")
+        
+        # Show first few files for debugging
+        for f in sorted(files)[:10]:
+            print(f"  {f}")
+        if len(files) > 10:
+            print(f"  ... and {len(files) - 10} more")
         
         if not files:
             return {'error': f'No export files found in {export_path}'}
         
-        print(f"Found {len(files)} files in Grok export folder")
-        
         for filepath in files:
+            # Skip directories
+            if os.path.isdir(filepath):
+                continue
             print(f"  Processing: {os.path.basename(filepath)}")
             format_type = detect_export_format(filepath)
             print(f"    Detected format: {format_type}")
