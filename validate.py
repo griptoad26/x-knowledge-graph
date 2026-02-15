@@ -477,7 +477,7 @@ def run_validation():
     print_header("VALIDATION SUMMARY")
     
     total = len(all_tests)
-    passed = sum(1 for _, (expected, actual, _) in all_tests if expected == actual or (isinstance(expected, bool) and expected == actual))
+    passed = sum(1 for _, (name, expected, actual, *_) in all_tests if expected == actual or (isinstance(expected, bool) and expected == actual))
     
     # Re-calculate properly
     passed = sum(1 for _, (name, expected, actual, *_) in all_tests if expected == actual)
@@ -488,7 +488,7 @@ def run_validation():
     
     # Save results
     results["tests"] = [{"category": cat, "name": name, "expected": exp, "actual": act} 
-                        for cat, (name, exp, act) in all_tests]
+                        for cat, (name, exp, act, *_) in all_tests]
     results["summary"]["total"] = total
     results["summary"]["passed"] = passed
     results["summary"]["failed"] = total - passed
