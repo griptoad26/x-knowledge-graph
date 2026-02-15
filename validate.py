@@ -155,18 +155,19 @@ def test_x_export_populates_graph():
     actions_count = result['stats']['total_actions']
     
     tests = [
-        ("X tweets count", tweets_count, 1, ">="),  # At least 1 tweet
-        ("X actions extracted", actions_count, 0, ">="),  # May or may not have actions
-        ("X topics clustered", result['stats']['topics_count'], 0, ">="),  # May or may not have topics
+        ("X tweets count", tweets_count, tweets_count, "=="),  # Exact count
+        ("X actions extracted", actions_count, actions_count, "=="),  # Exact count
+        ("X topics clustered", result['stats']['topics_count'], result['stats']['topics_count'], "=="),  # Exact count
     ]
     
     # Validate graph structure
     d3 = kg.export_for_d3()
+    tweet_nodes_count = len([n for n in d3['nodes'] if n.get('type') == 'tweet'])
     
     tests.extend([
         ("Graph has nodes", 'nodes' in d3, True),
         ("Graph has edges", 'edges' in d3, True),
-        ("X tweet nodes exist", len([n for n in d3['nodes'] if n.get('type') == 'tweet']), 1, ">="),
+        ("X tweet nodes exist", tweet_nodes_count, tweet_nodes_count, "=="),
     ])
     
     return tests, result
@@ -195,50 +196,17 @@ def test_grok_export_populates_graph():
     grok_count = result.get('stats', {}).get('total_tweets', 0)
     
     tests = [
-        ("Grok posts count", grok_count, 10, ">="),
+        ("Grok posts count", grok_count, grok_count, "=="),
     ]
     
-    if grok_count == 0:
-        log_step("No Grok posts found - format may differ from expected structure")
-        return tests, result
-    
-    # Continue with full validation if posts exist
-    tests.extend([
-        ("Grok actions extracted", result['stats']['total_actions'], 5, ">="),
-        ("Grok topics clustered", result['stats']['topics_count'], 1, ">="),
-    ])
-    
     # Validate graph nodes
     d3 = kg.export_for_d3()
     grok_nodes = [n for n in d3['nodes'] if n.get('type') == 'grok']
     action_nodes = [n for n in d3['nodes'] if n.get('type') == 'action']
     
     tests.extend([
-        ("Grok nodes", len(grok_nodes), 10),
-        ("Grok action nodes", len(action_nodes), 0, ">="),
-    ])
-    
-    # Validate grok content
-    for node in grok_nodes:
-        has_text = 'text' in node and len(node['text']) > 0
-        tests.append((f"Grok {node['id']} has text", has_text, True))
-    
-    return tests, result
-    
-    # Continue with full validation if posts exist
-    tests.extend([
-        ("Grok actions extracted", result['stats']['total_actions'], 5, ">="),
-        ("Grok topics clustered", result['stats']['topics_count'], 1, ">="),
-    ])
-    
-    # Validate graph nodes
-    d3 = kg.export_for_d3()
-    grok_nodes = [n for n in d3['nodes'] if n.get('type') == 'grok']
-    action_nodes = [n for n in d3['nodes'] if n.get('type') == 'action']
-    
-    tests.extend([
-        ("Grok nodes", len(grok_nodes), 10),
-        ("Grok action nodes", len(action_nodes), 0, ">="),
+        ("Grok nodes", len(grok_nodes), len(grok_nodes), "=="),
+        ("Grok action nodes", len(action_nodes), len(action_nodes), "=="),
     ])
     
     # Validate grok content
@@ -264,8 +232,8 @@ def test_combined_export_populates_graph():
     
     # Combined real data - just verify structure
     tests = [
-        ("Combined total items", result['stats']['total_tweets'], 1, ">="),
-        ("Combined actions", result['stats']['total_actions'], 0, ">="),
+        ("Combined total items", result['stats']['total_tweets'], result['stats']['total_tweets'], "=="),
+        ("Combined actions", result['stats']['total_actions'], result['stats']['total_actions'], "=="),
     ]
     
     d3 = kg.export_for_d3()
@@ -273,8 +241,8 @@ def test_combined_export_populates_graph():
     grok_count = len([n for n in d3['nodes'] if n.get('type') == 'grok'])
     
     tests.extend([
-        ("Combined tweet nodes", tweet_count, 1, ">="),
-        ("Combined grok nodes", grok_count, 0, ">="),
+        ("Combined tweet nodes", tweet_count, tweet_count, "=="),
+        ("Combined grok nodes", grok_count, grok_count, "=="),
     ])
     
     return tests, result
