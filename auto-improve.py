@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
-X Knowledge Graph - Autonomous Improvement System
-Detects failures → Analyzes → Fixes → Pushes to GitHub
+X Knowledge Graph - Autonomous Improvement & Distribution System
+Detects failures → Analyzes → Fixes → Creates Distribution on Success
+
+Usage:
+    python auto-improve.py              # Run full pipeline
+    python auto-improve.py --test-only  # Tests only
+    python auto-improve.py --dist-only  # Create distribution only
 """
 
 import subprocess
@@ -9,174 +14,310 @@ import json
 import os
 import sys
 import re
+import shutil
+import hashlib
 from datetime import datetime
+from pathlib import Path
 
-# GitHub Configuration
-REPO_DIR = "/home/molty/.openclaw/workspace/projects/x-knowledge-graph"
+# Configuration
+REPO_DIR = Path(__file__).parent
+DIST_DIR = REPO_DIR / "distributions"
+DISTRIBUTION_DIR = DIST_DIR / f"x-knowledge-graph-v0.4.33"
 GITHUB_TOKEN = os.environ.get("GITHUB_GIST_TOKEN", "")
 
-class AutoFixer:
-    """Autonomously fixes common issues"""
-    
-    def __init__(self, repo_dir):
-        self.repo_dir = repo_dir
-        os.chdir(repo_dir)
-    
-    def run_command(self, cmd):
-        """Run shell command"""
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        return result.returncode, result.stdout, result.stderr
-    
-    def git_pull(self):
-        """Get latest code"""
-        return self.run_command("git pull origin main")
-    
-    def git_push(self, message):
-        """Push changes"""
-        self.run_command("git add -A")
-        self.run_command(f'git commit -m "{message}"')
-        return self.run_command("git push origin main")
-    
-    def analyze_flask_error(self, error_msg):
-        """Analyze Flask startup errors"""
-        fixes = []
-        
-        # Port already in use
-        if "port" in error_msg.lower() and "in use" in error_msg.lower():
-            fixes.append(("kill_port", "Kill process on port 5000"))
-        
-        # Import error
-        if "ImportError" in error_msg or "ModuleNotFoundError" in error_msg:
-            match = re.search(r"No module named '([^']+)'", error_msg)
-            if match:
-                module = match.group(1)
-                fixes.append(("install_dep", f"Install missing module: {module}"))
-        
-        # Syntax error
-        if "SyntaxError" in error_msg:
-            fixes.append(("fix_syntax", "Fix syntax error in Python file"))
-        
-        # Missing file
-        if "FileNotFoundError" in error_msg or "not found" in error_msg.lower():
-            fixes.append(("create_file", "Create missing file"))
-        
-        return fixes
-    
-    def fix_kill_port(self):
-        """Kill process on port 5000"""
-        print("  → Killing process on port 5000...")
-        self.run_command("fuser -k 5000/tcp 2>/dev/null")
-        return True
-    
-    def fix_install_dep(self, module):
-        """Install missing dependency"""
-        print(f"  → Installing {module}...")
-        return self.run_command(f"pip install {module}") == 0
-    
-    def fix_syntax(self, error_msg):
-        """Fix syntax error"""
-        # Find file and line
-        match = re.search(r"File \"([^\"]+)\", line (\d+)", error_msg)
-        if match:
-            file_path = match.group(1)
-            line_num = int(match.group(1))
-            print(f"  → Syntax error in {file_path}:{line_num}")
-        return False  # Manual fix needed
-    
-    def apply_fixes(self, test_results):
-        """Apply fixes based on test failures"""
-        applied = []
-        
-        for test in test_results.get("tests", []):
-            if not test.get("passed"):
-                error = test.get("error", "")
-                fixes = self.analyze_flask_error(error)
-                
-                for fix_type, description in fixes:
-                    if fix_type == "kill_port":
-                        if self.fix_kill_port():
-                            applied.append(description)
-                    
-                    elif fix_type == "install_dep":
-                        module = description.split(": ")[1]
-                        if self.fix_install_dep(module):
-                            applied.append(description)
-                    
-                    elif fix_type == "fix_syntax":
-                        if self.fix_syntax(error):
-                            applied.append(description)
-        
-        return list(set(applied))  # Deduplicate
+class colors:
+    GREEN = '\033[92m'
+    RED = '\033[91m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    END = '\033[0m'
 
 
-def run_validation():
-    """Run validation and return results"""
-    print("\nRunning validation...")
-    code, stdout, stderr = subprocess.run(
-        [sys.executable, "validate.py"],
+def log(msg, color=BLUE):
+    print(f"{color}{msg}{END}")
+
+
+def log_step(msg, status=""):
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    if status:
+        status_color = GREEN if status == "✓" else RED
+        print(f"[{timestamp}] {status_color}{status}{END} {msg}")
+    else:
+        print(f"[{timestamp}] {msg}")
+
+
+def run_command(cmd, cwd=None, check=True):
+    """Run shell command"""
+    result = subprocess.run(
+        cmd,
+        shell=True,
+        cwd=cwd or REPO_DIR,
         capture_output=True,
-        text=True,
-        cwd=REPO_DIR
+        text=True
+    )
+    if check and result.returncode != 0:
+        log(f"Command failed: {cmd}", RED)
+        log(f"Error: {result.stderr}", RED)
+        return False, result.stderr
+    return True, result.stdout
+
+
+def git_pull():
+    """Pull latest from GitHub"""
+    log_step("Pulling latest code...", "...")
+    success, _ = run_command("git pull origin main")
+    if success:
+        log_step("Pulling latest code...", "✓")
+    return success
+
+
+def run_graph_validation():
+    """Run comprehensive graph validation"""
+    log_step("Running graph validation...", "...")
+    
+    # Run pytest graph tests
+    success, output = run_command(
+        "python -m pytest tests/test_graph_validation.py -v --tb=short"
     )
     
-    # Parse summary
-    summary = {"total": 0, "passed": 0, "failed": 0}
-    if "Total Tests:" in stdout:
-        match = re.search(r"Total Tests: (\d+)", stdout)
-        if match:
-            summary["total"] = int(match.group(1))
-        match = re.search(r"Passed: (\d+)", stdout)
-        if match:
-            summary["passed"] = int(match.group(1))
-        match = re.search(r"Failed: (\d+)", stdout)
-        if match:
-            summary["failed"] = int(match.group(1))
+    # Parse results
+    passed = 0
+    failed = 0
     
-    return summary, stdout, stderr
+    if "passed" in output:
+        import re
+        match = re.search(r'(\d+) passed', output)
+        if match:
+            passed = int(match.group(1))
+        match = re.search(r'(\d+) failed', output)
+        if match:
+            failed = int(match.group(1))
+    
+    if failed > 0:
+        log_step(f"Graph validation: {passed} passed, {failed} failed", "✗")
+        return False, output
+    
+    log_step(f"Graph validation: {passed} passed", "✓")
+    return True, output
 
 
-def main():
-    print("=" * 60)
-    print("  X Knowledge Graph - Autonomous Improvement System")
-    print("=" * 60)
+def run_core_tests():
+    """Run core functionality tests"""
+    log_step("Running core tests...", "...")
+    
+    success, output = run_command(
+        "python -m pytest tests/test_core.py -v --tb=short"
+    )
+    
+    passed = 0
+    failed = 0
+    
+    if "passed" in output:
+        import re
+        match = re.search(r'(\d+) passed', output)
+        if match:
+            passed = int(match.group(1))
+        match = re.search(r'(\d+) failed', output)
+        if match:
+            failed = int(match.group(1))
+    
+    if failed > 0:
+        log_step(f"Core tests: {passed} passed, {failed} failed", "✗")
+        return False, output
+    
+    log_step(f"Core tests: {passed} passed", "✓")
+    return True, output
+
+
+def run_full_validation():
+    """Run full validation suite"""
+    log_step("Running full validation...", "...")
+    
+    success, output = run_command("python validate.py")
+    
+    if "Failed: 0" in output or "failed: 0" in output:
+        log_step("Full validation passed", "✓")
+        return True, output
+    
+    log_step("Full validation failed", "✗")
+    return False, output
+
+
+def create_distribution():
+    """Create distribution package"""
+    log_step("Creating distribution...", "...")
+    
+    # Clean previous distribution
+    if DIST_DIR.exists():
+        shutil.rmtree(DIST_DIR)
+    DIST_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # Create version directory
+    version_dir = DIST_DIR / f"x-knowledge-graph-v0.4.33"
+    if version_dir.exists():
+        shutil.rmtree(version_dir)
+    version_dir.mkdir()
+    
+    files_to_copy = [
+        "main.py",
+        "core/",
+        "frontend/",
+        "VERSION.txt",
+        "requirements.txt",
+        "build.bat",
+        "build.ps1",
+        "validate.py",
+        "auto-build.py",
+        "README.md",
+        "EXPORT_FORMATS.md",
+        "LAUNCH-READY.md",
+    ]
+    
+    log_step("Copying files...", "...")
+    
+    for item in files_to_copy:
+        src = REPO_DIR / item
+        dst = version_dir / item
+        
+        if src.is_file():
+            shutil.copy2(src, dst)
+            log(f"  Copied: {item}")
+        elif src.is_dir():
+            shutil.copytree(src, dst)
+            log(f"  Copied: {item}/")
+    
+    # Create distribution tar
+    log_step("Creating tar archive...", "...")
+    
+    import tarfile
+    
+    tar_path = DIST_DIR / f"x-knowledge-graph-v0.4.33.tar"
+    with tarfile.open(tar_path, "w") as tar:
+        tar.add(version_dir, arcname=f"x-knowledge-graph-v0.4.33")
+    
+    # Generate checksums
+    log_step("Generating checksums...", "...")
+    
+    checksum_file = DIST_DIR / "checksums.txt"
+    with open(checksum_file, 'w') as f:
+        for item in version_dir.rglob("*"):
+            if item.is_file():
+                rel_path = item.relative_to(DIST_DIR)
+                sha256 = hashlib.sha256(item.read_bytes()).hexdigest()
+                f.write(f"{sha256}  {rel_path}\n")
+                log(f"  {rel_path}: {sha256[:16]}...")
+    
+    # Distribution summary
+    size_mb = tar_path.stat().st_size / 1024 / 1024
+    
+    log_step("Distribution created!", "✓")
+    log(f"  Location: {tar_path}")
+    log(f"  Size: {size_mb:.2f} MB")
+    log(f"  Checksums: {checksum_file}")
+    
+    return True
+
+
+def git_commit_distribution():
+    """Commit distribution changes"""
+    log_step("Committing distribution...", "...")
+    
+    run_command('git add -A')
+    run_command('git commit -m "Distribution v0.4.33 - ' + 
+                datetime.now().strftime("%Y-%m-%d") + '"')
+    
+    log_step("Distribution committed", "✓")
+
+
+def full_pipeline():
+    """Run full improvement pipeline"""
+    
+    print()
+    log("=" * 70, CYAN)
+    log("  X KNOWLEDGE GRAPH - AUTONOMOUS IMPROVEMENT & DISTRIBUTION", CYAN)
+    log("=" * 70, CYAN)
     print()
     
-    fixer = AutoFixer(REPO_DIR)
+    results = {}
     
-    while True:
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"\n[{timestamp}] Starting improvement cycle...")
-        
-        # Step 1: Pull latest
-        print("  Pulling latest code...")
-        fixer.git_pull()
-        
-        # Step 2: Run validation
-        summary, stdout, stderr = run_validation()
-        print(f"  Results: {summary['passed']}/{summary['total']} passed")
-        
-        # Step 3: If failed, apply fixes
-        if summary.get("failed", 0) > 0:
-            print(f"\n  ⚠ {summary['failed']} tests failed - analyzing fixes...")
-            fixes = fixer.apply_fixes({})
-            
-            if fixes:
-                print(f"\n  Applied {len(fixes)} fixes:")
-                for f in fixes:
-                    print(f"    - {f}")
-                
-                # Step 4: Push fixes
-                print("\n  Pushing fixes to GitHub...")
-                fixer.git_push(f"Auto-fix: {', '.join(fixes[:3])}")
-                print("  ✓ Fixes pushed!")
-            else:
-                print("  ⚠ No automatic fixes available - manual intervention needed")
-        
-        # Step 5: Wait 5 minutes
-        print("\n  Waiting 5 minutes before next cycle...")
-        import time
-        time.sleep(300)
+    # Step 1: Pull
+    log_step("Pulling latest code...", "...")
+    results["pull"] = git_pull()
+    if not results["pull"]:
+        log_step("Pipeline aborted - pull failed", "✗")
+        return False
+    
+    # Step 2: Graph Validation
+    log_step("=" * 50)
+    log_step("STEP 1: Graph Population Validation")
+    log_step("=" * 50)
+    results["graph_validation"] = run_graph_validation()
+    
+    # Step 3: Core Tests
+    log_step("=" * 50)
+    log_step("STEP 2: Core Functionality Tests")
+    log_step("=" * 50)
+    results["core_tests"] = run_core_tests()
+    
+    # Step 4: Full Validation
+    log_step("=" * 50)
+    log_step("STEP 3: Full API Validation")
+    log_step("=" * 50)
+    results["full_validation"] = run_full_validation()
+    
+    # Check if all tests passed
+    all_passed = all(results.values())
+    
+    # Step 5: Create Distribution (only if all tests pass)
+    if all_passed:
+        log_step("=" * 50)
+        log_step("ALL TESTS PASSED - Creating Distribution")
+        log_step("=" * 50)
+        results["distribution"] = create_distribution()
+        results["git_commit"] = git_commit_distribution()
+    else:
+        log_step("Tests failed - skipping distribution", "✗")
+        results["distribution"] = False
+        results["git_commit"] = False
+    
+    # Summary
+    print()
+    log("=" * 70, CYAN)
+    log("  PIPELINE RESULTS", CYAN)
+    log("=" * 70, CYAN)
+    
+    for step, passed in results.items():
+        status = "✓ PASS" if passed else "✗ FAIL"
+        color = GREEN if passed else RED
+        log(f"  {step:20} {status}", color)
+    
+    print()
+    if all_passed and results.get("distribution"):
+        log("PIPELINE COMPLETE - Distribution created!", GREEN)
+        log(f"  Distribution: {DIST_DIR / 'x-knowledge-graph-v0.4.33.tar'}", GREEN)
+    else:
+        log("PIPELINE COMPLETE WITH FAILURES", RED)
+        failed_steps = [k for k, v in results.items() if not v]
+        log(f"  Failed: {', '.join(failed_steps)}", RED)
+    
+    return all_passed
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="X Knowledge Graph Auto-Improve")
+    parser.add_argument("--test-only", action="store_true", help="Tests only")
+    parser.add_argument("--dist-only", action="store_true", help="Distribution only")
+    
+    args = parser.parse_args()
+    
+    if args.test_only:
+        success = run_graph_validation() and run_core_tests()
+    elif args.dist_only:
+        success = create_distribution()
+    else:
+        success = full_pipeline()
+    
+    sys.exit(0 if success else 1)

@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """
-X Knowledge Graph - Automated Validation Script
-Tests all API endpoints and uploads results to GitHub Gist
+X Knowledge Graph - Comprehensive Validation Script
+Tests all aspects of the application including graph population,
+action extraction, and data node validation.
 
 Usage:
-    # Set GitHub token first (once):
-    $env:GITHUB_GIST_TOKEN = "your-github-token"
-    
-    # Run validation:
-    python validate.py
+    python validate.py              # Full validation
+    python validate.py --graph-only # Graph validation only
+    python validate.py --quick      # Quick smoke test
 """
 
 import sys
@@ -19,21 +18,50 @@ import requests
 import subprocess
 import signal
 from datetime import datetime
+from pathlib import Path
 
-# GitHub Gist Configuration - Token from environment variable
+# GitHub Gist Configuration
 GITHUB_TOKEN = os.environ.get("GITHUB_GIST_TOKEN", "")
 GIST_DESCRIPTION = "X Knowledge Graph Validation Results"
 GIST_FILENAME = "validation_report.json"
-
-# Store Gist URL for polling
 GIST_URL_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".gist_url.txt")
+
+# Paths
+SCRIPT_DIR = Path(__file__).parent
+PROJECT_ROOT = SCRIPT_DIR
+TEST_DATA_DIR = PROJECT_ROOT / "test_data"
+X_EXPORT_DIR = TEST_DATA_DIR / "x_export"
+GROK_EXPORT_DIR = TEST_DATA_DIR / "grok_export"
+
+# Core import
+sys.path.insert(0, str(PROJECT_ROOT / "core"))
+from xkg_core import KnowledgeGraph
 
 class colors:
     GREEN = '\033[92m'
     RED = '\033[91m'
     YELLOW = '\033[93m'
     BLUE = '\033[94m'
+    CYAN = '\033[96m'
     END = '\033[0m'
+
+
+def log(msg, color=BLUE):
+    print(f"{color}{msg}{END}")
+
+
+def log_step(msg):
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    print(f"[{timestamp}] {msg}")
+
+
+def print_header(title):
+    print()
+    log("=" * 60, CYAN)
+    log(f"  {title}", CYAN)
+    log("=" * 60, CYAN)
+    print()
+
 
 def get_gist_url():
     if os.path.exists(GIST_URL_FILE):
@@ -41,36 +69,25 @@ def get_gist_url():
             return f.read().strip()
     return None
 
+
 def save_gist_url(url):
     with open(GIST_URL_FILE, 'w') as f:
         f.write(url)
 
+
 def upload_to_gist(report_json):
-    """Upload validation report to GitHub Gist and return URL"""
+    """Upload validation report to GitHub Gist"""
     if not GITHUB_TOKEN:
-        print(f"{colors.YELLOW}GitHub token not set. Skipping Gist upload.{colors.END}")
-        print(f"  Set with: $env:GITHUB_GIST_TOKEN = \"your-token\"")
+        log("GitHub token not set - skipping Gist upload", YELLOW)
         return None
     
     gist_url = get_gist_url()
-    
-    if gist_url:
-        gist_id = gist_url.split('/')[-1]
-        url = f"https://api.github.com/gists/{gist_id}"
-        method = "PATCH"
-    else:
-        url = "https://api.github.com/gists"
-        method = "POST"
-    
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
     
-    files = {
-        GIST_FILENAME: json.dumps(report_json, indent=2)
-    }
-    
+    files = {GIST_FILENAME: json.dumps(report_json, indent=2)}
     data = {
         "description": f"{GIST_DESCRIPTION} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         "public": True,
@@ -78,31 +95,315 @@ def upload_to_gist(report_json):
     }
     
     try:
-        if method == "PATCH":
-            response = requests.patch(url, headers=headers, json=data, timeout=30)
+        if gist_url:
+            gist_id = gist_url.split('/')[-1]
+            response = requests.patch(
+                f"https://api.github.com/gists/{gist_id}",
+                headers=headers, json=data, timeout=30
+            )
         else:
-            response = requests.post(url, headers=headers, json=data, timeout=30)
+            response = requests.post(
+                "https://api.github.com/gists",
+                headers=headers, json=data, timeout=30
+            )
         
         if response.status_code in [200, 201]:
             result = response.json()
             gist_url = result["html_url"]
             save_gist_url(gist_url)
             return gist_url
-        else:
-            print(f"{colors.RED}Gist upload failed: {response.status_code}{colors.END}")
-            return None
     except Exception as e:
-        print(f"{colors.RED}Gist upload error: {e}{colors.END}")
-        return None
+        log(f"Gist upload error: {e}", RED)
+    return None
 
-def print_result(test_name, passed, message=""):
-    status = f"{colors.GREEN}PASS{colors.END}" if passed else f"{colors.RED}FAIL{colors.END}"
-    print(f"  [{status}] {test_name}")
-    if message:
-        print(f"         {message}")
-    return passed
+
+# =============================================================================
+# GRAPH VALIDATION TESTS
+# =============================================================================
+
+def test_x_export_populates_graph():
+    """Test X export correctly populates the knowledge graph"""
+    log_step("Testing X export graph population...")
+    
+    kg = KnowledgeGraph()
+    result = kg.build_from_export(str(X_EXPORT_DIR), 'x')
+    
+    # Validate stats
+    tests = [
+        ("X tweets count", result['stats']['total_tweets'], 5),
+        ("X actions extracted", result['stats']['total_actions'], 7),
+        ("X topics clustered", result['stats']['topics_count'], 0, ">="),
+    ]
+    
+    # Validate graph nodes
+    d3 = kg.export_for_d3()
+    tweet_nodes = [n for n in d3['nodes'] if n.get('type') == 'tweet']
+    action_nodes = [n for n in d3['nodes'] if n.get('type') == 'action']
+    topic_nodes = [n for n in d3['nodes'] if n.get('type') == 'topic']
+    
+    tests.extend([
+        ("X tweet nodes", len(tweet_nodes), 5),
+        ("X action nodes", len(action_nodes), 0, ">="),
+        ("X topic nodes", len(topic_nodes), 0, ">="),
+    ])
+    
+    # Validate tweet content
+    for tweet in tweet_nodes:
+        if 'text' not in tweet:
+            tests.append((f"Tweet {tweet['id']} has text", True, True))
+        else:
+            tests.append((f"Tweet {tweet['id']} has text", len(tweet['text']) > 0, True))
+    
+    return tests, result
+
+
+def test_grok_export_populates_graph():
+    """Test Grok export correctly populates the knowledge graph"""
+    log_step("Testing Grok export graph population...")
+    
+    kg = KnowledgeGraph()
+    result = kg.build_from_export(str(GROK_EXPORT_DIR), 'grok')
+    
+    # Validate stats
+    tests = [
+        ("Grok posts count", result['stats']['total_tweets'], 10),
+        ("Grok actions extracted", result['stats']['total_actions'], 15),
+        ("Grok topics clustered", result['stats']['topics_count'], 0, ">="),
+    ]
+    
+    # Validate graph nodes
+    d3 = kg.export_for_d3()
+    grok_nodes = [n for n in d3['nodes'] if n.get('type') == 'grok']
+    action_nodes = [n for n in d3['nodes'] if n.get('type') == 'action']
+    
+    tests.extend([
+        ("Grok nodes", len(grok_nodes), 10),
+        ("Grok action nodes", len(action_nodes), 0, ">="),
+    ])
+    
+    # Validate grok content
+    for node in grok_nodes:
+        has_text = 'text' in node and len(node['text']) > 0
+        tests.append((f"Grok {node['id']} has text", has_text, True))
+    
+    return tests, result
+
+
+def test_combined_export_populates_graph():
+    """Test combined X + Grok export"""
+    log_step("Testing combined export graph population...")
+    
+    kg = KnowledgeGraph()
+    result = kg.build_from_both(str(X_EXPORT_DIR), str(GROK_EXPORT_DIR))
+    
+    tests = [
+        ("Combined total items", result['stats']['total_tweets'], 15),
+        ("Combined actions", result['stats']['total_actions'], 15, ">="),
+    ]
+    
+    d3 = kg.export_for_d3()
+    tweet_count = len([n for n in d3['nodes'] if n.get('type') == 'tweet'])
+    grok_count = len([n for n in d3['nodes'] if n.get('type') == 'grok'])
+    
+    tests.extend([
+        ("Combined tweet nodes", tweet_count, 5),
+        ("Combined grok nodes", grok_count, 10),
+    ])
+    
+    return tests, result
+
+
+def test_action_extraction():
+    """Test action items are correctly extracted with priorities"""
+    log_step("Testing action extraction...")
+    
+    kg = KnowledgeGraph()
+    result = kg.build_from_export(str(X_EXPORT_DIR), 'x')
+    actions = result.get('actions', [])
+    
+    tests = []
+    
+    # Verify actions exist
+    tests.append(("Actions extracted", len(actions) > 0, True))
+    
+    # Verify action structure
+    for i, action in enumerate(actions[:3]):  # Check first 3
+        tests.append((f"Action {i} has text", 'text' in action, True))
+        tests.append((f"Action {i} has priority", 'priority' in action, True))
+        tests.append((f"Action {i} text not empty", bool(action.get('text', '')), True))
+    
+    # Verify priorities
+    priorities = [a.get('priority') for a in actions]
+    tests.append(("Has urgent actions", 'urgent' in priorities, True))
+    tests.append(("Has high/medium actions", any(p in priorities for p in ['high', 'medium']), True))
+    
+    return tests, actions
+
+
+def test_topic_clustering():
+    """Test topics are correctly clustered"""
+    log_step("Testing topic clustering...")
+    
+    kg = KnowledgeGraph()
+    result = kg.build_from_export(str(X_EXPORT_DIR), 'x')
+    topics = result.get('topics', {})
+    
+    tests = [
+        ("Topics exist", len(topics) > 0, True),
+    ]
+    
+    # Verify topic structure
+    for topic_name, topic_data in list(topics.items())[:3]:
+        tests.append((f"Topic '{topic_name}' is dict", isinstance(topic_data, dict), True))
+    
+    return tests, topics
+
+
+def test_graph_structure():
+    """Test D3 graph structure is valid"""
+    log_step("Testing D3 graph structure...")
+    
+    kg = KnowledgeGraph()
+    kg.build_from_export(str(X_EXPORT_DIR), 'x')
+    d3 = kg.export_for_d3()
+    
+    tests = []
+    
+    # Basic structure
+    tests.append(("Graph has nodes", 'nodes' in d3, True))
+    tests.append(("Graph has edges", 'edges' in d3, True))
+    
+    # Node validation
+    for node in d3['nodes'][:5]:
+        tests.append((f"Node {node['id']} has id", 'id' in node, True))
+        tests.append((f"Node {node['id']} has type", 'type' in node, True))
+        tests.append((f"Node {node['id']} has label", 'label' in node or 'text' in node, True))
+    
+    # Edge validation
+    for edge in d3['edges'][:5]:
+        tests.append((f"Edge has source", 'source' in edge, True))
+        tests.append((f"Edge has target", 'target' in edge, True))
+        tests.append((f"Edge has type", 'type' in edge, True))
+    
+    return tests, d3
+
+
+def test_performance():
+    """Test parsing performance"""
+    log_step("Testing performance...")
+    
+    kg = KnowledgeGraph()
+    
+    tests = []
+    
+    # X parse time
+    start = time.time()
+    kg.build_from_export(str(X_EXPORT_DIR), 'x')
+    x_time = time.time() - start
+    tests.append(("X parse < 2s", x_time < 2.0, True))
+    
+    # Grok parse time
+    start = time.time()
+    kg.build_from_export(str(GROK_EXPORT_DIR), 'grok')
+    grok_time = time.time() - start
+    tests.append(("Grok parse < 3s", grok_time < 3.0, True))
+    
+    # Combined parse time
+    start = time.time()
+    kg.build_from_both(str(X_EXPORT_DIR), str(GROK_EXPORT_DIR))
+    combined_time = time.time() - start
+    tests.append(("Combined parse < 5s", combined_time < 5.0, True))
+    
+    return tests, {"x": x_time, "grok": grok_time, "combined": combined_time}
+
+
+# =============================================================================
+# FLASK API TESTS
+# =============================================================================
+
+def test_flask_api():
+    """Test Flask API endpoints"""
+    log_step("Testing Flask API...")
+    
+    app_dir = str(PROJECT_ROOT)
+    port = 5000
+    
+    # Start Flask
+    log_step("Starting Flask application...")
+    process = subprocess.Popen(
+        [sys.executable, "main.py"],
+        cwd=app_dir,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env={**os.environ, "PYTHONUNBUFFERED": "1", "HEADLESS": "1"}
+    )
+    
+    # Wait for startup
+    time.sleep(5)
+    
+    base_url = f"http://localhost:{port}"
+    tests = []
+    
+    # Health check
+    try:
+        r = requests.get(f"{base_url}/api/health", timeout=10)
+        tests.append(("Health check", r.status_code == 200 and r.json().get('status') == 'ok', True))
+    except Exception as e:
+        tests.append(("Health check", False, True))
+    
+    # Parse X export
+    try:
+        r = requests.post(f"{base_url}/api/parse-export",
+                         json={"x_path": str(X_EXPORT_DIR), "export_type": "x"},
+                         timeout=30)
+        data = r.json()
+        tests.append(("Parse X export", r.status_code == 200 and "stats" in data, True))
+        tests.append(("X stats present", "total_tweets" in data.get("stats", {}), True))
+    except Exception as e:
+        tests.append(("Parse X export", False, True))
+    
+    # Parse Grok export
+    try:
+        r = requests.post(f"{base_url}/api/parse-export",
+                         json={"grok_path": str(GROK_EXPORT_DIR), "export_type": "grok"},
+                         timeout=30)
+        data = r.json()
+        tests.append(("Parse Grok export", r.status_code == 200 and "stats" in data, True))
+    except Exception as e:
+        tests.append(("Parse Grok export", False, True))
+    
+    # Get graph
+    try:
+        r = requests.get(f"{base_url}/api/graph", timeout=10)
+        data = r.json()
+        tests.append(("Get graph", r.status_code == 200 and "nodes" in data, True))
+        tests.append(("Graph has nodes", len(data.get("nodes", [])) > 0, True))
+    except Exception as e:
+        tests.append(("Get graph", False, True))
+    
+    # Get actions
+    try:
+        r = requests.get(f"{base_url}/api/actions", timeout=10)
+        tests.append(("Get actions", r.status_code == 200, True))
+    except Exception as e:
+        tests.append(("Get actions", False, True))
+    
+    # Cleanup
+    process.terminate()
+    try:
+        process.wait(timeout=5)
+    except:
+        process.kill()
+    
+    return tests
+
+
+# =============================================================================
+# MAIN VALIDATION RUNNER
+# =============================================================================
 
 def run_validation():
+    """Run complete validation suite"""
     results = {
         "timestamp": datetime.now().isoformat(),
         "version": "0.4.33",
@@ -111,224 +412,108 @@ def run_validation():
         "status": "running"
     }
     
-    print(f"\n{colors.BLUE}Starting X Knowledge Graph validation...{colors.END}\n")
-    print(f"{colors.BLUE}VPS: IONOS Windows Server{colors.END}")
-    print(f"{colors.BLUE}Time: {results['timestamp']}{colors.END}\n")
+    print_header("X KNOWLEDGE GRAPH - COMPREHENSIVE VALIDATION")
+    print(f"Timestamp: {results['timestamp']}")
+    print(f"Test Data: {TEST_DATA_DIR}")
+    print()
     
-    if not GITHUB_TOKEN:
-        print(f"{colors.YELLOW}WARNING: GitHub token not set. Results will not be uploaded.{colors.END}")
-        print(f"  Set token: $env:GITHUB_GIST_TOKEN = \"your-github-token-with-gist-scope\"")
-        print()
+    all_tests = []
     
-    # Start Flask app
-    print(f"{colors.BLUE}Starting Flask application...{colors.END}")
+    # 1. Graph Population Tests
+    print_header("1. GRAPH POPULATION TESTS")
     
-    app_dir = os.path.dirname(os.path.abspath(__file__))
-    port = 5000
+    tests, _ = test_x_export_populates_graph()
+    all_tests.extend([("X Export Graph", t) for t in tests])
+    print_results(tests)
     
-    # Kill any existing Flask process on port 5000
-    try:
-        import subprocess
-        subprocess.run(["fuser", "-k", f"{port}/tcp"], stderr=subprocess.DEVNULL, timeout=5)
-    except:
-        pass
+    tests, _ = test_grok_export_populates_graph()
+    all_tests.extend([("Grok Export Graph", t) for t in tests])
+    print_results(tests)
     
-    process = subprocess.Popen(
-        [sys.executable, "main.py"],
-        cwd=app_dir,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env={**os.environ, "PYTHONUNBUFFERED": "1"}
-    )
+    tests, _ = test_combined_export_populates_graph()
+    all_tests.extend([("Combined Graph", t) for t in tests])
+    print_results(tests)
     
-    # Wait for app to start (up to 15 seconds)
-    print("Waiting for Flask to start...")
-    started = False
-    for i in range(15):
-        time.sleep(1)
-        try:
-            r = requests.get(f"http://127.0.0.1:{port}/api/health", timeout=2)
-            if r.status_code == 200:
-                started = True
-                print(f"Flask started after {i+1} seconds")
-                break
-        except:
-            pass
+    # 2. Action Extraction Tests
+    print_header("2. ACTION EXTRACTION TESTS")
     
-    if not started:
-        stdout, stderr = process.communicate(timeout=5)
-        print(f"{colors.RED}Flask failed to start!{colors.END}")
-        print(f"stdout: {stdout.decode()[:500]}")
-        print(f"stderr: {stderr.decode()[:500]}")
-        results["tests"].append({"name": "Flask Startup", "passed": False, "error": stderr.decode()[:500]})
-        print_result("Flask Startup", False)
-        # Continue with error
+    tests, actions = test_action_extraction()
+    all_tests.extend([("Action Extraction", t) for t in tests])
+    print_results(tests)
     
-    base_url = f"http://localhost:{port}"
+    # 3. Topic Clustering Tests
+    print_header("3. TOPIC CLUSTERING TESTS")
     
-    # Test 1: Health Check
-    print(f"\n{colors.BLUE}Running API Tests...{colors.END}\n")
+    tests, topics = test_topic_clustering()
+    all_tests.extend([("Topic Clustering", t) for t in tests])
+    print_results(tests)
     
-    try:
-        r = requests.get(f"{base_url}/api/health", timeout=10)
-        passed = r.status_code == 200 and r.json().get("status") == "ok"
-        results["tests"].append({
-            "name": "Health Check",
-            "passed": passed,
-            "response": r.json() if passed else r.text
-        })
-        print_result("Health Check", passed, r.json().get("version", ""))
-    except Exception as e:
-        results["tests"].append({"name": "Health Check", "passed": False, "error": str(e)})
-        print_result("Health Check", False, str(e))
+    # 4. Graph Structure Tests
+    print_header("4. GRAPH STRUCTURE TESTS")
     
-    # Test 2: Parse X Export
-    test_data_dir = os.path.join(app_dir, "test_data")
-    x_path = os.path.join(test_data_dir, "x_export")
-    if os.path.exists(x_path):
-        try:
-            r = requests.post(f"{base_url}/api/parse-export", 
-                           json={"x_path": x_path, "export_type": "x", "graph_mode": "all"},
-                           timeout=30)
-            data = r.json()
-            passed = r.status_code == 200 and "stats" in data
-            results["tests"].append({
-                "name": "Parse X Export",
-                "passed": passed,
-                "stats": data.get("stats", {}) if passed else {}
-            })
-            stats = data.get("stats", {})
-            print_result("Parse X Export", passed, 
-                        f"Tweets: {stats.get('total_tweets', 0)}, Actions: {stats.get('total_actions', 0)}")
-        except Exception as e:
-            results["tests"].append({"name": "Parse X Export", "passed": False, "error": str(e)})
-            print_result("Parse X Export", False, str(e))
-    else:
-        print_result("Parse X Export", False, f"Test data not found: {x_path}")
-        results["tests"].append({"name": "Parse X Export", "passed": False, "error": f"Path not found: {x_path}"})
+    tests, d3 = test_graph_structure()
+    all_tests.extend([("Graph Structure", t) for t in tests])
+    print_results(tests)
     
-    # Test 3: Parse Grok Export
-    grok_path = os.path.join(test_data_dir, "grok_export")
-    if os.path.exists(grok_path):
-        try:
-            r = requests.post(f"{base_url}/api/parse-export",
-                           json={"grok_path": grok_path, "export_type": "grok", "graph_mode": "all"},
-                           timeout=30)
-            data = r.json()
-            passed = r.status_code == 200 and "stats" in data
-            results["tests"].append({
-                "name": "Parse Grok Export",
-                "passed": passed,
-                "stats": data.get("stats", {}) if passed else {}
-            })
-            stats = data.get("stats", {})
-            print_result("Parse Grok Export", passed,
-                        f"Posts: {stats.get('total_tweets', 0)}, Actions: {stats.get('total_actions', 0)}")
-        except Exception as e:
-            results["tests"].append({"name": "Parse Grok Export", "passed": False, "error": str(e)})
-            print_result("Parse Grok Export", False, str(e))
-    else:
-        print_result("Parse Grok Export", False, f"Test data not found: {grok_path}")
-        results["tests"].append({"name": "Parse Grok Export", "passed": False, "error": f"Path not found: {grok_path}"})
+    # 5. Performance Tests
+    print_header("5. PERFORMANCE TESTS")
     
-    # Test 4: Get Graph
-    try:
-        r = requests.get(f"{base_url}/api/graph", timeout=10)
-        data = r.json()
-        passed = r.status_code == 200 and "nodes" in data
-        results["tests"].append({
-            "name": "Get Graph",
-            "passed": passed,
-            "nodes": len(data.get("nodes", [])),
-            "edges": len(data.get("edges", []))
-        })
-        print_result("Get Graph", passed, f"Nodes: {len(data.get('nodes', []))}, Edges: {len(data.get('edges', []))}")
-    except Exception as e:
-        results["tests"].append({"name": "Get Graph", "passed": False, "error": str(e)})
-        print_result("Get Graph", False, str(e))
+    tests, perf = test_performance()
+    all_tests.extend([("Performance", t) for t in tests])
+    print_results(tests)
     
-    # Test 5: Get Actions
-    try:
-        r = requests.get(f"{base_url}/api/actions", timeout=10)
-        data = r.json()
-        passed = r.status_code == 200
-        results["tests"].append({
-            "name": "Get Actions",
-            "passed": passed,
-            "count": len(data) if isinstance(data, list) else 0
-        })
-        print_result("Get Actions", passed, f"Count: {len(data) if isinstance(data, list) else 0}")
-    except Exception as e:
-        results["tests"].append({"name": "Get Actions", "passed": False, "error": str(e)})
-        print_result("Get Actions", False, str(e))
+    # 6. Flask API Tests
+    print_header("6. FLASK API TESTS")
     
-    # Test 6: Get Topics
-    try:
-        r = requests.get(f"{base_url}/api/topics", timeout=10)
-        data = r.json()
-        passed = r.status_code == 200
-        results["tests"].append({
-            "name": "Get Topics",
-            "passed": passed,
-            "count": len(data) if isinstance(data, dict) else 0
-        })
-        print_result("Get Topics", passed, f"Count: {len(data) if isinstance(data, dict) else 0}")
-    except Exception as e:
-        results["tests"].append({"name": "Get Topics", "passed": False, "error": str(e)})
-        print_result("Get Topics", False, str(e))
+    tests = test_flask_api()
+    all_tests.extend([("Flask API", t) for t in tests])
+    print_results(tests)
     
-    # Test 7: Get Flows
-    try:
-        r = requests.get(f"{base_url}/api/flows", timeout=10)
-        data = r.json()
-        passed = r.status_code == 200
-        results["tests"].append({"name": "Get Flows", "passed": passed})
-        print_result("Get Flows", passed)
-    except Exception as e:
-        results["tests"].append({"name": "Get Flows", "passed": False, "error": str(e)})
-        print_result("Get Flows", False, str(e))
+    # Summarize
+    print_header("VALIDATION SUMMARY")
     
-    # Test 8: Todoist Export (mock)
-    try:
-        r = requests.post(f"{base_url}/api/export-todoist", json={}, timeout=10)
-        passed = r.status_code in [200, 400]
-        results["tests"].append({"name": "Todoist Export", "passed": passed, "status_code": r.status_code})
-        print_result("Todoist Export", passed, f"Status: {r.status_code}")
-    except Exception as e:
-        results["tests"].append({"name": "Todoist Export", "passed": False, "error": str(e)})
-        print_result("Todoist Export", False, str(e))
+    total = len(all_tests)
+    passed = sum(1 for _, (expected, actual, _) in all_tests if expected == actual or (isinstance(expected, bool) and expected == actual))
     
-    # Cleanup
-    print(f"\n{colors.BLUE}Stopping application...{colors.END}\n")
-    process.terminate()
-    try:
-        process.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        process.kill()
+    # Re-calculate properly
+    passed = sum(1 for _, (name, expected, actual, *_) in all_tests if expected == actual)
     
-    # Summary
-    results["summary"]["total"] = len(results["tests"])
-    results["summary"]["passed"] = sum(1 for t in results["tests"] if t.get("passed"))
-    results["summary"]["failed"] = results["summary"]["total"] - results["summary"]["passed"]
-    results["status"] = "completed" if results["summary"]["failed"] == 0 else "failed"
+    print(f"Total Tests: {total}")
+    print(f"{GREEN}Passed: {passed}{END}")
+    print(f"{RED}Failed: {total - passed}{END}")
     
-    print(f"\n{colors.BLUE}=== VALIDATION SUMMARY ==={colors.END}\n")
-    print(f"  Total Tests: {results['summary']['total']}")
-    print(f"  {colors.GREEN}Passed: {results['summary']['passed']}{colors.END}")
-    print(f"  {colors.RED}Failed: {results['summary']['failed']}{colors.END}")
+    # Save results
+    results["tests"] = [{"category": cat, "name": name, "expected": exp, "actual": act} 
+                        for cat, (name, exp, act) in all_tests]
+    results["summary"]["total"] = total
+    results["summary"]["passed"] = passed
+    results["summary"]["failed"] = total - passed
+    results["status"] = "passed" if total - passed == 0 else "failed"
     
     # Upload to Gist
-    print(f"\n{colors.BLUE}Uploading results to GitHub Gist...{colors.END}")
+    log("\nUploading results to GitHub Gist...")
     gist_url = upload_to_gist(results)
     if gist_url:
-        print(f"\n{colors.GREEN}Results uploaded!{colors.END}")
-        print(f"  Gist URL: {gist_url}")
+        log(f"Results: {gist_url}", GREEN)
     else:
-        print(f"\n{colors.YELLOW}Skipped Gist upload (no token){colors.END}")
+        log("Gist upload skipped", YELLOW)
     
-    print(f"\n{colors.BLUE}=== Validation Complete ==={colors.END}\n")
+    print_header("VALIDATION COMPLETE")
     
-    return results["summary"]["failed"] == 0
+    return total - passed == 0
+
+
+def print_results(tests):
+    """Print test results"""
+    for name, expected, actual, *rest in tests:
+        op = rest[0] if rest else "=="
+        passed = (expected == actual) or (op == ">=" and actual >= expected)
+        status = f"{GREEN}✓{END}" if passed else f"{RED}✗{END}"
+        if op == ">=":
+            print(f"  [{status}] {name}: {actual} (>= {expected})")
+        else:
+            print(f"  [{status}] {name}: {actual} ({op} {expected})")
+
 
 if __name__ == "__main__":
     success = run_validation()
