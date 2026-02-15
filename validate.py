@@ -517,8 +517,8 @@ def run_validation():
     passed = sum(1 for _, (name, expected, actual, *_) in all_tests if expected == actual)
     
     print(f"Total Tests: {total}")
-    print(f"colors.GREENPassed: {passed}colors.END")
-    print(f"colors.REDFailed: {total - passed}colors.END")
+    print(f" {colors.GREEN}Passed: {passed}{colors.END}")
+    print(f" {colors.RED}Failed: {total - passed}{colors.END}")
     
     # Save results
     results["tests"] = [{"category": cat, "name": name, "expected": exp, "actual": act} 
@@ -546,7 +546,7 @@ def print_results(tests):
     for name, expected, actual, *rest in tests:
         op = rest[0] if rest else "=="
         passed = (expected == actual) or (op == ">=" and actual >= expected)
-        status = f"colors.GREEN✓colors.END" if passed else f"colors.RED✗colors.END"
+        status = f"{colors.GREEN}PASS{colors.END}" if passed else f"{colors.RED}FAIL{colors.END}"
         if op == ">=":
             print(f"  [{status}] {name}: {actual} (>= {expected})")
         else:
