@@ -9,12 +9,13 @@ echo.
 
 set APP_DIR=C:\Projects\x-knowledge-graph
 set INTERVAL_MINUTES=5
+set HEADLESS=1
 
 :LOOP
 echo [%date% %time%] Starting validation...
 cd /d %APP_DIR%
 git pull
-python validate.py
+set HEADLESS=1 && python validate.py
 
 echo.
 echo Waiting %INTERVAL_MINUTES% minutes before next run...

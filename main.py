@@ -319,9 +319,12 @@ def main():
         print(f"\nTodoist token provided via CLI")
         print("Note: Export will be available via API after parsing actions")
     
-    print("\nOpening browser...")
-    
-    webbrowser.open(f'http://localhost:{port}')
+    # Only open browser if not running in headless mode
+    if not os.environ.get("HEADLESS", ""):
+        print("\nOpening browser...")
+        webbrowser.open(f'http://localhost:{port}')
+    else:
+        print("\nRunning in headless mode (no browser)")
     
     try:
         app.run(host='127.0.0.1', port=port, debug=False, use_reloader=False)

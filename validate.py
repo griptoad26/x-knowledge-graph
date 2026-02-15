@@ -125,6 +125,14 @@ def run_validation():
     
     app_dir = os.path.dirname(os.path.abspath(__file__))
     port = 5000
+    
+    # Kill any existing Flask process on port 5000
+    try:
+        import subprocess
+        subprocess.run(["fuser", "-k", f"{port}/tcp"], stderr=subprocess.DEVNULL, timeout=5)
+    except:
+        pass
+    
     process = subprocess.Popen(
         [sys.executable, "main.py"],
         cwd=app_dir,
@@ -133,8 +141,28 @@ def run_validation():
         env={**os.environ, "PYTHONUNBUFFERED": "1"}
     )
     
-    # Wait for app to start
-    time.sleep(3)
+    # Wait for app to start (up to 15 seconds)
+    print("Waiting for Flask to start...")
+    started = False
+    for i in range(15):
+        time.sleep(1)
+        try:
+            r = requests.get(f"http://127.0.0.1:{port}/api/health", timeout=2)
+            if r.status_code == 200:
+                started = True
+                print(f"Flask started after {i+1} seconds")
+                break
+        except:
+            pass
+    
+    if not started:
+        stdout, stderr = process.communicate(timeout=5)
+        print(f"{colors.RED}Flask failed to start!{colors.END}")
+        print(f"stdout: {stdout.decode()[:500]}")
+        print(f"stderr: {stderr.decode()[:500]}")
+        results["tests"].append({"name": "Flask Startup", "passed": False, "error": stderr.decode()[:500]})
+        print_result("Flask Startup", False)
+        # Continue with error
     
     base_url = f"http://localhost:{port}"
     
