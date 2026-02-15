@@ -80,12 +80,16 @@ def run_graph_validation():
     
     # Run pytest graph tests
     success, output = run_command(
-        "python -m pytest tests/test_graph_validation.py -v --tb=short"
+        "python3 -m pytest tests/test_graph_validation.py -v --tb=short"
     )
     
     # Parse results
     passed = 0
     failed = 0
+    
+    if not success:
+        log_step("Graph validation: Command failed", "✗")
+        return False, output
     
     if "passed" in output:
         import re
@@ -109,11 +113,15 @@ def run_core_tests():
     log_step("Running core tests...", "...")
     
     success, output = run_command(
-        "python -m pytest tests/test_core.py -v --tb=short"
+        "python3 -m pytest tests/test_core.py -v --tb=short"
     )
     
     passed = 0
     failed = 0
+    
+    if not success:
+        log_step("Core tests: Command failed", "✗")
+        return False, output
     
     if "passed" in output:
         import re
@@ -136,7 +144,7 @@ def run_full_validation():
     """Run full validation suite"""
     log_step("Running full validation...", "...")
     
-    success, output = run_command("python validate.py")
+    success, output = run_command("python3 validate.py")
     
     if "Failed: 0" in output or "failed: 0" in output:
         log_step("Full validation passed", "✓")
