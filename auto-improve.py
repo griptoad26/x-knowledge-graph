@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 X Knowledge Graph - Autonomous Improvement & Distribution System
 Detects failures → Analyzes → Fixes → Creates Distribution on Success
@@ -80,7 +80,7 @@ def run_graph_validation():
     
     # Run pytest graph tests
     success, output = run_command(
-        "python3 -m pytest tests/test_graph_validation.py -v --tb=short"
+        "python -m pytest tests/test_graph_validation.py -v --tb=short"
     )
     
     # Parse results
@@ -113,7 +113,7 @@ def run_core_tests():
     log_step("Running core tests...", "...")
     
     success, output = run_command(
-        "python3 -m pytest tests/test_core.py -v --tb=short"
+        "python -m pytest tests/test_core.py -v --tb=short"
     )
     
     passed = 0
@@ -144,7 +144,7 @@ def run_full_validation():
     """Run full validation suite"""
     log_step("Running full validation...", "...")
     
-    success, output = run_command("python3 validate.py")
+    success, output = run_command("python validate.py")
     
     if "Failed: 0" in output or "failed: 0" in output:
         log_step("Full validation passed", "✓")
