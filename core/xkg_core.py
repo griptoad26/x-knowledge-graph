@@ -118,7 +118,7 @@ def find_all_export_files(directory: str, extensions: List[str] = None) -> List[
 
 
 def detect_export_format(filepath: str) -> str:
-    """Auto-detect if file is X or Grok format based on content"""
+    """Auto-detect if file is X, Grok, or Production Log format based on content"""
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
@@ -153,6 +153,24 @@ def detect_export_format(filepath: str) -> str:
                 if any('created_at' in item and 'text' in item for item in data[:3]):
                     if any('user' in item or 'author' in item.lower() for item in data[:3]):
                         return 'x'
+            
+            # Check for Production Log format (server logs with timestamp/level/message)
+            if isinstance(data, list):
+                first_item = data[0] if data else {}
+                # Check for log-like fields
+                has_log_fields = (
+                    ('timestamp' in first_item or 'time' in first_item or 'created_at' in first_item) and
+                    ('level' in first_item or 'severity' in first_item or 'log_level' in first_item or 'level' in str(first_item).lower())
+                )
+                has_message = 'message' in first_item or 'msg' in first_item or 'log_message' in first_item
+                has_service = 'service' in first_item or 'logger' in first_item or 'name' in first_item
+                if has_log_fields or has_message:
+                    return 'prodlog'
+            
+            # Check for prod-*.json filename pattern (production log files)
+            filename = Path(filepath).name.lower()
+            if filename.startswith('prod-') and filename.endswith('.json'):
+                return 'prodlog'
         
         except json.JSONDecodeError:
             pass
@@ -345,7 +363,7 @@ class FlexibleGrokParser:
         }
         
         # Find all potential export files
-        files = find_all_export_files(export_path, ['.json', '.js', 'grok', 'post', 'conversation', 'message'])
+        files = find_all_export_files(export_path, ['.json', '.js', 'grok', 'post', 'conversation', 'message', 'prod'])
         
         if not files:
             return {'error': f'No export files found in {export_path}'}
@@ -359,6 +377,8 @@ class FlexibleGrokParser:
             
             if format_type == 'grok':
                 self._parse_grok_file(filepath)
+            elif format_type == 'prodlog':
+                self._parse_prodlog_file(filepath)
             elif format_type == 'x':
                 print(f"    Skipping (X format)")
             else:
@@ -453,6 +473,53 @@ class FlexibleGrokParser:
         
         except Exception:
             return None
+    
+    def _parse_prodlog_file(self, filepath: str):
+        """Parse production log files as pseudo-posts"""
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            if not isinstance(data, list):
+                data = [data]
+            
+            for idx, item in enumerate(data):
+                if not isinstance(item, dict):
+                    continue
+                
+                # Extract log fields
+                timestamp = item.get('timestamp', item.get('time', item.get('created_at', '')))
+                level = item.get('level', item.get('severity', item.get('log_level', '')))
+                message = item.get('message', item.get('msg', item.get('log_message', '')))
+                service = item.get('service', item.get('logger', item.get('name', 'unknown')))
+                
+                # Skip empty messages
+                if not message:
+                    continue
+                
+                # Create a unique ID
+                post_id = f"log_{Path(filepath).stem}_{idx}"
+                
+                # Use service + level as "author" for filtering later
+                author_id = f"{service}_{level}"
+                
+                # Create the post
+                post = GrokPost(
+                    id=post_id,
+                    text=message,
+                    created_at=timestamp,
+                    author_id=author_id,
+                    conversation_id=None,
+                    in_reply_to_id=None,
+                    metrics={'level': level, 'service': service},
+                    entities=[],
+                    source='prodlog'
+                )
+                
+                self.posts[post.id] = post
+        
+        except Exception as e:
+            print(f"    Error parsing prodlog {os.path.basename(filepath)}: {e}")
     
     def _parse_generic_file(self, filepath: str):
         """Parse generic JSON as posts"""
