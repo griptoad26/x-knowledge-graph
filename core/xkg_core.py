@@ -152,22 +152,20 @@ def detect_export_format(filepath: str) -> str:
                 if any(k for k in data.keys() if 'tweet' in k.lower()):
                     return 'x'
             
-            # Check for tweets array format
-            if isinstance(data, list):
-                if any('created_at' in item and 'text' in item for item in data[:3]):
-                    if any('user' in item or 'author' in item.lower() for item in data[:3]):
-                        return 'x'
-            
-            # Check for Production Log format (server logs with timestamp/level/message)
-            if isinstance(data, list):
+            # Check for Production Log / Search History format
+            if isinstance(data, list) and len(data) > 0:
                 first_item = data[0] if data else {}
-                # Check for log-like fields
+                
+                # Check for Brave Search History (url, title, description)
+                if 'url' in first_item and 'title' in first_item:
+                    return 'prodlog'
+                
+                # Check for production log (timestamp/level/message)
                 has_log_fields = (
                     ('timestamp' in first_item or 'time' in first_item or 'created_at' in first_item) and
                     ('level' in first_item or 'severity' in first_item or 'log_level' in first_item or 'level' in str(first_item).lower())
                 )
                 has_message = 'message' in first_item or 'msg' in first_item or 'log_message' in first_item
-                has_service = 'service' in first_item or 'logger' in first_item or 'name' in first_item
                 if has_log_fields or has_message:
                     return 'prodlog'
             
@@ -493,7 +491,7 @@ class FlexibleGrokParser:
             return None
     
     def _parse_prodlog_file(self, filepath: str):
-        """Parse production log files as pseudo-posts"""
+        """Parse production log files or search history as pseudo-posts"""
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -505,31 +503,62 @@ class FlexibleGrokParser:
                 if not isinstance(item, dict):
                     continue
                 
-                # Extract log fields
-                timestamp = item.get('timestamp', item.get('time', item.get('created_at', '')))
-                level = item.get('level', item.get('severity', item.get('log_level', '')))
-                message = item.get('message', item.get('msg', item.get('log_message', '')))
-                service = item.get('service', item.get('logger', item.get('name', 'unknown')))
+                # Detect format based on available fields
+                has_url = 'url' in item
+                has_timestamp = 'timestamp' in item or 'time' in item or 'created_at' in item
+                has_message = 'message' in item or 'msg' in item
                 
-                # Skip empty messages
-                if not message:
+                # Format 1: Brave Search History (url, title, description, preview)
+                if has_url:
+                    title = item.get('title', '')
+                    description = item.get('description', '')
+                    preview = item.get('preview', '')
+                    url = item.get('url', '')
+                    site_name = item.get('site_name', '')
+                    
+                    # Combine text fields
+                    text_parts = []
+                    if title: text_parts.append(title)
+                    if description: text_parts.append(description)
+                    if preview: text_parts.append(preview)
+                    text = ' | '.join(text_parts)
+                    
+                    if not text:
+                        continue
+                    
+                    # Create ID from URL
+                    post_id = f"search_{idx}_{hash(url) % 100000}"
+                    timestamp = item.get('timestamp', item.get('time', ''))
+                    author_id = f"search_{site_name}" if site_name else "search_history"
+                
+                # Format 2: Production Log (timestamp, level, message, service)
+                elif has_timestamp or has_message:
+                    timestamp = item.get('timestamp', item.get('time', item.get('created_at', '')))
+                    level = item.get('level', item.get('severity', item.get('log_level', '')))
+                    message = item.get('message', item.get('msg', item.get('log_message', '')))
+                    service = item.get('service', item.get('logger', item.get('name', 'unknown')))
+                    
+                    # Skip empty messages
+                    if not message:
+                        continue
+                    
+                    text = message
+                    post_id = f"log_{Path(filepath).stem}_{idx}"
+                    author_id = f"{service}_{level}" if level else service
+                
+                else:
+                    # Unknown format - skip
                     continue
-                
-                # Create a unique ID
-                post_id = f"log_{Path(filepath).stem}_{idx}"
-                
-                # Use service + level as "author" for filtering later
-                author_id = f"{service}_{level}"
                 
                 # Create the post
                 post = GrokPost(
                     id=post_id,
-                    text=message,
+                    text=text,
                     created_at=timestamp,
                     author_id=author_id,
                     conversation_id=None,
                     in_reply_to_id=None,
-                    metrics={'level': level, 'service': service},
+                    metrics={'source': 'prodlog'},
                     entities=[],
                     source='prodlog'
                 )
