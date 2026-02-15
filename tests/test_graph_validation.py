@@ -16,14 +16,17 @@ Sample Data:
 import sys
 import json
 import time
+import os
 import pytest
 from pathlib import Path
 
-# Paths
+# Paths - allow environment override for production data
 PROJECT_ROOT = Path(__file__).parent.parent
 TEST_DATA_DIR = PROJECT_ROOT / "test_data"
-X_EXPORT_DIR = TEST_DATA_DIR / "x_export"
-GROK_EXPORT_DIR = TEST_DATA_DIR / "grok_export"
+
+# Allow environment override for production data
+X_EXPORT_DIR = os.environ.get("X_EXPORT_PATH", str(TEST_DATA_DIR / "x_export"))
+GROK_EXPORT_DIR = os.environ.get("GROK_EXPORT_PATH", str(TEST_DATA_DIR / "grok_export"))
 
 sys.path.insert(0, str(PROJECT_ROOT / "core"))
 from xkg_core import KnowledgeGraph
