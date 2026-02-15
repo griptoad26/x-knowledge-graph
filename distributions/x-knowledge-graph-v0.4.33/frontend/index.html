@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X Knowledge Graph v0.4.33</title>
+    <link rel="stylesheet" href="css/layouts.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">X Knowledge Graph <span>v0.4.33</span></div>
+            <div class="header-actions">
+                <button id="theme-toggle" class="btn btn-theme" onclick="toggleTheme()" aria-label="Toggle theme" title="Switch to light/dark theme">
+                    <span id="theme-icon" aria-hidden="true">🌙</span>
+                </button>
+                <button class="btn btn-secondary" onclick="showHelp()">Help</button>
+                <button class="btn btn-primary" onclick="exportData()">Export</button>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Data Source</div>
+                
+                <!-- Export Type Selection -->
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Export Type</label>
+                    <div style="display: flex; gap: 8px;">
+                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <input type="radio" name="export-type" value="x" checked onchange="toggleFolderInputs()">
+                            <span style="font-size: 12px;">X</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <input type="radio" name="export-type" value="grok" onchange="toggleFolderInputs()">
+                            <span style="font-size: 12px;">Grok</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <input type="radio" name="export-type" value="both" onchange="toggleFolderInputs()">
+                            <span style="font-size: 12px;">Both</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- X Export Folder -->
+                <div id="x-folder-section">
+                    <button class="btn btn-primary" style="width: 100%;" onclick="selectFolder('x')">
+                        📂 Browse X Folder
+                    </button>
+                    <input type="file" id="folder-input" webkitdirectory directory style="display: none;">
+                    <input type="text" id="x-folder-path" placeholder="Select X export folder..." 
+                           style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-color); 
+                                  color: var(--text-primary); padding: 8px; border-radius: 4px; 
+                                  font-size: 12px; margin-top: 8px;">
+                </div>
+
+                <!-- Grok Export Folder -->
+                <div id="grok-folder-section" style="display: none; margin-top: 8px;">
+                    <button class="btn btn-secondary" style="width: 100%;" onclick="selectFolder('grok')">
+                        📂 Browse Grok Folder
+                    </button>
+                    <input type="file" id="grok-folder-input" webkitdirectory directory style="display: none;">
+                    <input type="text" id="grok-folder-path" placeholder="Select Grok export folder..." 
+                           style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-color); 
+                                  color: var(--text-primary); padding: 8px; border-radius: 4px; 
+                                  font-size: 12px; margin-top: 8px;">
+                </div>
+
+                <!-- Load Button -->
+                <button class="btn btn-success" style="width: 100%; margin-top: 12px;" onclick="parseExport()">
+                    ▶️ Load Data
+                </button>
+
+                <!-- Clear Button -->
+                <button class="btn btn-secondary" style="width: 100%; margin-top: 6px;" onclick="clearGraph()">
+                    🗑️ Clear
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Views</div>
+                <nav class="nav-tabs">
+                    <div class="nav-tab active" data-view="graph" onclick="switchView('graph')">
+                        <span class="icon">🔗</span>
+                        <span>Graph View</span>
+                        <span class="badge" id="graph-count">0</span>
+                    </div>
+                    <div class="nav-tab" data-view="timeline" onclick="switchView('timeline')">
+                        <span class="icon">📅</span>
+                        <span>Timeline</span>
+                        <span class="badge" id="timeline-count">0</span>
+                    </div>
+                    <div class="nav-tab" data-view="taskboard" onclick="switchView('taskboard')">
+                        <span class="icon">📋</span>
+                        <span>Task Board</span>
+                        <span class="badge" id="task-count">0</span>
+                    </div>
+                    <div class="nav-tab" data-view="clusters" onclick="switchView('clusters')">
+                        <span class="icon">🏷️</span>
+                        <span>Topic Clusters</span>
+                        <span class="badge" id="cluster-count">0</span>
+                    </div>
+                    <div class="nav-tab" data-view="conversation" onclick="switchView('conversation')">
+                        <span class="icon">💬</span>
+                        <span>Conversation Tree</span>
+                        <span class="badge" id="conversation-count">0</span>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="sidebar-section" id="stats-section" style="display: none;">
+                <div class="sidebar-title">Statistics</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-tweets">0</div>
+                        <div class="stat-label">Tweets</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-actions">0</div>
+                        <div class="stat-label">Actions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-topics">0</div>
+                        <div class="stat-label">Topics</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-conversations">0</div>
+                        <div class="stat-label">Conversations</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- ==================== GRAPH VIEW ==================== -->
+            <div class="view-container active" id="view-graph">
+                <div class="graph-view">
+                    <div class="graph-toolbar">
+                        <button class="btn" onclick="zoomIn()">🔍+</button>
+                        <button class="btn" onclick="zoomOut()">🔍-</button>
+                        <button class="btn" onclick="zoomReset()">🔍100%</button>
+                        <button class="btn" onclick="fitGraph()">⊡ Fit</button>
+                    </div>
+                    <div class="graph-filters">
+                        <label>Layout Algorithm</label>
+                        <select id="layout-select" onchange="changeLayout(this.value)">
+                            <option value="force">🔗 Force-Directed</option>
+                            <option value="hierarchical">📊 Hierarchical</option>
+                            <option value="circular">⭕ Circular</option>
+                            <option value="radial">☀️ Radial</option>
+                            <option value="grid">▦ Grid</option>
+                        </select>
+                        <label style="margin-top: 10px;">Filter by Type</label>
+                        <select id="node-type-filter" onchange="filterNodes()">
+                            <option value="all">All Types</option>
+                            <option value="tweet">Tweets</option>
+                            <option value="action">Actions</option>
+                            <option value="topic">Topics</option>
+                        </select>
+                        <label style="margin-top: 10px;">Search Nodes</label>
+                        <input type="text" id="node-search" placeholder="Search..." onkeyup="searchNodes()">
+                    </div>
+                    <div class="graph-info" id="graph-info">Load X export to see knowledge graph</div>
+                    <svg id="graph-svg">
+                        <text x="50%" y="50%" text-anchor="middle" fill="#666" font-size="14">
+                            Load X export to see knowledge graph
+                        </text>
+                    </svg>
+                    <div class="node-tooltip" id="node-tooltip">
+                        <div class="node-tooltip-title"></div>
+                        <div class="node-tooltip-text"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TIMELINE VIEW ==================== -->
+            <div class="view-container" id="view-timeline">
+                <div class="timeline-view">
+                    <div class="timeline-toolbar">
+                        <div>
+                            <label>From:</label>
+                            <input type="date" id="timeline-start" onchange="filterTimeline()">
+                        </div>
+                        <div>
+                            <label>To:</label>
+                            <input type="date" id="timeline-end" onchange="filterTimeline()">
+                        </div>
+                        <button class="btn" onclick="clearTimelineFilter()">Clear</button>
+                        <div style="margin-left: auto; font-size: 12px; color: var(--text-secondary);">
+                            Showing <span id="timeline-visible">0</span> of <span id="timeline-total">0</span> items
+                        </div>
+                    </div>
+                    <div class="heatmap-container">
+                        <div class="heatmap-title">Activity Heatmap (Last 30 Days)</div>
+                        <div class="heatmap-grid" id="heatmap"></div>
+                    </div>
+                    <div class="timeline-container">
+                        <div class="timeline-stream" id="timeline-stream">
+                            <div class="empty-state">
+                                <div class="icon">📅</div>
+                                <h3>No Timeline Data</h3>
+                                <p>Load an X export to see your chronological activity stream</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TASK BOARD VIEW ==================== -->
+            <div class="view-container" id="view-taskboard">
+                <div class="taskboard-view">
+                    <div class="taskboard-toolbar">
+                        <h2>Task Board</h2>
+                        <div>
+                            <label style="margin-right: 10px;">Filter:</label>
+                            <select id="task-filter" onchange="filterTasks()">
+                                <option value="all">All Tasks</option>
+                                <option value="pending">Pending</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="complete">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="taskboard-columns">
+                        <div class="task-column" id="column-todo" 
+                             ondragover="handleDragOver(event)" 
+                             ondrop="handleDrop(event, 'todo')"
+                             ondragleave="handleDragLeave(event)">
+                            <div class="column-header">
+                                <span class="column-title">📝 To Do</span>
+                                <span class="column-count" id="count-todo">0</span>
+                            </div>
+                            <div class="column-content" id="tasks-todo"></div>
+                        </div>
+                        <div class="task-column" id="column-inprogress" 
+                             ondragover="handleDragOver(event)" 
+                             ondrop="handleDrop(event, 'in_progress')"
+                             ondragleave="handleDragLeave(event)">
+                            <div class="column-header">
+                                <span class="column-title">🔄 In Progress</span>
+                                <span class="column-count" id="count-inprogress">0</span>
+                            </div>
+                            <div class="column-content" id="tasks-inprogress"></div>
+                        </div>
+                        <div class="task-column" id="column-done" 
+                             ondragover="handleDragOver(event)" 
+                             ondrop="handleDrop(event, 'done')"
+                             ondragleave="handleDragLeave(event)">
+                            <div class="column-header">
+                                <span class="column-title">✅ Done</span>
+                                <span class="column-count" id="count-done">0</span>
+                            </div>
+                            <div class="column-content" id="tasks-done"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TOPIC CLUSTERS VIEW ==================== -->
+            <div class="view-container" id="view-clusters">
+                <div class="clusters-view">
+                    <div class="clusters-toolbar">
+                        <input type="text" id="cluster-search" placeholder="Search clusters..." onkeyup="searchClusters()">
+                        <button class="btn" onclick="expandAllClusters()">Expand All</button>
+                        <button class="btn" onclick="collapseAllClusters()">Collapse All</button>
+                    </div>
+                    <div class="clusters-container">
+                        <div class="clusters-grid" id="clusters-grid">
+                            <div class="empty-state">
+                                <div class="icon">🏷️</div>
+                                <h3>No Topic Clusters</h3>
+                                <p>Load an X export to see your topics organized by keywords</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== CONVERSATION TREE VIEW ==================== -->
+            <div class="view-container" id="view-conversation">
+                <div class="conversation-view">
+                    <div class="conversation-toolbar">
+                        <input type="text" id="conversation-search" placeholder="Search conversations..." onkeyup="searchConversations()">
+                        <button class="btn" onclick="expandAllThreads()">Expand All</button>
+                        <button class="btn" onclick="collapseAllThreads()">Collapse All</button>
+                    </div>
+                    <div class="conversation-container">
+                        <div class="conversation-tree" id="conversation-tree">
+                            <div class="empty-state">
+                                <div class="icon">💬</div>
+                                <h3>No Conversations</h3>
+                                <p>Load an X export to see your reply threads organized</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Panel - Details -->
+        <aside class="right-panel">
+            <div class="panel-section">
+                <div class="panel-title">Details</div>
+                <div id="details-content">
+                    <p style="color: var(--text-secondary); font-size: 12px;">
+                        Select an item to view details
+                    </p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; overflow-y: auto;">
+        <div style="background: var(--bg-secondary); border: 1px solid var(--accent-primary); border-radius: 12px; max-width: 600px; margin: 40px auto; overflow: hidden;">
+            <div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="color: var(--accent-primary); margin: 0;">📖 How to Use</h2>
+                <button onclick="hideHelp()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">×</button>
+            </div>
+            <div style="padding: 20px; line-height: 1.8;">
+                <h3 style="color: var(--accent-success);">🐦 X Export</h3>
+                <ol style="margin: 0 0 20px 20px; color: var(--text-primary);">
+                    <li>Settings → Your account → Download an archive</li>
+                    <li>Request archive (may take hours/days)</li>
+                    <li>Download ZIP when ready, extract</li>
+                    <li>Select folder with Browse button</li>
+                </ol>
+                <h3 style="color: var(--accent-primary);">📊 Views</h3>
+                <ul style="margin: 0 0 20px 20px; color: var(--text-primary);">
+                    <li><strong>Graph View:</strong> Force-directed visualization of connections</li>
+                    <li><strong>Timeline:</strong> Chronological stream of activity</li>
+                    <li><strong>Task Board:</strong> Kanban board for action items</li>
+                    <li><strong>Topic Clusters:</strong> Keyword-based grouping</li>
+                    <li><strong>Conversation Tree:</strong> Threaded reply structure</li>
+                </ul>
+                <h3 style="color: var(--accent-warning);">🌙 Light/Dark Mode</h3>
+                <ul style="margin: 0 0 20px 20px; color: var(--text-primary);">
+                    <li><strong>Theme Toggle:</strong> Click the moon/sun icon in the header</li>
+                    <li><strong>Auto-detection:</strong> Defaults to your system preference</li>
+                    <li><strong>Persistence:</strong> Your theme choice is saved automatically</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let graphData = { nodes: [], edges: [] };
+        let timelineData = [];
+        let actions = [];
+        let topics = {};
+        let conversations = [];
+        let currentView = 'graph';
+        let currentLayout = 'force';
+        let zoomLevel = 1;
+        let nodePositions = {};
+
+        const API_BASE = '';
+
+        // Theme State
+        let currentTheme = 'dark';
+
+        // Theme Toggle
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme();
+            saveThemePreference();
+        }
+
+        function applyTheme() {
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            const icon = document.getElementById('theme-icon');
+            icon.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+        }
+
+        function loadThemePreference() {
+            const savedTheme = localStorage.getItem('xkg_theme');
+            if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+                currentTheme = savedTheme;
+            } else {
+                // Check system preference
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                    currentTheme = 'light';
+                }
+            }
+            applyTheme();
+        }
+
+        function saveThemePreference() {
+            localStorage.setItem('xkg_theme', currentTheme);
+        }
+
+        // DOM Elements
+        const els = {
+            details: document.getElementById('details-content'),
+            statsSection: document.getElementById('stats-section')
+        };
+
+        // ==================== VIEW NAVIGATION ====================
+
+        function switchView(viewName) {
+            currentView = viewName;
+            
+            // Update nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.view === viewName);
+            });
+            
+            // Update view containers
+            document.querySelectorAll('.view-container').forEach(container => {
+                container.classList.toggle('active', container.id === `view-${viewName}`);
+            });
+            
+            // Save state
+            localStorage.setItem('xkg_current_view', viewName);
+            
+            // Render current view
+            renderCurrentView();
+        }
+
+        function renderCurrentView() {
+            switch(currentView) {
+                case 'graph': renderGraph(); break;
+                case 'timeline': renderTimeline(); break;
+                case 'taskboard': renderTaskBoard(); break;
+                case 'clusters': renderClusters(); break;
+                case 'conversation': renderConversation(); break;
+            }
+        }
+
+        // ==================== GRAPH VIEW ====================
+
+        const layouts = {
+            force: function(nodes, edges, width, height) {
+                const positions = {};
+                const padding = 60;
+                const areaWidth = width - padding * 2;
+                const areaHeight = height - padding * 2;
+                
+                nodes.forEach((node, i) => {
+                    positions[node.id] = {
+                        x: padding + Math.random() * areaWidth,
+                        y: padding + Math.random() * areaHeight
+                    };
+                });
+                
+                const iterations = 100;
+                const repulsion = 5000;
+                const springLength = 80;
+                const springStrength = 0.05;
+                
+                for (let iter = 0; iter < iterations; iter++) {
+                    nodes.forEach(node1 => {
+                        nodes.forEach(node2 => {
+                            if (node1.id === node2.id) return;
+                            const dx = positions[node1.id].x - positions[node2.id].x;
+                            const dy = positions[node1.id].y - positions[node2.id].y;
+                            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                            const force = repulsion / (dist * dist);
+                            positions[node1.id].x += (dx / dist) * force;
+                            positions[node1.id].y += (dy / dist) * force;
+                        });
+                    });
+                    
+                    edges.forEach(edge => {
+                        if (positions[edge.source] && positions[edge.target]) {
+                            const dx = positions[edge.target].x - positions[edge.source].x;
+                            const dy = positions[edge.target].y - positions[edge.source].y;
+                            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                            const force = (dist - springLength) * springStrength;
+                            positions[edge.source].x += (dx / dist) * force;
+                            positions[edge.source].y += (dy / dist) * force;
+                            positions[edge.target].x -= (dx / dist) * force;
+                            positions[edge.target].y -= (dy / dist) * force;
+                        }
+                    });
+                    
+                    const centerX = width / 2;
+                    const centerY = height / 2;
+                    nodes.forEach(node => {
+                        positions[node.id].x += (centerX - positions[node.id].x) * 0.01;
+                        positions[node.id].y += (centerY - positions[node.id].y) * 0.01;
+                    });
+                }
+                
+                return positions;
+            },
+            
+            hierarchical: function(nodes, edges, width, height) {
+                const positions = {};
+                const padding = 80;
+                const levels = {};
+                const levelOrder = { topic: 0, action: 1, tweet: 2, user: 3 };
+                
+                nodes.forEach(node => {
+                    const level = levelOrder[node.type] || 2;
+                    if (!levels[level]) levels[level] = [];
+                    levels[level].push(node.id);
+                });
+                
+                const numLevels = Object.keys(levels).length;
+                const levelHeight = (height - padding * 2) / (numLevels - 1 || 1);
+                
+                Object.keys(levels).forEach(level => {
+                    const levelNodes = levels[level];
+                    const levelY = padding + (parseInt(level) * levelHeight);
+                    const nodeSpacing = (width - padding * 2) / (levelNodes.length + 1);
+                    
+                    levelNodes.forEach((nodeId, i) => {
+                        positions[nodeId] = {
+                            x: padding + nodeSpacing * (i + 1),
+                            y: levelY
+                        };
+                    });
+                });
+                
+                return positions;
+            },
+            
+            circular: function(nodes, edges, width, height) {
+                const positions = {};
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const radius = Math.min(width, height) / 3;
+                
+                nodes.forEach((node, i) => {
+                    const angle = (i / nodes.length) * 2 * Math.PI - Math.PI / 2;
+                    positions[node.id] = {
+                        x: centerX + radius * Math.cos(angle),
+                        y: centerY + radius * Math.sin(angle)
+                    };
+                });
+                
+                return positions;
+            },
+            
+            radial: function(nodes, edges, width, height) {
+                const positions = {};
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const topicNodes = nodes.filter(n => n.type === 'topic');
+                const actionNodes = nodes.filter(n => n.type === 'action');
+                const tweetNodes = nodes.filter(n => n.type === 'tweet');
+                
+                const topicRadius = Math.min(width, height) / 6;
+                topicNodes.forEach((node, i) => {
+                    const angle = (i / topicNodes.length) * 2 * Math.PI - Math.PI / 2;
+                    positions[node.id] = {
+                        x: centerX + topicRadius * Math.cos(angle),
+                        y: centerY + topicRadius * Math.sin(angle)
+                    };
+                });
+                
+                const actionRadius = Math.min(width, height) / 3;
+                actionNodes.forEach((node, i) => {
+                    const angle = (i / actionNodes.length) * 2 * Math.PI;
+                    positions[node.id] = {
+                        x: centerX + actionRadius * Math.cos(angle),
+                        y: centerY + actionRadius * Math.sin(angle)
+                    };
+                });
+                
+                const tweetRadius = Math.min(width, height) / 2.2;
+                tweetNodes.forEach((node, i) => {
+                    const angle = (i / tweetNodes.length) * 2 * Math.PI;
+                    positions[node.id] = {
+                        x: centerX + tweetRadius * Math.cos(angle),
+                        y: centerY + tweetRadius * Math.sin(angle)
+                    };
+                });
+                
+                return positions;
+            },
+            
+            grid: function(nodes, edges, width, height) {
+                const positions = {};
+                const padding = 60;
+                const cols = Math.ceil(Math.sqrt(nodes.length));
+                const cellWidth = (width - padding * 2) / cols;
+                const cellHeight = (height - padding * 2) / Math.ceil(nodes.length / cols);
+                
+                nodes.forEach((node, i) => {
+                    const row = Math.floor(i / cols);
+                    const col = i % cols;
+                    positions[node.id] = {
+                        x: padding + col * cellWidth + cellWidth / 2,
+                        y: padding + row * cellHeight + cellHeight / 2
+                    };
+                });
+                
+                return positions;
+            }
+        };
+
+        function renderGraph() {
+            const svg = document.getElementById('graph-svg');
+            const container = document.getElementById('view-graph');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            svg.innerHTML = '';
+
+            if (!graphData.nodes || graphData.nodes.length === 0) {
+                svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">No graph data - Parse an export first</text>';
+                document.getElementById('graph-info').textContent = 'No data loaded';
+                return;
+            }
+
+            const colors = {
+                tweet: '#3498db',
+                action: '#e94560',
+                topic: '#00d9ff',
+                user: '#9b59b6'
+            };
+
+            const sizes = {
+                tweet: 12,
+                action: 10,
+                topic: 30,
+                user: 15
+            };
+
+            // Filter nodes
+            const typeFilter = document.getElementById('node-type-filter').value;
+            let filteredNodes = graphData.nodes;
+            if (typeFilter !== 'all') {
+                filteredNodes = graphData.nodes.filter(n => n.type === typeFilter);
+            }
+            
+            const nodeIds = new Set(filteredNodes.map(n => n.id));
+            const filteredEdges = graphData.edges.filter(e => nodeIds.has(e.source) && nodeIds.has(e.target));
+
+            nodePositions = layouts[currentLayout](filteredNodes, filteredEdges, width, height);
+
+            // Draw edges
+            filteredEdges.forEach(edge => {
+                if (nodePositions[edge.source] && nodePositions[edge.target]) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', nodePositions[edge.source].x);
+                    line.setAttribute('y1', nodePositions[edge.source].y);
+                    line.setAttribute('x2', nodePositions[edge.target].x);
+                    line.setAttribute('y2', nodePositions[edge.target].y);
+                    line.setAttribute('class', 'graph-edge');
+                    svg.appendChild(line);
+                }
+            });
+
+            // Draw nodes
+            filteredNodes.forEach(node => {
+                if (!nodePositions[node.id]) return;
+                const pos = nodePositions[node.id];
+
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.setAttribute('class', 'graph-node');
+                group.setAttribute('data-id', node.id);
+
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', pos.x);
+                circle.setAttribute('cy', pos.y);
+                circle.setAttribute('r', sizes[node.type] || 12);
+                circle.setAttribute('fill', colors[node.type] || '#666');
+                
+                circle.addEventListener('mouseenter', () => {
+                    circle.setAttribute('stroke', '#00d9ff');
+                    circle.setAttribute('stroke-width', '3');
+                    showTooltip(node, pos.x, pos.y);
+                });
+                circle.addEventListener('mouseleave', () => {
+                    circle.setAttribute('stroke', '#fff');
+                    circle.setAttribute('stroke-width', '2');
+                    hideTooltip();
+                });
+                circle.addEventListener('click', () => selectNode(node));
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', pos.x);
+                text.setAttribute('y', pos.y + (sizes[node.type] || 12) + 15);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', '#ccc');
+                text.setAttribute('font-size', '10');
+                text.textContent = node.label ? node.label.substring(0, 15) : node.type;
+
+                group.appendChild(circle);
+                group.appendChild(text);
+                svg.appendChild(group);
+            });
+
+            document.getElementById('graph-count').textContent = filteredNodes.length;
+            document.getElementById('graph-info').textContent = 
+                `${filteredNodes.length} nodes • ${filteredEdges.length} edges`;
+        }
+
+        function changeLayout(layout) {
+            currentLayout = layout;
+            renderGraph();
+        }
+
+        function filterNodes() {
+            renderGraph();
+        }
+
+        function searchNodes() {
+            const query = document.getElementById('node-search').value.toLowerCase();
+            document.querySelectorAll('.graph-node').forEach(node => {
+                const id = node.getAttribute('data-id');
+                const nodeData = graphData.nodes.find(n => n.id === id);
+                const visible = !query || (nodeData.label && nodeData.label.toLowerCase().includes(query));
+                node.style.display = visible ? 'block' : 'none';
+            });
+        }
+
+        function zoomIn() { zoomLevel = Math.min(zoomLevel * 1.3, 5); applyZoom(); }
+        function zoomOut() { zoomLevel = Math.max(zoomLevel / 1.3, 0.2); applyZoom(); }
+        function zoomReset() { zoomLevel = 1; applyZoom(); }
+        
+        function applyZoom() {
+            const svg = document.getElementById('graph-svg');
+            svg.style.transform = `scale(${zoomLevel})`;
+            svg.style.transformOrigin = 'center center';
+        }
+
+        function fitGraph() {
+            zoomReset();
+            renderGraph();
+        }
+
+        function showTooltip(node, x, y) {
+            const tooltip = document.getElementById('node-tooltip');
+            tooltip.querySelector('.node-tooltip-title').textContent = 
+                node.type.charAt(0).toUpperCase() + node.type.slice(1);
+            tooltip.querySelector('.node-tooltip-text').textContent = 
+                node.label || node.text || 'Node ' + node.id;
+            tooltip.style.left = (x + 10) + 'px';
+            tooltip.style.top = (y - 30) + 'px';
+            tooltip.style.display = 'block';
+        }
+
+        function hideTooltip() {
+            document.getElementById('node-tooltip').style.display = 'none';
+        }
+
+        function selectNode(node) {
+            showNodeDetails(node);
+        }
+
+        // ==================== TIMELINE VIEW ====================
+
+        function renderTimeline() {
+            const container = document.getElementById('timeline-stream');
+            
+            if (!timelineData || timelineData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📅</div>
+                        <h3>No Timeline Data</h3>
+                        <p>Load an X export to see your chronological activity stream</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let filtered = [...timelineData];
+            
+            const startDate = document.getElementById('timeline-start').value;
+            const endDate = document.getElementById('timeline-end').value;
+            
+            if (startDate) {
+                filtered = filtered.filter(item => item.date >= startDate);
+            }
+            if (endDate) {
+                filtered = filtered.filter(item => item.date <= endDate);
+            }
+
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            container.innerHTML = filtered.map(item => `
+                <div class="timeline-item type-${item.type}" onclick="selectTimelineItem('${item.id}')">
+                    <div class="timeline-header">
+                        <span class="timeline-time">${formatDate(item.date)}</span>
+                        <span class="timeline-type">${item.type}</span>
+                    </div>
+                    <div class="timeline-content">${item.content}</div>
+                    ${item.meta ? `<div class="timeline-meta">${item.meta}</div>` : ''}
+                </div>
+            `).join('');
+
+            document.getElementById('timeline-visible').textContent = filtered.length;
+            document.getElementById('timeline-total').textContent = timelineData.length;
+
+            renderHeatmap();
+        }
+
+        function filterTimeline() {
+            renderTimeline();
+        }
+
+        function clearTimelineFilter() {
+            document.getElementById('timeline-start').value = '';
+            document.getElementById('timeline-end').value = '';
+            renderTimeline();
+        }
+
+        function renderHeatmap() {
+            const container = document.getElementById('heatmap');
+            const days = 30;
+            let html = '';
+            
+            for (let i = 0; i < days; i++) {
+                const level = Math.floor(Math.random() * 5);
+                html += `<div class="heatmap-day level-${level}"></div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function selectTimelineItem(itemId) {
+            const item = timelineData.find(i => i.id === itemId);
+            if (item) showNodeDetails(item);
+        }
+
+        // ==================== TASK BOARD VIEW ====================
+
+        function renderTaskBoard() {
+            const todoContainer = document.getElementById('tasks-todo');
+            const progressContainer = document.getElementById('tasks-inprogress');
+            const doneContainer = document.getElementById('tasks-done');
+
+            const taskFilter = document.getElementById('task-filter').value;
+            let filteredActions = actions;
+
+            if (taskFilter !== 'all') {
+                filteredActions = actions.filter(a => {
+                    if (taskFilter === 'pending') return a.status !== 'complete';
+                    if (taskFilter === 'in_progress') return a.status === 'in_progress';
+                    if (taskFilter === 'complete') return a.status === 'complete';
+                    return true;
+                });
+            }
+
+            const todo = filteredActions.filter(a => a.status !== 'complete');
+            const inProgress = filteredActions.filter(a => a.status === 'in_progress');
+            const done = filteredActions.filter(a => a.status === 'complete');
+
+            todoContainer.innerHTML = todo.map(a => createTaskCard(a)).join('');
+            progressContainer.innerHTML = inProgress.map(a => createTaskCard(a)).join('');
+            doneContainer.innerHTML = done.map(a => createTaskCard(a)).join('');
+
+            document.getElementById('count-todo').textContent = todo.length;
+            document.getElementById('count-inprogress').textContent = inProgress.length;
+            document.getElementById('count-done').textContent = done.length;
+            document.getElementById('task-count').textContent = filteredActions.length;
+
+            setupDragAndDrop();
+        }
+
+        function createTaskCard(action) {
+            const initial = (action.assignee || 'U')[0].toUpperCase();
+            return `
+                <div class="task-card priority-${action.priority}" 
+                     draggable="true" 
+                     data-action-id="${action.id}"
+                     onclick="selectTask('${action.id}')">
+                    <div class="task-title">${action.text}</div>
+                    <div class="task-meta">
+                        <span class="task-priority-badge">${action.priority}</span>
+                        <div class="task-assignee">
+                            <div class="task-assignee-avatar">${initial}</div>
+                            ${action.assignee || 'Unassigned'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setupDragAndDrop() {
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        function handleDragStart(e) {
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.dataset.actionId);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        async function handleDrop(e, status) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            const actionId = e.dataTransfer.getData('text/plain');
+            
+            const action = actions.find(a => a.id === actionId);
+            if (action) {
+                action.status = status === 'todo' ? 'pending' : status;
+                await updateActionStatus(actionId, action.status);
+                renderTaskBoard();
+            }
+        }
+
+        function filterTasks() {
+            renderTaskBoard();
+        }
+
+        async function updateActionStatus(actionId, status) {
+            try {
+                await fetch(`${API_BASE}/api/actions/${actionId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+            } catch (error) {
+                console.error('Error updating action:', error);
+            }
+        }
+
+        function selectTask(actionId) {
+            const action = actions.find(a => a.id === actionId);
+            if (action) showNodeDetails(action);
+        }
+
+        // ==================== TOPIC CLUSTERS VIEW ====================
+
+        function renderClusters() {
+            const container = document.getElementById('clusters-grid');
+            const topicEntries = Object.entries(topics);
+
+            if (topicEntries.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🏷️</div>
+                        <h3>No Topic Clusters</h3>
+                        <p>Load an X export to see your topics organized by keywords</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = topicEntries.map(([name, topic]) => `
+                <div class="cluster-card" data-cluster="${name}">
+                    <div class="cluster-header" onclick="toggleCluster('${name}')">
+                        <div class="cluster-name">
+                            <span class="cluster-expand-icon">▶</span>
+                            ${name}
+                        </div>
+                        <span class="cluster-count">${topic.action_count || 0}</span>
+                    </div>
+                    <div class="cluster-items hidden" id="cluster-items-${name.replace(/\s/g, '-')}">
+                        ${(topic.items || []).map(item => `
+                            <div class="cluster-item" onclick="selectClusterItem('${item.id}')">
+                                <div class="cluster-item-title">${item.title}</div>
+                                <div class="cluster-item-meta">${item.date || ''}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('cluster-count').textContent = topicEntries.length;
+        }
+
+        function toggleCluster(name) {
+            const card = document.querySelector(`[data-cluster="${name}"]`);
+            const items = document.getElementById(`cluster-items-${name.replace(/\s/g, '-')}`);
+            card.classList.toggle('expanded');
+            items.classList.toggle('hidden');
+        }
+
+        function expandAllClusters() {
+            document.querySelectorAll('.cluster-card').forEach(card => {
+                card.classList.add('expanded');
+                const items = card.querySelector('.cluster-items');
+                items.classList.remove('hidden');
+            });
+        }
+
+        function collapseAllClusters() {
+            document.querySelectorAll('.cluster-card').forEach(card => {
+                card.classList.remove('expanded');
+                const items = card.querySelector('.cluster-items');
+                items.classList.add('hidden');
+            });
+        }
+
+        function searchClusters() {
+            const query = document.getElementById('cluster-search').value.toLowerCase();
+            document.querySelectorAll('.cluster-card').forEach(card => {
+                const name = card.dataset.cluster.toLowerCase();
+                card.style.display = name.includes(query) ? 'block' : 'none';
+            });
+        }
+
+        function selectClusterItem(itemId) {
+            for (const topic of Object.values(topics)) {
+                const item = (topic.items || []).find(i => i.id === itemId);
+                if (item) {
+                    showNodeDetails(item);
+                    return;
+                }
+            }
+        }
+
+        // ==================== CONVERSATION TREE VIEW ====================
+
+        function renderConversation() {
+            const container = document.getElementById('conversation-tree');
+
+            if (!conversations || conversations.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">💬</div>
+                        <h3>No Conversations</h3>
+                        <p>Load an X export to see your reply threads organized</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = conversations.map(conv => createConversationTree(conv)).join('');
+            document.getElementById('conversation-count').textContent = conversations.length;
+        }
+
+        function createConversationTree(conv, depth = 0) {
+            const initial = (conv.author || 'U')[0].toUpperCase();
+            const hasChildren = conv.replies && conv.replies.length > 0;
+            
+            return `
+                <div class="conversation-thread" onclick="toggleThread(this)">
+                    <div class="thread-header">
+                        <div class="thread-avatar">${initial}</div>
+                        <div class="thread-content">
+                            <div class="thread-author">${conv.author}</div>
+                            <div class="thread-text">${conv.text}</div>
+                            <div class="thread-time">${formatDate(conv.date)}</div>
+                            ${hasChildren ? `<button class="expand-btn">Show ${conv.replies.length} replies</button>` : ''}
+                        </div>
+                    </div>
+                    ${hasChildren ? `
+                        <div class="thread-children collapsed">
+                            ${conv.replies.map(reply => createReplyItem(reply)).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function createReplyItem(reply) {
+            const initial = (reply.author || 'U')[0].toUpperCase();
+            return `
+                <div class="reply-item" onclick="selectReply('${reply.id}')">
+                    <div class="reply-header">
+                        <div class="reply-avatar">${initial}</div>
+                        <span class="reply-author">${reply.author}</span>
+                        <span class="reply-time">${formatDate(reply.date)}</span>
+                    </div>
+                    <div class="reply-text">${reply.text}</div>
+                </div>
+            `;
+        }
+
+        function toggleThread(element) {
+            const children = element.querySelector('.thread-children');
+            if (children) {
+                children.classList.toggle('collapsed');
+                const btn = element.querySelector('.expand-btn');
+                if (btn) {
+                    btn.textContent = children.classList.contains('collapsed') 
+                        ? `Show ${children.children.length} replies` 
+                        : 'Hide replies';
+                }
+            }
+        }
+
+        function expandAllThreads() {
+            document.querySelectorAll('.thread-children').forEach(el => el.classList.remove('collapsed'));
+        }
+
+        function collapseAllThreads() {
+            document.querySelectorAll('.thread-children').forEach(el => el.classList.add('collapsed'));
+        }
+
+        function searchConversations() {
+            const query = document.getElementById('conversation-search').value.toLowerCase();
+            document.querySelectorAll('.conversation-thread').forEach(thread => {
+                const text = thread.textContent.toLowerCase();
+                thread.style.display = text.includes(query) ? 'block' : 'none';
+            });
+        }
+
+        function selectReply(replyId) {
+            for (const conv of conversations) {
+                const reply = (conv.replies || []).find(r => r.id === replyId);
+                if (reply) {
+                    showNodeDetails(reply);
+                    return;
+                }
+            }
+        }
+
+        // ==================== DETAILS PANEL ====================
+
+        function showNodeDetails(node) {
+            const typeColors = { tweet: '#3498db', action: '#e94560', topic: '#00d9ff', user: '#9b59b6' };
+            
+            els.details.innerHTML = `
+                <div class="detail-card">
+                    <div class="detail-row">
+                        <div class="detail-label">Type</div>
+                        <div class="detail-value" style="color: ${typeColors[node.type] || '#ccc'}">
+                            ● ${node.type || 'Unknown'}
+                        </div>
+                    </div>
+                    ${node.label ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Label</div>
+                            <div class="detail-value">${node.label}</div>
+                        </div>
+                    ` : ''}
+                    ${node.text ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Content</div>
+                            <div class="detail-value">${node.text.substring(0, 200)}${node.text.length > 200 ? '...' : ''}</div>
+                        </div>
+                    ` : ''}
+                    ${node.topic ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Topic</div>
+                            <div class="detail-value">${node.topic}</div>
+                        </div>
+                    ` : ''}
+                    ${node.priority ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Priority</div>
+                            <div class="detail-value">
+                                <span class="task-priority-badge priority-${node.priority}">${node.priority}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${node.status ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">
+                                <span class="status-badge ${node.status === 'complete' ? 'complete' : 'pending'}">
+                                    ${node.status}
+                                </span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${node.date ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Date</div>
+                            <div class="detail-value">${formatDate(node.date)}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // ==================== API FUNCTIONS ====================
+
+        function toggleFolderInputs() {
+            const exportType = document.querySelector('input[name="export-type"]:checked').value;
+            const xSection = document.getElementById('x-folder-section');
+            const grokSection = document.getElementById('grok-folder-section');
+            
+            xSection.style.display = exportType === 'grok' ? 'none' : 'block';
+            grokSection.style.display = exportType === 'x' ? 'none' : 'block';
+        }
+
+        async function selectFolder(type) {
+            try {
+                await fetch('/api/select-folder', { method: 'POST' });
+                
+                let attempts = 0;
+                while (attempts < 100) {
+                    await new Promise(r => setTimeout(r, 100));
+                    const response = await fetch('/api/get-selected-folder');
+                    const result = await response.json();
+                    
+                    if (result.status === 'done') {
+                        if (result.path) {
+                            const key = type === 'grok' ? 'xkg_grok_path' : 'xkg_export_path';
+                            const inputId = type === 'grok' ? 'grok-folder-path' : 'x-folder-path';
+                            localStorage.setItem(key, result.path);
+                            document.getElementById(inputId).value = result.path;
+                        }
+                        return;
+                    }
+                    attempts++;
+                }
+            } catch (error) {
+                document.getElementById(type === 'grok' ? 'grok-folder-input' : 'folder-input').click();
+            }
+        }
+
+        document.getElementById('folder-input').addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                const path = e.target.files[0].path.replace(/\\[^\\]+$/, '');
+                localStorage.setItem('xkg_export_path', path);
+                document.getElementById('x-folder-path').value = path;
+            }
+        });
+
+        document.getElementById('grok-folder-input').addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                const path = e.target.files[0].path.replace(/\\[^\\]+$/, '');
+                localStorage.setItem('xkg_grok_path', path);
+                document.getElementById('grok-folder-path').value = path;
+            }
+        });
+
+        async function parseExport() {
+            const exportType = document.querySelector('input[name="export-type"]:checked').value;
+            const xPath = localStorage.getItem('xkg_export_path');
+            const grokPath = localStorage.getItem('xkg_grok_path');
+
+            if (exportType === 'x' && !xPath) {
+                alert('Please select an X export folder first');
+                return;
+            }
+            if (exportType === 'grok' && !grokPath) {
+                alert('Please select a Grok export folder first');
+                return;
+            }
+            if (exportType === 'both' && (!xPath || !grokPath)) {
+                alert('Please select both X and Grok export folders');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/parse-export`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        x_path: xPath,
+                        grok_path: grokPath,
+                        export_type: exportType
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                document.getElementById('stat-tweets').textContent = data.stats.total_tweets;
+                document.getElementById('stat-actions').textContent = data.stats.total_actions;
+                document.getElementById('stat-topics').textContent = data.stats.topics_count;
+                document.getElementById('stat-conversations').textContent = data.stats.total_conversations;
+                els.statsSection.style.display = 'block';
+
+                actions = data.actions || [];
+                topics = data.topics || {};
+                graphData = data.graph || { nodes: [], edges: [] };
+                
+                timelineData = [];
+                if (graphData.nodes) {
+                    graphData.nodes.forEach(node => {
+                        if (node.date) {
+                            timelineData.push({
+                                id: node.id,
+                                type: node.type,
+                                date: node.date,
+                                content: node.label || node.text || '',
+                                meta: node.topic || ''
+                            });
+                        }
+                    });
+                }
+
+                conversations = [];
+
+                renderCurrentView();
+
+            } catch (error) {
+                alert('Error parsing export: ' + error.message);
+            }
+        }
+
+        function exportData() {
+            window.location.href = `${API_BASE}/api/export`;
+        }
+
+        function clearGraph() {
+            graphData = { nodes: [], edges: [] };
+            timelineData = [];
+            actions = [];
+            topics = {};
+            conversations = [];
+            document.getElementById('x-folder-path').value = '';
+            document.getElementById('grok-folder-path').value = '';
+            localStorage.removeItem('xkg_export_path');
+            localStorage.removeItem('xkg_grok_path');
+            els.statsSection.style.display = 'none';
+            renderCurrentView();
+        }
+
+        function showHelp() {
+            document.getElementById('help-modal').style.display = 'block';
+        }
+
+        function hideHelp() {
+            document.getElementById('help-modal').style.display = 'none';
+        }
+
+        // ==================== INITIALIZATION ====================
+
+        const savedView = localStorage.getItem('xkg_current_view');
+        if (savedView) {
+            switchView(savedView);
+        }
+
+        // Load theme preference
+        loadThemePreference();
+
+        window.addEventListener('resize', renderGraph);
+
+        document.getElementById('help-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('help-modal')) {
+                hideHelp();
+            }
+        });
+    </script>
+</body>
+</html>

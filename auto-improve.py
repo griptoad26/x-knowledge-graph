@@ -34,15 +34,17 @@ class colors:
     END = '\033[0m'
 
 
-def log(msg, color=BLUE):
-    print(f"{color}{msg}{END}")
+def log(msg, color=None):
+    if color is None:
+        color = colors.BLUE
+    print(f"{color}{msg}{colors.END}")
 
 
 def log_step(msg, status=""):
     timestamp = datetime.now().strftime("%H:%M:%S")
     if status:
-        status_color = GREEN if status == "✓" else RED
-        print(f"[{timestamp}] {status_color}{status}{END} {msg}")
+        status_color = colors.GREEN if status == "✓" else colors.RED
+        print(f"[{timestamp}] {status_color}{status}{colors.END} {msg}")
     else:
         print(f"[{timestamp}] {msg}")
 
@@ -57,8 +59,8 @@ def run_command(cmd, cwd=None, check=True):
         text=True
     )
     if check and result.returncode != 0:
-        log(f"Command failed: {cmd}", RED)
-        log(f"Error: {result.stderr}", RED)
+        log(f"Command failed: {cmd}", colors.RED)
+        log(f"Error: {result.stderr}", colors.RED)
         return False, result.stderr
     return True, result.stdout
 
@@ -234,9 +236,9 @@ def full_pipeline():
     """Run full improvement pipeline"""
     
     print()
-    log("=" * 70, CYAN)
-    log("  X KNOWLEDGE GRAPH - AUTONOMOUS IMPROVEMENT & DISTRIBUTION", CYAN)
-    log("=" * 70, CYAN)
+    log("=" * 70, colors.CYAN)
+    log("  X KNOWLEDGE GRAPH - AUTONOMOUS IMPROVEMENT & DISTRIBUTION", colors.CYAN)
+    log("=" * 70, colors.CYAN)
     print()
     
     results = {}
@@ -283,9 +285,9 @@ def full_pipeline():
     
     # Summary
     print()
-    log("=" * 70, CYAN)
-    log("  PIPELINE RESULTS", CYAN)
-    log("=" * 70, CYAN)
+    log("=" * 70, colors.CYAN)
+    log("  PIPELINE RESULTS", colors.CYAN)
+    log("=" * 70, colors.CYAN)
     
     for step, passed in results.items():
         status = "✓ PASS" if passed else "✗ FAIL"
@@ -294,12 +296,12 @@ def full_pipeline():
     
     print()
     if all_passed and results.get("distribution"):
-        log("PIPELINE COMPLETE - Distribution created!", GREEN)
-        log(f"  Distribution: {DIST_DIR / 'x-knowledge-graph-v0.4.33.tar'}", GREEN)
+        log("PIPELINE COMPLETE - Distribution created!", colors.GREEN)
+        log(f"  Distribution: {DIST_DIR / 'x-knowledge-graph-v0.4.33.tar'}", colors.GREEN)
     else:
-        log("PIPELINE COMPLETE WITH FAILURES", RED)
+        log("PIPELINE COMPLETE WITH FAILURES", colors.RED)
         failed_steps = [k for k, v in results.items() if not v]
-        log(f"  Failed: {', '.join(failed_steps)}", RED)
+        log(f"  Failed: {', '.join(failed_steps)}", colors.RED)
     
     return all_passed
 
