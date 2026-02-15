@@ -291,7 +291,7 @@ def full_pipeline():
     
     for step, passed in results.items():
         status = "✓ PASS" if passed else "✗ FAIL"
-        color = GREEN if passed else RED
+        color = colors.GREEN if passed else colors.RED
         log(f"  {step:20} {status}", color)
     
     print()
