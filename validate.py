@@ -221,7 +221,13 @@ def test_combined_export_populates_graph():
     log_step("Testing combined export graph population...")
     
     kg = KnowledgeGraph()
-    result = kg.build_from_both(str(X_EXPORT_DIR), str(GROK_EXPORT_DIR))
+    
+    # Handle case where Grok format doesn't match expected structure
+    try:
+        result = kg.build_from_both(str(X_EXPORT_DIR), str(GROK_EXPORT_DIR))
+    except Exception as e:
+        log_step(f"Combined parsing failed: {e}")
+        return [("Combined parsing", False, True)], {"stats": {"total_tweets": 0}}
     
     # Combined real data should have hundreds/thousands of items
     tests = [
