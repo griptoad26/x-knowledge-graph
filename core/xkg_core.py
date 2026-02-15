@@ -384,6 +384,7 @@ class FlexibleGrokParser:
                     if post:
                         self.posts[post.id] = post
             elif isinstance(data, dict):
+                # Check for standard Grok formats
                 if 'posts' in data:
                     for item in data['posts']:
                         post = self._create_post(item)
@@ -396,9 +397,62 @@ class FlexibleGrokParser:
                                 post = self._create_post(item)
                                 if post:
                                     self.posts[post.id] = post
+                # Check for new Grok export format with results
+                elif 'results' in data:
+                    for item in data['results']:
+                        post = self._create_post_from_grok_result(item)
+                        if post:
+                            self.posts[post.id] = post
+                # Check for task-based format
+                elif 'task' in data and 'results' in data.get('task', {}):
+                    for item in data['task']['results']:
+                        post = self._create_post_from_grok_result(item)
+                        if post:
+                            self.posts[post.id] = post
         
         except Exception as e:
             print(f"    Error parsing {os.path.basename(filepath)}: {e}")
+    
+    def _create_post_from_grok_result(self, data: Dict) -> Optional[GrokPost]:
+        """Create GrokPost from new Grok result format (conversations with tasks)"""
+        try:
+            # Extract post info from task/conversation structure
+            conversation_id = data.get('conversation_id', '')
+            task_id = data.get('task_id', '')
+            post_id = f"grok_{conversation_id}_{task_id}" if conversation_id and task_id else data.get('task_result_id', f"grok_{data.get('create_time', '')}")
+            
+            # Extract text from metadata.response_preview (may be HTML)
+            metadata = data.get('metadata', {})
+            response_preview = metadata.get('response_preview', '')
+            
+            # Strip HTML tags for clean text
+            import re
+            text = re.sub(r'<[^>]+>', '', response_preview).strip()
+            if not text:
+                text = data.get('title', '')
+            
+            created_at = data.get('create_time', data.get('update_time', datetime.now().isoformat()))
+            status = data.get('status', '')
+            error = data.get('error')
+            
+            # Only create post for successful results
+            if error or status != 'Success':
+                return None
+            
+            return GrokPost(
+                id=post_id,
+                text=text[:500] if text else '[No content]',  # Truncate long HTML
+                created_at=created_at,
+                author_id='grok',
+                conversation_id=conversation_id,
+                in_reply_to_id=None,
+                metrics={'exec_time': metadata.get('exec_time', 0)},
+                entities=[],
+                source='grok'
+            )
+        
+        except Exception:
+            return None
     
     def _parse_generic_file(self, filepath: str):
         """Parse generic JSON as posts"""

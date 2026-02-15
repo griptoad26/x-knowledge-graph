@@ -31,11 +31,11 @@ SCRIPT_DIR = Path(__file__).parent
 PROJECT_ROOT = SCRIPT_DIR
 TEST_DATA_DIR = PROJECT_ROOT / "test_data"
 PROD_DATA_DIR = PROJECT_ROOT / "data"
+DESKTOP_DATA_DIR = PROJECT_ROOT.parent.parent.parent / "Desktop" / "x-knowledge-graph" / "data"
 
-# Allow environment override for production data - use production data if available
-# Production X export has files in x_export/data/ subfolder
-X_EXPORT_DIR = os.environ.get("X_EXPORT_PATH", str(PROD_DATA_DIR / "x_export" / "data") if (PROD_DATA_DIR / "x_export" / "data").exists() else str(TEST_DATA_DIR / "x_export"))
-GROK_EXPORT_DIR = os.environ.get("GROK_EXPORT_PATH", str(PROD_DATA_DIR / "grok_export"))
+# Use Desktop data as the production data source
+X_EXPORT_DIR = os.environ.get("X_EXPORT_PATH", str(DESKTOP_DATA_DIR / "x_export" / "data") if (DESKTOP_DATA_DIR / "x_export" / "data").exists() else str(PROD_DATA_DIR / "x_export" / "data") if (PROD_DATA_DIR / "x_export" / "data").exists() else str(TEST_DATA_DIR / "x_export"))
+GROK_EXPORT_DIR = os.environ.get("GROK_EXPORT_PATH", str(DESKTOP_DATA_DIR / "grok_export") if (DESKTOP_DATA_DIR / "grok_export").exists() else str(PROD_DATA_DIR / "grok_export"))
 
 # Core import
 sys.path.insert(0, str(PROJECT_ROOT / "core"))
