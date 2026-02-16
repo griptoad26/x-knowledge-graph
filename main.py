@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-X Knowledge Graph v0.4.34 - Self-Contained Standalone Application
+X Knowledge Graph v0.5.0 - Self-Contained Standalone Application
 Features: Graph visualization, action extraction, task flows, Todoist export
 """
 
@@ -893,7 +893,7 @@ def main():
     port = find_port()
     
     print("=" * 50)
-    print("X Knowledge Graph v0.4.33")
+    print("X Knowledge Graph v0.5.0")
     print("=" * 50)
     print(f"Server at: http://localhost:{port}")
     
@@ -910,7 +910,7 @@ def main():
         print("\nRunning in headless mode (no browser)")
     
     try:
-        app.run(host='127.0.0.1', port=port, debug=False, use_reloader=False)
+        app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
     except KeyboardInterrupt:
         pass
 
