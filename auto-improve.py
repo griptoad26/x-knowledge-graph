@@ -22,7 +22,7 @@ from pathlib import Path
 # Configuration
 REPO_DIR = Path(__file__).parent
 DIST_DIR = REPO_DIR / "distributions"
-DISTRIBUTION_DIR = DIST_DIR / f"x-knowledge-graph-v0.4.33"
+DISTRIBUTION_DIR = DIST_DIR / f"x-knowledge-graph-v0.5.0"
 GITHUB_TOKEN = os.environ.get("GITHUB_GIST_TOKEN", "")
 
 class colors:
@@ -164,7 +164,7 @@ def create_distribution():
     DIST_DIR.mkdir(parents=True, exist_ok=True)
     
     # Create version directory
-    version_dir = DIST_DIR / f"x-knowledge-graph-v0.4.33"
+    version_dir = DIST_DIR / f"x-knowledge-graph-v0.5.0"
     if version_dir.exists():
         shutil.rmtree(version_dir)
     version_dir.mkdir()
@@ -202,9 +202,9 @@ def create_distribution():
     
     import tarfile
     
-    tar_path = DIST_DIR / f"x-knowledge-graph-v0.4.33.tar"
+    tar_path = DIST_DIR / f"x-knowledge-graph-v0.5.0.tar"
     with tarfile.open(tar_path, "w") as tar:
-        tar.add(version_dir, arcname=f"x-knowledge-graph-v0.4.33")
+        tar.add(version_dir, arcname=f"x-knowledge-graph-v0.5.0")
     
     # Generate checksums
     log_step("Generating checksums...", "...")
@@ -234,7 +234,7 @@ def git_commit_distribution():
     log_step("Committing distribution...", "...")
     
     run_command('git add -A')
-    run_command('git commit -m "Distribution v0.4.33 - ' + 
+    run_command('git commit -m "Distribution v0.5.0 - ' + 
                 datetime.now().strftime("%Y-%m-%d") + '"')
     
     log_step("Distribution committed", "✓")
@@ -305,7 +305,7 @@ def full_pipeline():
     print()
     if all_passed and results.get("distribution"):
         log("PIPELINE COMPLETE - Distribution created!", colors.GREEN)
-        log(f"  Distribution: {DIST_DIR / 'x-knowledge-graph-v0.4.33.tar'}", colors.GREEN)
+        log(f"  Distribution: {DIST_DIR / 'x-knowledge-graph-v0.5.0.tar'}", colors.GREEN)
     else:
         log("PIPELINE COMPLETE WITH FAILURES", colors.RED)
         failed_steps = [k for k, v in results.items() if not v]
