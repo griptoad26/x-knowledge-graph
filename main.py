@@ -171,7 +171,14 @@ def static_files(filename):
 
 @app.route('/api/health')
 def health():
-    return jsonify({'status': 'ok', 'version': '0.4.33'})
+    # Read version from VERSION.txt file
+    version_file = os.path.join(BASE_DIR, 'VERSION.txt')
+    if os.path.exists(version_file):
+        with open(version_file, 'r') as f:
+            version = f.read().strip()
+    else:
+        version = 'unknown'
+    return jsonify({'status': 'ok', 'version': version})
 
 @app.route('/api/select-folder', methods=['POST'])
 def select_folder():
