@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xkg_mvp - Grok Content Converter</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🚀 xkg_mvp</h1>
+            <p class="subtitle">Grok Conversation to Reddit-Style Content Converter</p>
+            <span class="version">v0.0.1</span>
+        </header>
+        
+        <!-- Upload Section -->
+        <section class="upload-section">
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-content">
+                    <span class="icon">📁</span>
+                    <h3>Drop Grok JSON file here</h3>
+                    <p>or click to browse</p>
+                    <input type="file" id="fileInput" accept=".json" hidden>
+                </div>
+            </div>
+            <div class="status" id="status"></div>
+        </section>
+        
+        <!-- Search Section -->
+        <section class="search-section" id="searchSection" style="display: none;">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search conversations...">
+                <button id="searchBtn">🔍</button>
+            </div>
+            <div class="stats" id="stats"></div>
+        </section>
+        
+        <!-- Conversations List -->
+        <section class="conversations-section" id="conversationsSection" style="display: none;">
+            <h2>Conversations</h2>
+            <div class="conversation-list" id="conversationList"></div>
+        </section>
+        
+        <!-- Conversation Viewer -->
+        <section class="viewer-section" id="viewerSection" style="display: none;">
+            <div class="viewer-header">
+                <button id="backBtn">← Back</button>
+                <div class="viewer-actions">
+                    <button id="exportMdBtn" class="btn">📄 Export Markdown</button>
+                    <button id="exportJsonBtn" class="btn">📦 Export JSON</button>
+                    <button id="exportHtmlBtn" class="btn">🌐 Export HTML</button>
+                </div>
+            </div>
+            <div class="viewer-content" id="viewerContent"></div>
+        </section>
+    </div>
+    
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Export</h3>
+                <button class="close-btn" id="closeModal">×</button>
+            </div>
+            <div class="modal-body">
+                <pre id="exportContent"></pre>
+            </div>
+            <div class="modal-footer">
+                <button id="copyBtn" class="btn">📋 Copy</button>
+                <button id="downloadBtn" class="btn primary">⬇️ Download</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/app.js"></script>
+</body>
+</html>
