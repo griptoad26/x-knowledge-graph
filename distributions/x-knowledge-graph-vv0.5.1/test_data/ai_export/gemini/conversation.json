@@ -1,0 +1,23 @@
+{
+  "id": "gemini_001",
+  "title": "Research Discussion",
+  "createTime": "2024-01-15T09:00:00Z",
+  "updateTime": "2024-01-15T10:30:00Z",
+  "contents": [
+    {
+      "role": "user",
+      "parts": [{"text": "Help me research quantum computing"}],
+      "createTime": "2024-01-15T09:00:00Z"
+    },
+    {
+      "role": "model",
+      "parts": [{"text": "Quantum computing uses qubits instead of classical bits. Key concepts:\n\n1. Superposition - qubits can be 0 and 1 simultaneously\n2. Entanglement - linked qubits share quantum states\n3. Need to implement error correction for stable results"}],
+      "createTime": "2024-01-15T09:05:00Z"
+    },
+    {
+      "role": "user",
+      "parts": [{"text": "What about buying quantum hardware? Should I order a quantum computer?"}],
+      "createTime": "2024-01-15T10:00:00Z"
+    }
+  ]
+}
