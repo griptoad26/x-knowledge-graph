@@ -37,18 +37,6 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-# Global error handler - return JSON instead of HTML
-@app.errorhandler(Exception)
-def handle_exception(e):
-    import traceback
-    response = jsonify({
-        'error': str(e),
-        'type': type(e).__name__,
-        'traceback': traceback.format_exc()
-    })
-    response.status_code = 500
-    return response
-
 # Debug: print paths when running
 print(f"BASE_DIR: {BASE_DIR}")
 print(f"sys.executable: {sys.executable}")
@@ -338,6 +326,7 @@ def parse_export():
             print(f"Warning: Could not auto-index for search: {index_err}")
 
         response = {
+            'status': 'success',
             'stats': result['stats'],
             'graph': graph_export,
             'actions': graph_data['actions'],

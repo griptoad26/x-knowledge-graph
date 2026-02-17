@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-X Knowledge Graph v0.4.34 - Self-Contained Standalone Application
+X Knowledge Graph v0.5.1 - Self-Contained Standalone Application
 Features: Graph visualization, action extraction, task flows, Todoist export
 """
 
@@ -37,6 +37,18 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+# Global error handler - return JSON instead of HTML
+@app.errorhandler(Exception)
+def handle_exception(e):
+    import traceback
+    response = jsonify({
+        'error': str(e),
+        'type': type(e).__name__,
+        'traceback': traceback.format_exc()
+    })
+    response.status_code = 500
+    return response
+
 # Debug: print paths when running
 print(f"BASE_DIR: {BASE_DIR}")
 print(f"sys.executable: {sys.executable}")
@@ -49,6 +61,12 @@ def parse_cli_args():
     parser = argparse.ArgumentParser(
         description='X Knowledge Graph - Parse X exports and visualize',
         add_help=False
+    )
+    parser.add_argument(
+        '--port',
+        type=int,
+        default=None,
+        help='Port to run on (default: auto-select)'
     )
     parser.add_argument(
         '--export-todoist',
@@ -171,7 +189,14 @@ def static_files(filename):
 
 @app.route('/api/health')
 def health():
-    return jsonify({'status': 'ok', 'version': '0.4.33'})
+    # Read version from VERSION.txt file
+    version_file = os.path.join(BASE_DIR, 'VERSION.txt')
+    if os.path.exists(version_file):
+        with open(version_file, 'r') as f:
+            version = f.read().strip()
+    else:
+        version = 'unknown'
+    return jsonify({'status': 'ok', 'version': version})
 
 @app.route('/api/select-folder', methods=['POST'])
 def select_folder():
@@ -204,7 +229,14 @@ def get_selected_folder():
 def parse_export():
     global graph_data
     
+    # Check content type
+    if not request.is_json:
+        return jsonify({'error': 'Request must be JSON'}), 400
+    
     data = request.json
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
     x_path = data.get('x_path', '').strip()
     grok_path = data.get('grok_path', '').strip()
     ai_path = data.get('ai_path', '').strip()  # New AI export path
@@ -890,10 +922,22 @@ def import_markdown():
         }), 500
 
 def main():
-    port = find_port()
+    # Use CLI port if provided, otherwise auto-select
+    if CLI_ARGS.port:
+        port = CLI_ARGS.port
+    else:
+        port = find_port()
+    
+    # Read version from VERSION.txt
+    version_file = os.path.join(BASE_DIR, 'VERSION.txt')
+    if os.path.exists(version_file):
+        with open(version_file, 'r') as f:
+            version = f.read().strip()
+    else:
+        version = 'unknown'
     
     print("=" * 50)
-    print("X Knowledge Graph v0.4.33")
+    print(f"X Knowledge Graph {version}")
     print("=" * 50)
     print(f"Server at: http://localhost:{port}")
     
@@ -910,7 +954,7 @@ def main():
         print("\nRunning in headless mode (no browser)")
     
     try:
-        app.run(host='127.0.0.1', port=port, debug=False, use_reloader=False)
+        app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
     except KeyboardInterrupt:
         pass
 

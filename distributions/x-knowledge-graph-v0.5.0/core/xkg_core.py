@@ -52,7 +52,24 @@ except ImportError:
 
 # ==================== DATA MODELS ====================
 
-@dataclass
+
+
+def parse_timestamp(ts: str) -> str:
+    """Parse various timestamp formats to ISO 8601"""
+    if not ts:
+        return ""
+    
+    # Already ISO format - clean it up
+    if ts.startswith('20'):  # Starts with year like 2024-
+        # Handle various formats
+        if '.' in ts:
+            ts = ts.split('.')[0]
+        if 'Z' not in ts:
+            ts = ts + 'Z'
+        return ts
+    
+    return ""
+
 class Tweet:
     id: str
     text: str
@@ -1051,7 +1068,7 @@ class KnowledgeGraph:
         # Cluster Grok actions separately
         grok_topic_actions = defaultdict(list)
         for action in grok_actions:
-            topic_actions[action.topic].append({
+            grok_topic_actions[action.topic].append({
                 'id': action.id,
                 'text': action.text,
                 'priority': action.priority,
@@ -1105,24 +1122,28 @@ class KnowledgeGraph:
         self.flows = dict(topic_flows)
     
     def export_for_d3(self) -> Dict:
-        """Export graph in D3.js format"""
+        """Export graph in D3.js format with proper timestamps"""
         nodes = []
         edges = []
         
-        # Tweet nodes
+        # Tweet nodes with parsed timestamps
         for tweet_id, tweet in self.tweets.items():
+            created_at = parse_timestamp(tweet.created_at)
             nodes.append({
                 'id': f'tweet_{tweet_id}',
                 'type': 'tweet',
                 'label': tweet.text[:50] + '...' if len(tweet.text) > 50 else tweet.text,
                 'text': tweet.text,
                 'topic': 'general',
-                'source': 'x'
+                'source': 'x',
+                'created_at': created_at,
+                'author_id': tweet.author_id,
+                'conversation_id': tweet.conversation_id or ''
             })
         
-        # Grok post nodes (separate from X tweets)
+        # Grok post nodes with parsed timestamps
         for post_id, post in self.posts.items():
-            # Get conversation info if available
+            created_at = parse_timestamp(post.created_at)
             conv_title = ''
             if post.conversation_id and post.conversation_id in self.grok_conversations:
                 conv_title = self.grok_conversations[post.conversation_id].title
@@ -1134,8 +1155,10 @@ class KnowledgeGraph:
                 'text': post.text,
                 'topic': 'general',
                 'source': 'grok',
-                'conversation_id': post.conversation_id,
-                'conversation_title': conv_title
+                'created_at': created_at,
+                'conversation_id': post.conversation_id or '',
+                'conversation_title': conv_title,
+                'author_id': post.author_id
             })
         
         # Add Grok conversation nodes for better organization
@@ -1152,7 +1175,9 @@ class KnowledgeGraph:
         
         # Action nodes - separate by source
         for action in self.actions:
-            source_prefix = action.source_type[:1]  # 't' for tweet, 'g' for grok
+            # Map source_type to node prefix
+            source_prefix_map = {'tweet': 'tweet', 'grok': 'grok', 'ai_openai': 'ai_openai', 'ai_anthropic': 'ai_anthropic', 'ai_google': 'ai_google'}
+            source_prefix = source_prefix_map.get(action.source_type, action.source_type[:4])
             source_id = f"{source_prefix}_{action.source_id}"
             nodes.append({
                 'id': action.id,
@@ -1182,9 +1207,9 @@ class KnowledgeGraph:
             })
             
             # Edges from actions to topic
-            for action_id in data.get('actions', []):
+            for action_item in data.get('items', []):
                 edges.append({
-                    'source': action_id,
+                    'source': action_item.get('id'),
                     'target': f'topic_{topic}',
                     'type': 'belongs_to'
                 })
@@ -1198,5 +1223,13 @@ class KnowledgeGraph:
                 'topic': topic,
                 'source': 'grok'
             })
+            
+            # Edges from grok actions to grok topic
+            for action_item in data.get('items', []):
+                edges.append({
+                    'source': action_item.get('id'),
+                    'target': f'grok_topic_{topic}',
+                    'type': 'belongs_to'
+                })
         
         return {'nodes': nodes, 'edges': edges}

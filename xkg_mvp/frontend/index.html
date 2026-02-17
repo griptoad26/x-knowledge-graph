@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>xkg_mvp - Grok Content Converter</title>
+    <title>xkg_mvp - Grok/X Content Converter</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -11,8 +11,8 @@
         <!-- Header -->
         <header>
             <h1>🚀 xkg_mvp</h1>
-            <p class="subtitle">Grok Conversation to Reddit-Style Content Converter</p>
-            <span class="version">v0.0.1</span>
+            <p class="subtitle">Grok/X to Reddit-Style Content Converter</p>
+            <span class="version">v0.0.2</span>
         </header>
         
         <!-- Upload Section -->
@@ -20,18 +20,26 @@
             <div class="drop-zone" id="dropZone">
                 <div class="drop-content">
                     <span class="icon">📁</span>
-                    <h3>Drop Grok JSON file here</h3>
-                    <p>or click to browse</p>
-                    <input type="file" id="fileInput" accept=".json" hidden>
+                    <h3>Drop file or folder here</h3>
+                    <p>Supports Grok JSON, X exports, tweet.js</p>
+                    <input type="file" id="fileInput" webkitdirectory multiple hidden>
+                    <input type="file" id="singleFileInput" accept=".json" hidden>
+                    <button id="toggleInputType" class="btn small">Switch to File</button>
                 </div>
             </div>
             <div class="status" id="status"></div>
         </section>
         
+        <!-- Quick Actions -->
+        <section class="actions-section">
+            <button id="exportBookmarksBtn" class="btn">📑 Export Bookmarks</button>
+            <button id="clearBtn" class="btn secondary">🗑️ Clear All</button>
+        </section>
+        
         <!-- Search Section -->
         <section class="search-section" id="searchSection" style="display: none;">
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search conversations...">
+                <input type="text" id="searchInput" placeholder="Search conversations, tweets...">
                 <button id="searchBtn">🔍</button>
             </div>
             <div class="stats" id="stats"></div>

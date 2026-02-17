@@ -46,7 +46,63 @@ class GrokParser:
     
     def _parse_conversations_array(self, conversations_data):
         """Parse conversations array"""
+        # Check for new Grok format: {'conversation': {...}, 'responses': [...]}
+        if conversations_data and isinstance(conversations_data[0], dict):
+            if 'conversation' in conversations_data[0] and 'responses' in conversations_data[0]:
+                return self._parse_new_grok_format(conversations_data)
+        
         return [self._parse_single(c) for c in conversations_data if c]
+    
+    def _parse_new_grok_format(self, conversations_data):
+        """Parse new Grok format with conversation/responses structure"""
+        conversations = []
+        
+        for item in conversations_data:
+            if not item or 'conversation' not in item:
+                continue
+            
+            conv_meta = item['conversation']
+            responses = item.get('responses', [])
+            
+            conv_id = conv_meta.get('id', self._generate_id(str(conv_meta)))
+            
+            # Skip if already processed
+            if conv_id in self.conversations:
+                continue
+            
+            conv = {
+                'id': conv_id,
+                'title': conv_meta.get('title', 'Untitled Conversation'),
+                'messages': [],
+                'created_at': conv_meta.get('create_time'),
+                'updated_at': conv_meta.get('modify_time')
+            }
+            
+            # Parse responses (messages)
+            for response in responses:
+                if not response or 'response' not in response:
+                    continue
+                
+                msg = response['response']
+                parsed = {
+                    'id': msg.get('_id', self._generate_id(str(msg))),
+                    'role': msg.get('sender', 'grok'),
+                    'content': msg.get('message', ''),
+                    'timestamp': msg.get('create_time'),
+                    'metadata': {
+                        'model': msg.get('model', ''),
+                        'likes': 0,
+                        'shares': 0,
+                        'replies': 0
+                    }
+                }
+                conv['messages'].append(parsed)
+            
+            if conv['messages']:
+                self.conversations[conv['id']] = conv
+                conversations.append(conv)
+        
+        return conversations
     
     def _parse_results(self, results):
         """Parse results array"""

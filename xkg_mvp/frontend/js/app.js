@@ -1,10 +1,12 @@
-// xkg_mvp - Frontend JavaScript
+// xkg_mvp - Frontend JavaScript v0.0.2
 
 class XkgMvp {
     constructor() {
         this.conversations = [];
+        this.tweets = [];
         this.currentConversation = null;
         this.apiBase = '/api';
+        this.isFolderMode = true;
         
         this.initElements();
         this.initEvents();
@@ -14,6 +16,8 @@ class XkgMvp {
         // Sections
         this.dropZone = document.getElementById('dropZone');
         this.fileInput = document.getElementById('fileInput');
+        this.singleFileInput = document.getElementById('singleFileInput');
+        this.toggleInputType = document.getElementById('toggleInputType');
         this.statusEl = document.getElementById('status');
         this.searchSection = document.getElementById('searchSection');
         this.searchInput = document.getElementById('searchInput');
@@ -29,6 +33,8 @@ class XkgMvp {
         this.exportMdBtn = document.getElementById('exportMdBtn');
         this.exportJsonBtn = document.getElementById('exportJsonBtn');
         this.exportHtmlBtn = document.getElementById('exportHtmlBtn');
+        this.exportBookmarksBtn = document.getElementById('exportBookmarksBtn');
+        this.clearBtn = document.getElementById('clearBtn');
         
         // Modal
         this.modal = document.getElementById('exportModal');
@@ -39,9 +45,29 @@ class XkgMvp {
     }
     
     initEvents() {
+        // Toggle between folder and file mode
+        this.toggleInputType.addEventListener('click', () => {
+            this.isFolderMode = !this.isFolderMode;
+            this.toggleInputType.textContent = this.isFolderMode ? 'Switch to File' : 'Switch to Folder';
+            this.fileInput.style.display = this.isFolderMode ? 'block' : 'none';
+            this.singleFileInput.style.display = this.isFolderMode ? 'none' : 'block';
+        });
+        
         // File upload
-        this.dropZone.addEventListener('click', () => this.fileInput.click());
-        this.fileInput.addEventListener('change', (e) => this.handleFile(e.target.files[0]));
+        this.dropZone.addEventListener('click', () => {
+            if (this.isFolderMode) {
+                this.fileInput.click();
+            } else {
+                this.singleFileInput.click();
+            }
+        });
+        
+        this.fileInput.addEventListener('change', (e) => this.handleFolder(e.target.files));
+        this.singleFileInput.addEventListener('change', (e) => this.handleFile(e.target.files[0]));
+        
+        // Quick actions
+        this.exportBookmarksBtn.addEventListener('click', () => this.exportBookmarks());
+        this.clearBtn.addEventListener('click', () => this.clearAll());
         
         // Drag and drop
         this.dropZone.addEventListener('dragover', (e) => {
@@ -54,8 +80,23 @@ class XkgMvp {
         this.dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             this.dropZone.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            this.handleFile(file);
+            
+            const items = e.dataTransfer.items;
+            if (items.length > 1) {
+                // Folder or multiple files
+                const files = [];
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i].webkitGetAsEntry();
+                    if (item) {
+                        this.collectFiles(item, files);
+                    }
+                }
+                this.handleFolder(files);
+            } else {
+                // Single file
+                const file = e.dataTransfer.files[0];
+                this.handleFile(file);
+            }
         });
         
         // Search
@@ -76,6 +117,48 @@ class XkgMvp {
         this.closeModal.addEventListener('click', () => this.hideModal());
         this.copyBtn.addEventListener('click', () => this.copyToClipboard());
         this.downloadBtn.addEventListener('click', () => this.downloadExport());
+    }
+    
+    async handleFolder(files) {
+        if (!files || files.length === 0) {
+            this.showStatus('No files selected', 'error');
+            return;
+        }
+        
+        this.showStatus('Processing folder...', 'success');
+        
+        // Get first file's path to determine folder
+        if (files[0].webkitRelativePath) {
+            const folderPath = files[0].webkitRelativePath.split('/')[0];
+            await this.importFolder(folderPath);
+        } else {
+            this.showStatus('Please drop a folder', 'error');
+        }
+    }
+    
+    async importFolder(folderPath) {
+        const formData = new FormData();
+        formData.append('folder', folderPath);
+        formData.append('type', 'auto');
+        
+        try {
+            const response = await fetch(`${this.apiBase}/import`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                this.conversations = data.conversations;
+                this.showStatus(`Loaded ${data.count} conversations from ${data.imported_files?.length || 0} files`, 'success');
+                this.showList();
+            } else {
+                this.showStatus(data.error || 'Error processing folder', 'error');
+            }
+        } catch (error) {
+            this.showStatus('Error: ' + error.message, 'error');
+        }
     }
     
     async handleFile(file) {
@@ -109,6 +192,33 @@ class XkgMvp {
         } catch (error) {
             this.showStatus('Error uploading file: ' + error.message, 'error');
         }
+    }
+    
+    async exportBookmarks() {
+        try {
+            const response = await fetch(`${this.apiBase}/export/bookmarks`);
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                this.showStatus(`Found ${data.count} bookmarked tweets`, 'success');
+                this.showExportModal(data.markdown, data.filename);
+            } else {
+                this.showStatus(data.error || 'No bookmarks found', 'error');
+            }
+        } catch (error) {
+            this.showStatus('Error: ' + error.message, 'error');
+        }
+    }
+    
+    clearAll() {
+        this.conversations = [];
+        this.tweets = [];
+        this.currentConversation = null;
+        this.showStatus('Cleared all data', 'success');
+        this.conversationsSection.style.display = 'none';
+        this.searchSection.style.display = 'none';
+        this.viewerSection.style.display = 'none';
+        this.conversationList.innerHTML = '';
     }
     
     showStatus(message, type) {

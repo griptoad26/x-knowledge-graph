@@ -1,0 +1,738 @@
+{
+  "nodes": [
+    {
+      "id": "grok_grok_001",
+      "type": "grok",
+      "label": "Just shipped the new feature to production. Need t...",
+      "text": "Just shipped the new feature to production. Need to monitor the error logs tomorrow morning.",
+      "topic": "general",
+      "source": "grok",
+      "created_at": "2024-01-15T08:00:00Z",
+      "conversation_id": "",
+      "conversation_title": "",
+      "author_id": "user_001"
+    },
+    {
+      "id": "grok_grok_002",
+      "type": "grok",
+      "label": "TODO: Update the API documentation for the new end...",
+      "text": "TODO: Update the API documentation for the new endpoints. Make sure to include code examples.",
+      "topic": "general",
+      "source": "grok",
+      "created_at": "2024-01-15T11:30:00Z",
+      "conversation_id": "",
+      "conversation_title": "",
+      "author_id": "user_001"
+    },
+    {
+      "id": "grok_grok_003",
+      "type": "grok",
+      "label": "Remember to buy a new keyboard for the workstation...",
+      "text": "Remember to buy a new keyboard for the workstation. The current one is making weird noises.",
+      "topic": "general",
+      "source": "grok",
+      "created_at": "2024-01-15T14:00:00Z",
+      "conversation_id": "",
+      "conversation_title": "",
+      "author_id": "user_002"
+    },
+    {
+      "id": "grok_grok_004",
+      "type": "grok",
+      "label": "Going to schedule a 1:1 with the team lead to disc...",
+      "text": "Going to schedule a 1:1 with the team lead to discuss project priorities for Q2.",
+      "topic": "general",
+      "source": "grok",
+      "created_at": "2024-01-16T09:30:00Z",
+      "conversation_id": "",
+      "conversation_title": "",
+      "author_id": "user_001"
+    },
+    {
+      "id": "grok_grok_005",
+      "type": "grok",
+      "label": "Need to research pricing models for the new SaaS p...",
+      "text": "Need to research pricing models for the new SaaS product. Should look at competitor analysis.",
+      "topic": "general",
+      "source": "grok",
+      "created_at": "2024-01-16T10:15:00Z",
+      "conversation_id": "",
+      "conversation_title": "",
+      "author_id": "user_003"
+    },
+    {
+      "id": "grok_grok_006",
+      "type": "grok",
+      "label": "ASAP: Fix the login bug that's affecting 5% of use...",
+      "text": "ASAP: Fix the login bug that's affecting 5% of users. Customer support is getting complaints.",
+      "topic": "general",
+      "source": "grok",
+      "created_at": "2024-01-16T13:45:00Z",
+      "conversation_id": "",
+      "conversation_title": "",
+      "author_id": "user_001"
+    },
+    {
+      "id": "grok_grok_007",
+      "type": "grok",
+      "label": "Going to refactor the database queries to improve ...",
+      "text": "Going to refactor the database queries to improve performance. Should reduce load time by 50%.",
+      "topic": "general",
+      "source": "grok",
+      "created_at": "2024-01-16T15:30:00Z",
+      "conversation_id": "",
+      "conversation_title": "",
+      "author_id": "user_002"
+    },
+    {
+      "id": "grok_grok_008",
+      "type": "grok",
+      "label": "Don't forget to renew the domain names before they...",
+      "text": "Don't forget to renew the domain names before they expire next month.",
+      "topic": "general",
+      "source": "grok",
+      "created_at": "2024-01-17T08:00:00Z",
+      "conversation_id": "",
+      "conversation_title": "",
+      "author_id": "user_001"
+    },
+    {
+      "id": "grok_grok_009",
+      "type": "grok",
+      "label": "Need to set up automated testing for the CI/CD pip...",
+      "text": "Need to set up automated testing for the CI/CD pipeline. This will catch bugs early.",
+      "topic": "general",
+      "source": "grok",
+      "created_at": "2024-01-17T11:00:00Z",
+      "conversation_id": "",
+      "conversation_title": "",
+      "author_id": "user_003"
+    },
+    {
+      "id": "grok_grok_010",
+      "type": "grok",
+      "label": "Remember to order office supplies. We're running l...",
+      "text": "Remember to order office supplies. We're running low on printer paper and toner.",
+      "topic": "general",
+      "source": "grok",
+      "created_at": "2024-01-17T14:30:00Z",
+      "conversation_id": "",
+      "conversation_title": "",
+      "author_id": "user_002"
+    },
+    {
+      "id": "action_0",
+      "type": "action",
+      "label": "Need to monitor the error logs tomorrow ...",
+      "text": "Need to monitor the error logs tomorrow morning",
+      "priority": "medium",
+      "topic": "general",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169593"
+    },
+    {
+      "id": "action_1",
+      "type": "action",
+      "label": "TODO: Update the API documentation for t...",
+      "text": "TODO: Update the API documentation for the new endpoints",
+      "priority": "medium",
+      "topic": "api",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169609"
+    },
+    {
+      "id": "action_2",
+      "type": "action",
+      "label": "Remember to buy a new keyboard for the w...",
+      "text": "Remember to buy a new keyboard for the workstation",
+      "priority": "medium",
+      "topic": "personal",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169616"
+    },
+    {
+      "id": "action_3",
+      "type": "action",
+      "label": "Should look at competitor analysis",
+      "text": "Should look at competitor analysis",
+      "priority": "medium",
+      "topic": "general",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169622"
+    },
+    {
+      "id": "action_4",
+      "type": "action",
+      "label": "ASAP: Fix the login bug that's affecting...",
+      "text": "ASAP: Fix the login bug that's affecting 5% of users",
+      "priority": "urgent",
+      "topic": "authentication",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169628"
+    },
+    {
+      "id": "action_5",
+      "type": "action",
+      "label": "ASAP: Fix the login bug that's affecting...",
+      "text": "ASAP: Fix the login bug that's affecting 5% of users",
+      "priority": "medium",
+      "topic": "authentication",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169633"
+    },
+    {
+      "id": "action_6",
+      "type": "action",
+      "label": "Should reduce load time by 50%",
+      "text": "Should reduce load time by 50%",
+      "priority": "medium",
+      "topic": "general",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169639"
+    },
+    {
+      "id": "action_7",
+      "type": "action",
+      "label": "Need to set up automated testing for the...",
+      "text": "Need to set up automated testing for the CI/CD pipeline",
+      "priority": "medium",
+      "topic": "testing",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169644"
+    },
+    {
+      "id": "action_8",
+      "type": "action",
+      "label": "Remember to order office supplies",
+      "text": "Remember to order office supplies",
+      "priority": "medium",
+      "topic": "personal",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169650"
+    },
+    {
+      "id": "action_0",
+      "type": "action",
+      "label": "Need to monitor the error logs tomorrow ...",
+      "text": "Need to monitor the error logs tomorrow morning",
+      "priority": "medium",
+      "topic": "general",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169655"
+    },
+    {
+      "id": "action_1",
+      "type": "action",
+      "label": "TODO: Update the API documentation for t...",
+      "text": "TODO: Update the API documentation for the new endpoints",
+      "priority": "medium",
+      "topic": "api",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169661"
+    },
+    {
+      "id": "action_2",
+      "type": "action",
+      "label": "Remember to buy a new keyboard for the w...",
+      "text": "Remember to buy a new keyboard for the workstation",
+      "priority": "medium",
+      "topic": "personal",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169666"
+    },
+    {
+      "id": "action_3",
+      "type": "action",
+      "label": "Should look at competitor analysis",
+      "text": "Should look at competitor analysis",
+      "priority": "medium",
+      "topic": "general",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169682"
+    },
+    {
+      "id": "action_4",
+      "type": "action",
+      "label": "ASAP: Fix the login bug that's affecting...",
+      "text": "ASAP: Fix the login bug that's affecting 5% of users",
+      "priority": "urgent",
+      "topic": "authentication",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169689"
+    },
+    {
+      "id": "action_5",
+      "type": "action",
+      "label": "ASAP: Fix the login bug that's affecting...",
+      "text": "ASAP: Fix the login bug that's affecting 5% of users",
+      "priority": "medium",
+      "topic": "authentication",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169694"
+    },
+    {
+      "id": "action_6",
+      "type": "action",
+      "label": "Should reduce load time by 50%",
+      "text": "Should reduce load time by 50%",
+      "priority": "medium",
+      "topic": "general",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169699"
+    },
+    {
+      "id": "action_7",
+      "type": "action",
+      "label": "Need to set up automated testing for the...",
+      "text": "Need to set up automated testing for the CI/CD pipeline",
+      "priority": "medium",
+      "topic": "testing",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169705"
+    },
+    {
+      "id": "action_8",
+      "type": "action",
+      "label": "Remember to order office supplies",
+      "text": "Remember to order office supplies",
+      "priority": "medium",
+      "topic": "personal",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169710"
+    },
+    {
+      "id": "action_0",
+      "type": "action",
+      "label": "Need to monitor the error logs tomorrow ...",
+      "text": "Need to monitor the error logs tomorrow morning",
+      "priority": "medium",
+      "topic": "general",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169716"
+    },
+    {
+      "id": "action_1",
+      "type": "action",
+      "label": "TODO: Update the API documentation for t...",
+      "text": "TODO: Update the API documentation for the new endpoints",
+      "priority": "medium",
+      "topic": "api",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169721"
+    },
+    {
+      "id": "action_2",
+      "type": "action",
+      "label": "Remember to buy a new keyboard for the w...",
+      "text": "Remember to buy a new keyboard for the workstation",
+      "priority": "medium",
+      "topic": "personal",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169727"
+    },
+    {
+      "id": "action_3",
+      "type": "action",
+      "label": "Should look at competitor analysis",
+      "text": "Should look at competitor analysis",
+      "priority": "medium",
+      "topic": "general",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169732"
+    },
+    {
+      "id": "action_4",
+      "type": "action",
+      "label": "ASAP: Fix the login bug that's affecting...",
+      "text": "ASAP: Fix the login bug that's affecting 5% of users",
+      "priority": "urgent",
+      "topic": "authentication",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169738"
+    },
+    {
+      "id": "action_5",
+      "type": "action",
+      "label": "ASAP: Fix the login bug that's affecting...",
+      "text": "ASAP: Fix the login bug that's affecting 5% of users",
+      "priority": "medium",
+      "topic": "authentication",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169743"
+    },
+    {
+      "id": "action_6",
+      "type": "action",
+      "label": "Should reduce load time by 50%",
+      "text": "Should reduce load time by 50%",
+      "priority": "medium",
+      "topic": "general",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169749"
+    },
+    {
+      "id": "action_7",
+      "type": "action",
+      "label": "Need to set up automated testing for the...",
+      "text": "Need to set up automated testing for the CI/CD pipeline",
+      "priority": "medium",
+      "topic": "testing",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169754"
+    },
+    {
+      "id": "action_8",
+      "type": "action",
+      "label": "Remember to order office supplies",
+      "text": "Remember to order office supplies",
+      "priority": "medium",
+      "topic": "personal",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169759"
+    },
+    {
+      "id": "grok_topic_general",
+      "type": "topic",
+      "label": "GENERAL",
+      "topic": "general",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169766"
+    },
+    {
+      "id": "grok_topic_api",
+      "type": "topic",
+      "label": "API",
+      "topic": "api",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169772"
+    },
+    {
+      "id": "grok_topic_personal",
+      "type": "topic",
+      "label": "PERSONAL",
+      "topic": "personal",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169778"
+    },
+    {
+      "id": "grok_topic_authentication",
+      "type": "topic",
+      "label": "AUTHENTICATION",
+      "topic": "authentication",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169784"
+    },
+    {
+      "id": "grok_topic_testing",
+      "type": "topic",
+      "label": "TESTING",
+      "topic": "testing",
+      "source": "grok",
+      "conversation_id": null,
+      "created_at": "2026-02-17T09:11:20.169789"
+    }
+  ],
+  "edges": [
+    {
+      "source": "grok_grok_001",
+      "target": "action_0",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_002",
+      "target": "action_1",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_003",
+      "target": "action_2",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_005",
+      "target": "action_3",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_006",
+      "target": "action_4",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_006",
+      "target": "action_5",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_007",
+      "target": "action_6",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_009",
+      "target": "action_7",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_010",
+      "target": "action_8",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_001",
+      "target": "action_0",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_002",
+      "target": "action_1",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_003",
+      "target": "action_2",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_005",
+      "target": "action_3",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_006",
+      "target": "action_4",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_006",
+      "target": "action_5",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_007",
+      "target": "action_6",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_009",
+      "target": "action_7",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_010",
+      "target": "action_8",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_001",
+      "target": "action_0",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_002",
+      "target": "action_1",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_003",
+      "target": "action_2",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_005",
+      "target": "action_3",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_006",
+      "target": "action_4",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_006",
+      "target": "action_5",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_007",
+      "target": "action_6",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_009",
+      "target": "action_7",
+      "type": "extracts"
+    },
+    {
+      "source": "grok_grok_010",
+      "target": "action_8",
+      "type": "extracts"
+    },
+    {
+      "source": "action_0",
+      "target": "grok_topic_general",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_3",
+      "target": "grok_topic_general",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_6",
+      "target": "grok_topic_general",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_0",
+      "target": "grok_topic_general",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_3",
+      "target": "grok_topic_general",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_6",
+      "target": "grok_topic_general",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_0",
+      "target": "grok_topic_general",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_3",
+      "target": "grok_topic_general",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_6",
+      "target": "grok_topic_general",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_1",
+      "target": "grok_topic_api",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_1",
+      "target": "grok_topic_api",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_1",
+      "target": "grok_topic_api",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_2",
+      "target": "grok_topic_personal",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_8",
+      "target": "grok_topic_personal",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_2",
+      "target": "grok_topic_personal",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_8",
+      "target": "grok_topic_personal",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_2",
+      "target": "grok_topic_personal",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_8",
+      "target": "grok_topic_personal",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_4",
+      "target": "grok_topic_authentication",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_5",
+      "target": "grok_topic_authentication",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_4",
+      "target": "grok_topic_authentication",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_5",
+      "target": "grok_topic_authentication",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_4",
+      "target": "grok_topic_authentication",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_5",
+      "target": "grok_topic_authentication",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_7",
+      "target": "grok_topic_testing",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_7",
+      "target": "grok_topic_testing",
+      "type": "belongs_to"
+    },
+    {
+      "source": "action_7",
+      "target": "grok_topic_testing",
+      "type": "belongs_to"
+    }
+  ]
+}
