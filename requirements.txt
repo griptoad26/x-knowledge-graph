@@ -26,3 +26,5 @@ faiss-cpu>=1.7
 
 # Standard library (no install needed)
 # json, re, sqlite3, dataclasses, tkinter, threading, pathlib
+# Neo4j
+neo4j>=5.0.0
