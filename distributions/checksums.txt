@@ -5,7 +5,7 @@
 74f3216c353d2a3ea9bdfd37617388ede8639376b78f3374f12e0776a6d3fc41  x-knowledge-graph-v0.5.0/EXPORT_FORMATS.md
 e28b63a33cfc96127d21f716b0d0cee140dad44d88245f0dd1883ad5c9e58b5e  x-knowledge-graph-v0.5.0/build.bat
 8feb5ef35fed6f522439e2103af68ee8e65a039a9d19449e3d5a7608c9fd1709  x-knowledge-graph-v0.5.0/README.md
-eb8d59c0680eb3f8813d4c7254f5cd6dbb0160cb24efa20e92bdda11d548c2e8  x-knowledge-graph-v0.5.0/VERSION.txt
+70c8308e781f6c292956d4787414eaa462e297647fb10c3ba543e119fe620ad9  x-knowledge-graph-v0.5.0/VERSION.txt
 619894a8058615bd9545428614ec1e2af7e764748a7bf45190a3e5d329443866  x-knowledge-graph-v0.5.0/LAUNCH-READY.md
 39cd76273b7dda6eb63e3eb5e7032bac48bc344ca771f6f5f1d9ba368030cd2b  x-knowledge-graph-v0.5.0/core/search_embeddings.db
 47058fece642c66970d64c26429b3a08d53430a5b90563336600c9a87bba8ff6  x-knowledge-graph-v0.5.0/core/pkm_importers.py
