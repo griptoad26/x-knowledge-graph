@@ -618,11 +618,11 @@ class FlexibleGrokParser:
             
             # Extract text from metadata.response_preview (may be HTML)
             metadata = data.get('metadata', {})
-            response_preview = metadata.get('response_preview', '')
+            response_preview = metadata.get('response_preview', '') or ''
             
-            # Strip HTML tags for clean text
+            # Strip HTML tags for clean text - ensure str() to handle None
             import re
-            text = re.sub(r'<[^>]+>', '', response_preview).strip()
+            text = re.sub(r'<[^>]+>', '', str(response_preview)).strip()
             if not text:
                 text = data.get('title', '')
             
@@ -997,16 +997,21 @@ class KnowledgeGraph:
     def _find_actions_in_text(self, text: str, source_id: str, source_type: str) -> List[tuple]:
         """Find action items in text and their priorities"""
         actions = []
-        text_lower = text.lower()
+        
+        # Defensive: ensure text is a string
+        if not text:
+            return []
+        
+        text_lower = str(text).lower()
         
         for priority, keywords in self.priority_keywords.items():
             for keyword in keywords:
                 if keyword in text_lower:
-                    # Extract sentence containing the keyword
-                    sentences = re.split(r'[.!?\n]', text)
+                    # Extract sentence containing the keyword - defensive check for None
+                    sentences = re.split(r'[.!?\n]', str(text)) if text else []
                     for sentence in sentences:
-                        if keyword in sentence.lower():
-                            sentence = sentence.strip()
+                        if keyword in str(sentence).lower():
+                            sentence = str(sentence).strip()
                             if len(sentence) > 10 and len(sentence) < 500:
                                 actions.append((sentence, priority))
                     break

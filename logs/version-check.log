@@ -20,3 +20,7 @@
 [2026-02-18 08:00:02] OK - Versions match (v0.5.1)
 [2026-02-18 08:30:02] Local: v0.5.3, VPS: v0.5.1
 [2026-02-18 08:30:02] VERSION_MISMATCH - Local: v0.5.3, VPS: v0.5.1
+[2026-02-18 08:30:03] Deploying distributions/x-knowledge-graph-v0.5.0.tar...
+[2026-02-18 08:30:12] VPS now running: 
+[2026-02-18 09:00:03] Local: v0.5.3, VPS: v0.5.1
+[2026-02-18 09:00:03] VERSION_MISMATCH - Local: v0.5.3, VPS: v0.5.1
