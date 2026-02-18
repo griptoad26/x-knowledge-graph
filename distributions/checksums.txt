@@ -7,6 +7,7 @@ e28b63a33cfc96127d21f716b0d0cee140dad44d88245f0dd1883ad5c9e58b5e  x-knowledge-gr
 8feb5ef35fed6f522439e2103af68ee8e65a039a9d19449e3d5a7608c9fd1709  x-knowledge-graph-v0.5.0/README.md
 eb8d59c0680eb3f8813d4c7254f5cd6dbb0160cb24efa20e92bdda11d548c2e8  x-knowledge-graph-v0.5.0/VERSION.txt
 619894a8058615bd9545428614ec1e2af7e764748a7bf45190a3e5d329443866  x-knowledge-graph-v0.5.0/LAUNCH-READY.md
+39cd76273b7dda6eb63e3eb5e7032bac48bc344ca771f6f5f1d9ba368030cd2b  x-knowledge-graph-v0.5.0/core/search_embeddings.db
 47058fece642c66970d64c26429b3a08d53430a5b90563336600c9a87bba8ff6  x-knowledge-graph-v0.5.0/core/pkm_importers.py
 b9aef2fe90271cc0272c83095c96d488e7cb757b403f735d019c4fb14478c21d  x-knowledge-graph-v0.5.0/core/notion_parser.py
 e9e449006932ee257fa019af1b8f3c910b8a2e23c1177ccdfb376eb2909196e1  x-knowledge-graph-v0.5.0/core/semantic_search.py
@@ -14,7 +15,7 @@ e9e449006932ee257fa019af1b8f3c910b8a2e23c1177ccdfb376eb2909196e1  x-knowledge-gr
 576d1ea80c3eb7fb49aefba8baf274d2d4931368aff74bb044a8040bd78f8296  x-knowledge-graph-v0.5.0/core/todoist_exporter.py
 b39aaf7221268267faa288443948563c8ec229f86e002381a178a11b4e273465  x-knowledge-graph-v0.5.0/core/amazon_product_linker.py
 26d2997b354dfa43b08da495e7a007b33e58a7366821094db743e254e0f729a5  x-knowledge-graph-v0.5.0/core/ai_export_parser.py
-7606beb2ea78be7b03e9fa903f2dfd95b2db273355d3eb4e6231084d885edfeb  x-knowledge-graph-v0.5.0/core/xkg_core.py
+31c5771a90418e9ce1189c8373c7380bcddab7db91a978bc777dcf13c68ef9d3  x-knowledge-graph-v0.5.0/core/xkg_core.py
 9995daa80ad14c8030758658eff1aeb74cd087ac256df7ebdeb3f2233fd36592  x-knowledge-graph-v0.5.0/core/evernote_parser.py
 b4de9b15fedd529fa85953fdc77479ec69b6f5b4c54ae05fa4b02f9b75fc636a  x-knowledge-graph-v0.5.0/core/analytics.py
 54f901987efaa7b39a29a12f3fdbbd2b6c6026953eb1eb2cd30a92c6084cd811  x-knowledge-graph-v0.5.0/core/markdown_folder_parser.py
@@ -23,7 +24,7 @@ b4de9b15fedd529fa85953fdc77479ec69b6f5b4c54ae05fa4b02f9b75fc636a  x-knowledge-gr
 59d2ef8050ca61446b30bb66cdb2982b1ae3cf197d89d635e310bd0064b42928  x-knowledge-graph-v0.5.0/core/__pycache__/evernote_parser.cpython-312.pyc
 83bc1cc281a2cadc1f73d095f7c559d06817ac299bda77d5dd1a29f7a06572dd  x-knowledge-graph-v0.5.0/core/__pycache__/analytics.cpython-312.pyc
 61fa1b47650b60c84223beced07b1e2d2da33af23a88fffc12dc84f5df3d67ab  x-knowledge-graph-v0.5.0/core/__pycache__/pkm_importers.cpython-312.pyc
-ecca70f0c1d53c22cb71bcde578085eb75783e8718b3e9c3909fd5cfefe58c5b  x-knowledge-graph-v0.5.0/core/__pycache__/xkg_core.cpython-312.pyc
+668368508c0f194b9ca2a857714ec62f566d6c56f309967faa5b29a8a71bd2d3  x-knowledge-graph-v0.5.0/core/__pycache__/xkg_core.cpython-312.pyc
 9513cb92c0b35178e1844ea2653e6c2c2483161149ee5dda647e13094ab26026  x-knowledge-graph-v0.5.0/core/__pycache__/notion_parser.cpython-312.pyc
 809e66b6ea885ce136259f73298016dec15b78135529ff09780176738b7e9c95  x-knowledge-graph-v0.5.0/core/__pycache__/todoist_exporter.cpython-312.pyc
 7f356b086ad21e75dd568c6243cf897f074d59e433447d604a97427ab382ba39  x-knowledge-graph-v0.5.0/core/__pycache__/pkm_exporter.cpython-312.pyc

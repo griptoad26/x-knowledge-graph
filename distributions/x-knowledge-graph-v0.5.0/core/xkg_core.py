@@ -70,6 +70,7 @@ def parse_timestamp(ts: str) -> str:
     
     return ""
 
+@dataclass
 class Tweet:
     id: str
     text: str
