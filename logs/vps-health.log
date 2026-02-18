@@ -245,3 +245,12 @@
 [2026-02-18 14:45:01] OK - Server responding (HTTP 200)
 [2026-02-18 14:50:02] OK - Server responding (HTTP 200)
 [2026-02-18 14:55:01] OK - Server responding (HTTP 200)
+[2026-02-18 15:00:02] ERROR - Server not responding (HTTP 000)
+[2026-02-18 15:00:08] ERROR - Server restart failed
+[2026-02-18 15:05:01] OK - Server responding (HTTP 200)
+[2026-02-18 15:10:02] OK - Server responding (HTTP 200)
+[2026-02-18 15:15:02] OK - Server responding (HTTP 200)
+[2026-02-18 15:20:01] ERROR - Server not responding (HTTP 000)
+[2026-02-18 15:20:07] ERROR - Server restart failed
+[2026-02-18 15:25:02] OK - Server responding (HTTP 200)
+[2026-02-18 15:30:01] OK - Server responding (HTTP 200)

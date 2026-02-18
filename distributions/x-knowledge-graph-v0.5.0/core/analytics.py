@@ -317,7 +317,7 @@ class AnalyticsEngine:
         bar_height = 0.6
         y_positions = range(len(priorities))
         
-        max_total = max(p['total'] for p in data.values()) or 1
+        max_total = max((p.get('total', 0) for p in data.values()), default=1)
         
         for i, priority in enumerate(priorities):
             p = data.get(priority, {'total': 0, 'completed': 0, 'in_progress': 0, 'pending': 0})

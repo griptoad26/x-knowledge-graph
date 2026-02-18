@@ -17,13 +17,15 @@ b39aaf7221268267faa288443948563c8ec229f86e002381a178a11b4e273465  x-knowledge-gr
 26d2997b354dfa43b08da495e7a007b33e58a7366821094db743e254e0f729a5  x-knowledge-graph-v0.5.0/core/ai_export_parser.py
 4a0c4f73c08054c7dc5a41c5d168cacac208ac0618d1ce80c6a296589fa8bb28  x-knowledge-graph-v0.5.0/core/xkg_core.py
 9995daa80ad14c8030758658eff1aeb74cd087ac256df7ebdeb3f2233fd36592  x-knowledge-graph-v0.5.0/core/evernote_parser.py
-b4de9b15fedd529fa85953fdc77479ec69b6f5b4c54ae05fa4b02f9b75fc636a  x-knowledge-graph-v0.5.0/core/analytics.py
+fca84cc8508955588ef23ec74bab4acd46441aea849db4f6042015f062f6ba56  x-knowledge-graph-v0.5.0/core/analytics.py
 54f901987efaa7b39a29a12f3fdbbd2b6c6026953eb1eb2cd30a92c6084cd811  x-knowledge-graph-v0.5.0/core/markdown_folder_parser.py
+3ab156823ed98136de89722d5872eb6148180627688658b1863eb7983bad1ba7  x-knowledge-graph-v0.5.0/core/llm_action_extractor.py
 208e3364506648238a5f5eef1b5cf61bd182170720da833b8a8e2525392d3005  x-knowledge-graph-v0.5.0/frontend/favicon.ico
 5634703ff844d473fe8487688e287c0fdad346683fae3f5b4007dff7fba75e31  x-knowledge-graph-v0.5.0/frontend/index.html
 59d2ef8050ca61446b30bb66cdb2982b1ae3cf197d89d635e310bd0064b42928  x-knowledge-graph-v0.5.0/core/__pycache__/evernote_parser.cpython-312.pyc
 83bc1cc281a2cadc1f73d095f7c559d06817ac299bda77d5dd1a29f7a06572dd  x-knowledge-graph-v0.5.0/core/__pycache__/analytics.cpython-312.pyc
 61fa1b47650b60c84223beced07b1e2d2da33af23a88fffc12dc84f5df3d67ab  x-knowledge-graph-v0.5.0/core/__pycache__/pkm_importers.cpython-312.pyc
+9e8ae6e462393dd4aabba1a6d884b88e662a4dfb0448c56099eeb30cad131b11  x-knowledge-graph-v0.5.0/core/__pycache__/llm_action_extractor.cpython-312.pyc
 844cad14e8fc0f74b012ed71c155451a656e65f89fe656397a2ba14531b50118  x-knowledge-graph-v0.5.0/core/__pycache__/xkg_core.cpython-312.pyc
 9513cb92c0b35178e1844ea2653e6c2c2483161149ee5dda647e13094ab26026  x-knowledge-graph-v0.5.0/core/__pycache__/notion_parser.cpython-312.pyc
 809e66b6ea885ce136259f73298016dec15b78135529ff09780176738b7e9c95  x-knowledge-graph-v0.5.0/core/__pycache__/todoist_exporter.cpython-312.pyc
