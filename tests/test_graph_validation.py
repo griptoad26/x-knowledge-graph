@@ -74,7 +74,7 @@ class TestGraphPopulation:
         posts_count = result['stats'].get('total_posts', result['stats'].get('total_tweets', 0))
         assert posts_count == 10, f"Expected 10 posts, got {posts_count}"
         assert result['stats']['total_actions'] > 0, "Expected actions extracted"
-        assert result['stats']['topics_count'] > 0, "Expected topics clustered"
+        assert result['stats']['grok_topics_count'] > 0, "Expected topics clustered"
         
         # Verify graph nodes
         d3 = kg.export_for_d3()
@@ -185,7 +185,7 @@ class TestTopicClustering:
     def test_topics_clustered_from_grok(self, kg):
         """Verify topics are clustered from Grok content"""
         result = kg.build_from_export(str(GROK_EXPORT_DIR), 'grok')
-        topics = result.get('topics', {})
+        topics = result.get('grok_topics', {})
         
         assert len(topics) > 0, "No topics clustered from Grok export"
         

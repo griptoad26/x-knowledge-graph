@@ -10,10 +10,10 @@ import requests
 from datetime import datetime
 from typing import Dict, List, Optional
 try:
-    from .amazon_product_linker import generate_amazon_url, detect_product_mentions
+    from .amazon_product_linker import generate_amazon_url, detect_purchase_intent
 except ImportError:
     # Fallback for standalone testing
-    from amazon_product_linker import generate_amazon_url, detect_product_mentions
+    from amazon_product_linker import generate_amazon_url, detect_purchase_intent
 from dataclasses import dataclass
 from unittest.mock import Mock, patch
 
@@ -70,7 +70,7 @@ class TodoistExporter:
                 return match.group(1)
         
         # If no explicit URL, generate one from product mentions
-        if detect_product_mentions(text):
+        if detect_purchase_intent(text):
             generated_url = generate_amazon_url(text)
             if generated_url:
                 return generated_url

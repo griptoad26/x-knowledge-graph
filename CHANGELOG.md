@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [v0.5.1] - 2026-02-16
+## [v0.5.4] - 2026-02-18
+
+### Added
+- LLM Action Extraction prototype with HybridExtractor (84.6% accuracy vs 53.8% regex)
+- Neo4j integration research and schema
+- Multi-agent architecture documentation
+- Analytics dashboard with charts
+
+### Changed
+- Version bump to v0.5.4 for release cycle
+
+### Fixed
+- Version mismatch between VERSION.txt and main.py
+
+## [v0.5.3] - 2026-02-17
 
 ### Added
 - VPS Testing Standards documentation
