@@ -1,0 +1,3574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X Knowledge Graph v0.4.34</title>
+    <link rel="stylesheet" href="css/layouts.css">
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">X Knowledge Graph <span>v0.4.34</span></div>
+
+            <!-- Search Bar -->
+            <div class="search-container">
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="global-search" placeholder="Search conversations, tweets, actions... (Ctrl+K)"
+                           onkeyup="handleSearchKeyup(event)" onfocus="handleSearchFocus()"
+                           onblur="handleSearchBlur()" autocomplete="off">
+                    <span class="search-shortcut">⌘K</span>
+                </div>
+                <div class="search-results" id="search-results">
+                    <!-- Results populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div class="search-type-toggle">
+                    <button class="search-type-btn active" data-type="keyword" onclick="setSearchType('keyword')" title="Keyword Search">Aa</button>
+                    <button class="search-type-btn" data-type="semantic" onclick="setSearchType('semantic')" title="Semantic Search">✨</button>
+                </div>
+                <button id="theme-toggle" class="btn btn-theme" onclick="toggleTheme()" aria-label="Toggle theme" title="Switch to light/dark theme">
+                    <span id="theme-icon" aria-hidden="true">🌙</span>
+                </button>
+                <button class="btn btn-secondary" onclick="showHelp()">Help</button>
+                <button class="btn btn-secondary" onclick="showImportModal()">Import ▾</button>
+                <div class="export-dropdown">
+    <button class="btn btn-primary" onclick="toggleExportMenu()">Export ▾</button>
+    <div class="export-menu" id="export-menu">
+        <div class="export-menu-item" onclick="exportJSON()">
+            <span class="export-icon">📄</span>
+            <span>Export as JSON</span>
+        </div>
+        <div class="export-menu-item" onclick="exportPDF()">
+            <span class="export-icon">📑</span>
+            <span>Export as PDF</span>
+        </div>
+        <div class="export-menu-separator"></div>
+        <div class="export-menu-item export-submenu">
+            <span class="export-icon">📚</span>
+            <span>Export to PKM ▸</span>
+            <div class="export-submenu-content">
+                <div class="export-menu-item" onclick="exportPKM('obsidian')">
+                    <span class="export-icon">💎</span>
+                    <span>Obsidian</span>
+                </div>
+                <div class="export-menu-item" onclick="exportPKM('logseq')">
+                    <span class="export-icon">📅</span>
+                    <span>Logseq</span>
+                </div>
+                <div class="export-menu-item" onclick="exportPKM('markdown')">
+                    <span class="export-icon">📝</span>
+                    <span>Generic Markdown</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Data Source</div>
+                
+                <!-- Export Type Selection -->
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Export Type</label>
+                    <div style="display: flex; gap: 8px;">
+                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <input type="radio" name="export-type" value="x" checked onchange="toggleFolderInputs()">
+                            <span style="font-size: 12px;">X</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <input type="radio" name="export-type" value="grok" onchange="toggleFolderInputs()">
+                            <span style="font-size: 12px;">Grok</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;" title="OpenAI ChatGPT, Anthropic Claude, Google Gemini">
+                            <input type="radio" name="export-type" value="ai" onchange="toggleFolderInputs()">
+                            <span style="font-size: 12px;">AI</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <input type="radio" name="export-type" value="both" onchange="toggleFolderInputs()">
+                            <span style="font-size: 12px;">Both</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- X Export Folder -->
+                <div id="x-folder-section">
+                    <button class="btn btn-primary" style="width: 100%;" onclick="selectFolder('x')">
+                        📂 Browse X Folder
+                    </button>
+                    <input type="file" id="folder-input" webkitdirectory directory style="display: none;">
+                    <input type="text" id="x-folder-path" placeholder="Select X export folder..." 
+                           style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-color); 
+                                  color: var(--text-primary); padding: 8px; border-radius: 4px; 
+                                  font-size: 12px; margin-top: 8px;">
+                </div>
+
+                <!-- Grok Export Folder -->
+                <div id="grok-folder-section" style="display: none; margin-top: 8px;">
+                    <button class="btn btn-secondary" style="width: 100%;" onclick="selectFolder('grok')">
+                        📂 Browse Grok Folder
+                    </button>
+                    <input type="file" id="grok-folder-input" webkitdirectory directory style="display: none;">
+                    <input type="text" id="grok-folder-path" placeholder="Select Grok export folder..." 
+                           style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-color); 
+                                  color: var(--text-primary); padding: 8px; border-radius: 4px; 
+                                  font-size: 12px; margin-top: 8px;">
+                </div>
+
+                <!-- AI Export Folder -->
+                <div id="ai-folder-section" style="display: none; margin-top: 8px;">
+                    <button class="btn" style="width: 100%; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; color: white;" onclick="selectFolder('ai')">
+                        🤖 Browse AI Export Folder
+                    </button>
+                    <div style="font-size: 10px; color: var(--text-secondary); margin-top: 6px; line-height: 1.4;">
+                        Supports: ChatGPT, Claude, Gemini exports
+                    </div>
+                    <input type="file" id="ai-folder-input" webkitdirectory directory style="display: none;">
+                    <input type="text" id="ai-folder-path" placeholder="Select AI export folder..." 
+                           style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-color); 
+                                  color: var(--text-primary); padding: 8px; border-radius: 4px; 
+                                  font-size: 12px; margin-top: 8px;">
+                </div>
+
+                <!-- Load Button -->
+                <button class="btn btn-success" style="width: 100%; margin-top: 12px;" onclick="parseExport()">
+                    ▶️ Load Data
+                </button>
+
+                <!-- Clear Button -->
+                <button class="btn btn-secondary" style="width: 100%; margin-top: 6px;" onclick="clearGraph()">
+                    🗑️ Clear
+                </button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Views</div>
+                <nav class="nav-tabs">
+                    <div class="nav-tab active" data-view="graph" onclick="switchView('graph')">
+                        <span class="icon">🔗</span>
+                        <span>Graph View</span>
+                        <span class="badge" id="graph-count">0</span>
+                    </div>
+                    <div class="nav-tab" data-view="timeline" onclick="switchView('timeline')">
+                        <span class="icon">📅</span>
+                        <span>Timeline</span>
+                        <span class="badge" id="timeline-count">0</span>
+                    </div>
+                    <div class="nav-tab" data-view="taskboard" onclick="switchView('taskboard')">
+                        <span class="icon">📋</span>
+                        <span>Task Board</span>
+                        <span class="badge" id="task-count">0</span>
+                    </div>
+                    <div class="nav-tab" data-view="clusters" onclick="switchView('clusters')">
+                        <span class="icon">🏷️</span>
+                        <span>Topic Clusters</span>
+                        <span class="badge" id="cluster-count">0</span>
+                    </div>
+                    <div class="nav-tab" data-view="conversation" onclick="switchView('conversation')">
+                        <span class="icon">💬</span>
+                        <span>Conversation Tree</span>
+                        <span class="badge" id="conversation-count">0</span>
+                    </div>
+                    <div class="nav-tab" data-view="outline" onclick="switchView('outline')">
+                        <span class="icon">📝</span>
+                        <span>Outline</span>
+                        <span class="badge" id="outline-count">0</span>
+                    </div>
+                    <div class="nav-tab" data-view="insights" onclick="switchView('insights')">
+                        <span class="icon">📈</span>
+                        <span>Insights</span>
+                        <span class="badge" id="insights-count">New</span>
+                    </div>
+                </nav>
+            </div>
+
+            <div class="sidebar-section" id="stats-section" style="display: none;">
+                <div class="sidebar-title">Statistics</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-tweets">0</div>
+                        <div class="stat-label">Tweets</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-actions">0</div>
+                        <div class="stat-label">Actions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-topics">0</div>
+                        <div class="stat-label">Topics</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-conversations">0</div>
+                        <div class="stat-label">Conversations</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- ==================== GRAPH VIEW ==================== -->
+            <div class="view-container active" id="view-graph">
+                <div class="graph-view">
+                    <div class="graph-toolbar">
+                        <button class="btn" onclick="zoomIn()">🔍+</button>
+                        <button class="btn" onclick="zoomOut()">🔍-</button>
+                        <button class="btn" onclick="zoomReset()">🔍100%</button>
+                        <button class="btn" onclick="fitGraph()">⊡ Fit</button>
+                    </div>
+                    <div class="graph-filters">
+                        <label>Layout Algorithm</label>
+                        <select id="layout-select" onchange="changeLayout(this.value)">
+                            <option value="force">🔗 Force-Directed</option>
+                            <option value="hierarchical">📊 Hierarchical</option>
+                            <option value="circular">⭕ Circular</option>
+                            <option value="radial">☀️ Radial</option>
+                            <option value="grid">▦ Grid</option>
+                        </select>
+                        <label style="margin-top: 10px;">Filter by Type</label>
+                        <select id="node-type-filter" onchange="filterNodes()">
+                            <option value="all">All Types</option>
+                            <option value="tweet">Tweets</option>
+                            <option value="action">Actions</option>
+                            <option value="topic">Topics</option>
+                        </select>
+                        <label style="margin-top: 10px;">Search Nodes</label>
+                        <input type="text" id="node-search" placeholder="Search..." onkeyup="searchNodes()">
+                    </div>
+                    <div class="graph-info" id="graph-info">Load X export to see knowledge graph</div>
+                    <svg id="graph-svg">
+                        <text x="50%" y="50%" text-anchor="middle" fill="#666" font-size="14">
+                            Load X export to see knowledge graph
+                        </text>
+                    </svg>
+                    <div class="node-tooltip" id="node-tooltip">
+                        <div class="node-tooltip-title"></div>
+                        <div class="node-tooltip-text"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TIMELINE VIEW ==================== -->
+            <div class="view-container" id="view-timeline">
+                <div class="timeline-view">
+                    <div class="timeline-toolbar">
+                        <div>
+                            <label>From:</label>
+                            <input type="date" id="timeline-start" onchange="filterTimeline()">
+                        </div>
+                        <div>
+                            <label>To:</label>
+                            <input type="date" id="timeline-end" onchange="filterTimeline()">
+                        </div>
+                        <button class="btn" onclick="clearTimelineFilter()">Clear</button>
+                        <div style="margin-left: auto; font-size: 12px; color: var(--text-secondary);">
+                            Showing <span id="timeline-visible">0</span> of <span id="timeline-total">0</span> items
+                        </div>
+                    </div>
+                    <div class="heatmap-container">
+                        <div class="heatmap-title">Activity Heatmap (Last 30 Days)</div>
+                        <div class="heatmap-grid" id="heatmap"></div>
+                    </div>
+                    <div class="timeline-container">
+                        <div class="timeline-stream" id="timeline-stream">
+                            <div class="empty-state">
+                                <div class="icon">📅</div>
+                                <h3>No Timeline Data</h3>
+                                <p>Load an X export to see your chronological activity stream</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TASK BOARD VIEW ==================== -->
+            <div class="view-container" id="view-taskboard">
+                <div class="taskboard-view">
+                    <div class="taskboard-toolbar">
+                        <h2>Task Board</h2>
+                        <div>
+                            <label style="margin-right: 10px;">Filter:</label>
+                            <select id="task-filter" onchange="filterTasks()">
+                                <option value="all">All Tasks</option>
+                                <option value="pending">Pending</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="complete">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="taskboard-columns">
+                        <div class="task-column" id="column-todo" 
+                             ondragover="handleDragOver(event)" 
+                             ondrop="handleDrop(event, 'todo')"
+                             ondragleave="handleDragLeave(event)">
+                            <div class="column-header">
+                                <span class="column-title">📝 To Do</span>
+                                <span class="column-count" id="count-todo">0</span>
+                            </div>
+                            <div class="column-content" id="tasks-todo"></div>
+                        </div>
+                        <div class="task-column" id="column-inprogress" 
+                             ondragover="handleDragOver(event)" 
+                             ondrop="handleDrop(event, 'in_progress')"
+                             ondragleave="handleDragLeave(event)">
+                            <div class="column-header">
+                                <span class="column-title">🔄 In Progress</span>
+                                <span class="column-count" id="count-inprogress">0</span>
+                            </div>
+                            <div class="column-content" id="tasks-inprogress"></div>
+                        </div>
+                        <div class="task-column" id="column-done" 
+                             ondragover="handleDragOver(event)" 
+                             ondrop="handleDrop(event, 'done')"
+                             ondragleave="handleDragLeave(event)">
+                            <div class="column-header">
+                                <span class="column-title">✅ Done</span>
+                                <span class="column-count" id="count-done">0</span>
+                            </div>
+                            <div class="column-content" id="tasks-done"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TOPIC CLUSTERS VIEW ==================== -->
+            <div class="view-container" id="view-clusters">
+                <div class="clusters-view">
+                    <div class="clusters-toolbar">
+                        <input type="text" id="cluster-search" placeholder="Search clusters..." onkeyup="searchClusters()">
+                        <button class="btn" onclick="expandAllClusters()">Expand All</button>
+                        <button class="btn" onclick="collapseAllClusters()">Collapse All</button>
+                    </div>
+                    <div class="clusters-container">
+                        <div class="clusters-grid" id="clusters-grid">
+                            <div class="empty-state">
+                                <div class="icon">🏷️</div>
+                                <h3>No Topic Clusters</h3>
+                                <p>Load an X export to see your topics organized by keywords</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== CONVERSATION TREE VIEW ==================== -->
+            <div class="view-container" id="view-conversation">
+                <div class="conversation-view">
+                    <div class="conversation-toolbar">
+                        <input type="text" id="conversation-search" placeholder="Search conversations..." onkeyup="searchConversations()">
+                        <button class="btn" onclick="expandAllThreads()">Expand All</button>
+                        <button class="btn" onclick="collapseAllThreads()">Collapse All</button>
+                    </div>
+                    <div class="conversation-browser">
+                        <!-- Conversation List Sidebar -->
+                        <div class="conversation-list" id="conversation-list">
+                            <div class="conversation-list-header">
+                                <span>Conversations</span>
+                                <span class="badge" id="conversation-count">0</span>
+                            </div>
+                            <div class="conversation-list-items" id="conversation-list-items">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                        <!-- Conversation Content Panel -->
+                        <div class="conversation-content" id="conversation-content">
+                            <div class="empty-state">
+                                <div class="icon">💬</div>
+                                <h3>Select a Conversation</h3>
+                                <p>Click on a conversation to view its full content</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== OUTLINE VIEW ==================== -->
+            <div class="view-container" id="view-outline">
+                <div class="outline-view">
+                    <div class="outline-toolbar">
+                        <input type="text" id="outline-search" placeholder="Search outline..." onkeyup="searchOutline()">
+                        <button class="btn" onclick="copyOutline()">📋 Copy</button>
+                        <button class="btn" onclick="downloadOutline()">⬇️ Download</button>
+                    </div>
+                    <div class="outline-container" id="outline-content">
+                        <div class="empty-state">
+                            <div class="icon">📝</div>
+                            <h3>No Content</h3>
+                            <p>Load an X export to see your outline</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== INSIGHTS VIEW ==================== -->
+            <div class="view-container" id="view-insights">
+                <div class="insights-view">
+                    <div class="insights-toolbar">
+                        <h2>📈 Insights Dashboard</h2>
+                        <button class="btn btn-primary" onclick="refreshAnalytics()">🔄 Refresh</button>
+                    </div>
+                    <div class="insights-grid">
+                        <!-- Stats Overview Cards -->
+                        <div class="insights-stats-row">
+                            <div class="insight-stat-card">
+                                <div class="insight-stat-value" id="stat-nodes">0</div>
+                                <div class="insight-stat-label">Total Nodes</div>
+                            </div>
+                            <div class="insight-stat-card">
+                                <div class="insight-stat-value" id="stat-edges">0</div>
+                                <div class="insight-stat-label">Connections</div>
+                            </div>
+                            <div class="insight-stat-card">
+                                <div class="insight-stat-value" id="stat-action-rate">0%</div>
+                                <div class="insight-stat-label">Action Completion</div>
+                            </div>
+                            <div class="insight-stat-card">
+                                <div class="insight-stat-value" id="stat-conversations">0</div>
+                                <div class="insight-stat-label">Conversations</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Activity Over Time -->
+                        <div class="insight-chart-card" id="card-activity">
+                            <div class="insight-chart-title">Activity Over Time</div>
+                            <div class="insight-chart-container">
+                                <img id="chart-activity" src="" alt="Activity Chart" onerror="loadChart('activity', this)" style="display:none;">
+                                <div class="insight-chart-loading" id="loading-activity">Loading...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Topic Distribution -->
+                        <div class="insight-chart-card" id="card-topics">
+                            <div class="insight-chart-title">Topic Distribution</div>
+                            <div class="insight-chart-container">
+                                <img id="chart-topics" src="" alt="Topics Chart" onerror="loadChart('topics', this)" style="display:none;">
+                                <div class="insight-chart-loading" id="loading-topics">Loading...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Completion -->
+                        <div class="insight-chart-card" id="card-actions">
+                            <div class="insight-chart-title">Action Completion by Priority</div>
+                            <div class="insight-chart-container">
+                                <img id="chart-actions" src="" alt="Actions Chart" onerror="loadChart('actions', this)" style="display:none;">
+                                <div class="insight-chart-loading" id="loading-actions">Loading...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Source Breakdown -->
+                        <div class="insight-chart-card" id="card-sources">
+                            <div class="insight-chart-title">Source Breakdown</div>
+                            <div class="insight-chart-container">
+                                <img id="chart-sources" src="" alt="Sources Chart" onerror="loadChart('sources', this)" style="display:none;">
+                                <div class="insight-chart-loading" id="loading-sources">Loading...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Top Keywords -->
+                        <div class="insight-chart-card" id="card-keywords">
+                            <div class="insight-chart-title">Top Keywords</div>
+                            <div class="insight-chart-container">
+                                <img id="chart-keywords" src="" alt="Keywords Chart" onerror="loadChart('keywords', this)" style="display:none;">
+                                <div class="insight-chart-loading" id="loading-keywords">Loading...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Engagement Trends -->
+                        <div class="insight-chart-card" id="card-engagement">
+                            <div class="insight-chart-title">Engagement Trends</div>
+                            <div class="insight-chart-container">
+                                <img id="chart-engagement" src="" alt="Engagement Chart" onerror="loadChart('engagement', this)" style="display:none;">
+                                <div class="insight-chart-loading" id="loading-engagement">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Panel - Details -->
+        <aside class="right-panel" id="right-panel">
+            <div class="panel-section">
+                <div class="panel-title">
+                    Details
+                    <button onclick="toggleRightPanel()" style="float: right; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 14px;" title="Minimize">─</button>
+                </div>
+                <div id="details-content">
+                    <p style="color: var(--text-secondary); font-size: 12px;">
+                        Select an item to view details
+                    </p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; overflow-y: auto;">
+        <div style="background: var(--bg-secondary); border: 1px solid var(--accent-primary); border-radius: 12px; max-width: 800px; margin: 40px auto; overflow: hidden;">
+            <div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="color: var(--accent-primary); margin: 0;">📑 Export Preview</h2>
+                <button onclick="closeExportModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">×</button>
+            </div>
+            <div id="export-preview" style="padding: 20px; max-height: 60vh; overflow-y: auto; background: var(--bg-primary);"></div>
+            <div style="padding: 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-secondary" onclick="closeExportModal()">Cancel</button>
+                <button class="btn btn-primary" id="download-pdf-btn" onclick="downloadPDF()">Download PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; overflow-y: auto;">
+        <div style="background: var(--bg-secondary); border: 1px solid var(--accent-primary); border-radius: 12px; max-width: 600px; margin: 40px auto; overflow: hidden;">
+            <div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="color: var(--accent-primary); margin: 0;">📖 How to Use</h2>
+                <button onclick="hideHelp()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">×</button>
+            </div>
+            <div style="padding: 20px; line-height: 1.8;">
+                <h3 style="color: var(--accent-success);">🐦 X Export</h3>
+                <ol style="margin: 0 0 20px 20px; color: var(--text-primary);">
+                    <li>Settings → Your account → Download an archive</li>
+                    <li>Request archive (may take hours/days)</li>
+                    <li>Download ZIP when ready, extract</li>
+                    <li>Select folder with Browse button</li>
+                </ol>
+                <h3 style="color: var(--accent-primary);">📊 Views</h3>
+                <ul style="margin: 0 0 20px 20px; color: var(--text-primary);">
+                    <li><strong>Graph View:</strong> Force-directed visualization of connections</li>
+                    <li><strong>Timeline:</strong> Chronological stream of activity</li>
+                    <li><strong>Task Board:</strong> Kanban board for action items</li>
+                    <li><strong>Topic Clusters:</strong> Keyword-based grouping</li>
+                    <li><strong>Conversation Tree:</strong> Threaded reply structure</li>
+                </ul>
+                <h3 style="color: var(--accent-warning);">🌙 Light/Dark Mode</h3>
+                <ul style="margin: 0 0 20px 20px; color: var(--text-primary);">
+                    <li><strong>Theme Toggle:</strong> Click the moon/sun icon in the header</li>
+                    <li><strong>Auto-detection:</strong> Defaults to your system preference</li>
+                    <li><strong>Persistence:</strong> Your theme choice is saved automatically</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Topic Drill-down Modal -->
+    <div id="topic-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; overflow-y: auto;">
+        <div style="background: var(--bg-secondary); border: 1px solid var(--accent-primary); border-radius: 12px; max-width: 900px; margin: 40px auto; overflow: hidden; max-height: calc(100vh - 80px); display: flex; flex-direction: column;">
+            <div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="color: var(--accent-primary); margin: 0;">
+                    <span class="icon">🏷️</span>
+                    <span id="modal-topic-name">Topic Name</span>
+                </h2>
+                <button onclick="hideTopicModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">×</button>
+            </div>
+            <div style="padding: 0; flex: 1; overflow-y: auto;">
+                <div class="modal-tabs" style="display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-tertiary);">
+                    <div class="modal-tab active" data-tab="actions" onclick="switchModalTab('actions')">
+                        <span class="icon">📋</span> Actions <span id="modal-actions-count">0</span>
+                    </div>
+                    <div class="modal-tab" data-tab="tweets" onclick="switchModalTab('tweets')">
+                        <span class="icon">🐦</span> Tweets <span id="modal-tweets-count">0</span>
+                    </div>
+                </div>
+                <div id="modal-content" style="padding: 20px;">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="import-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; overflow-y: auto;">
+        <div style="background: var(--bg-secondary); border: 1px solid var(--accent-primary); border-radius: 12px; max-width: 600px; margin: 40px auto; overflow: hidden;">
+            <div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="color: var(--accent-primary); margin: 0;">
+                    <span class="icon">📥</span> Import Data
+                </h2>
+                <button onclick="hideImportModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">×</button>
+            </div>
+            <div style="padding: 20px;">
+                <!-- Import Options -->
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <!-- Notion Import -->
+                    <div class="import-option" onclick="selectImportType('notion')">
+                        <div class="import-icon">📓</div>
+                        <div class="import-info">
+                            <div class="import-title">Notion Export</div>
+                            <div class="import-desc">Import pages from a Notion export folder</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Evernote Import -->
+                    <div class="import-option" onclick="selectImportType('evernote')">
+                        <div class="import-icon">🐘</div>
+                        <div class="import-info">
+                            <div class="import-title">Evernote ENEX</div>
+                            <div class="import-desc">Import notes from an Evernote export file (.enex)</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Markdown Import -->
+                    <div class="import-option" onclick="selectImportType('markdown')">
+                        <div class="import-icon">📝</div>
+                        <div class="import-info">
+                            <div class="import-title">Markdown Folder</div>
+                            <div class="import-desc">Import markdown files from a local folder</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Import Path Input (hidden by default) -->
+                <div id="import-path-section" style="margin-top: 20px; display: none;">
+                    <input type="text" id="import-path" placeholder="Select a path..." 
+                           style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-color); 
+                                  color: var(--text-primary); padding: 12px; border-radius: 8px; 
+                                  font-size: 14px; margin-bottom: 12px;">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="browseImportPath()" style="flex: 1;">
+                            📂 Browse
+                        </button>
+                        <button class="btn btn-primary" onclick="executeImport()" id="import-btn" style="flex: 1;">
+                            Import
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Progress Indicator -->
+                <div id="import-progress" style="margin-top: 20px; display: none;">
+                    <div style="text-align: center; padding: 20px;">
+                        <div class="loading-spinner" style="width: 40px; height: 40px; border: 3px solid var(--border-color); border-top-color: var(--accent-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+                        <div id="import-progress-text">Importing...</div>
+                    </div>
+                </div>
+                
+                <!-- Import Stats -->
+                <div id="import-stats" style="margin-top: 20px; display: none;">
+                    <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 16px;">
+                        <h3 style="margin: 0 0 12px; color: var(--accent-success);">✓ Import Complete!</h3>
+                        <div id="import-stats-content"></div>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 16px;" onclick="hideImportModal(); renderGraph();">
+                        View Graph
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Drill-down modal styles */
+        .modal-tabs {
+            padding: 0 10px;
+        }
+        .modal-tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .modal-tab:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.05);
+        }
+        .modal-tab.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+        }
+        .modal-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-action-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .modal-action-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 12px rgba(0, 217, 255, 0.15);
+        }
+        .modal-action-text {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        .modal-action-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .amazon-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #FF9900 0%, #FFAD33 100%);
+            color: #111;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .amazon-link:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 153, 0, 0.4);
+        }
+        .modal-tweet-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+        .modal-tweet-text {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        .modal-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        .modal-empty .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        /* Import Modal Styles */
+        .import-option {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .import-option:hover {
+            border-color: var(--accent-primary);
+            background: rgba(0, 217, 255, 0.1);
+        }
+        .import-option.selected {
+            border-color: var(--accent-primary);
+            background: rgba(0, 217, 255, 0.15);
+        }
+        .import-icon {
+            font-size: 32px;
+        }
+        .import-info {
+            flex: 1;
+        }
+        .import-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .import-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .import-stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .import-stat-row:last-child {
+            border-bottom: none;
+        }
+        .import-stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .import-stat-value {
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+        }
+    </style>
+
+    <script>
+        // State
+        let graphData = { nodes: [], edges: [] };
+        let timelineData = [];
+        let actions = [];
+        let topics = {};
+        let grokTopics = {};
+        let grokConversations = [];  // Full Grok conversations
+        let conversations = [];
+        let selectedConversation = null;
+        let currentView = 'graph';
+        let currentLayout = 'force';
+        let zoomLevel = 1;
+        let nodePositions = {};
+
+        const API_BASE = '';
+
+        // Initialize - load persisted data if available
+        (function initState() {
+            if (!loadGraphData()) {
+                // Use empty defaults if no persisted data
+                graphData = { nodes: [], edges: [] };
+                timelineData = [];
+                actions = [];
+                topics = {};
+                grokTopics = {};
+                grokConversations = [];
+                conversations = [];
+            }
+        })();
+
+        // Theme State
+        let currentTheme = 'dark';
+
+        // Theme Toggle
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme();
+            saveThemePreference();
+        }
+
+        function applyTheme() {
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            const icon = document.getElementById('theme-icon');
+            icon.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+        }
+
+        function loadThemePreference() {
+            const savedTheme = localStorage.getItem('xkg_theme');
+            if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+                currentTheme = savedTheme;
+            } else {
+                // Check system preference
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                    currentTheme = 'light';
+                }
+            }
+            applyTheme();
+        }
+
+        function saveThemePreference() {
+            localStorage.setItem('xkg_theme', currentTheme);
+        }
+
+        // DOM Elements
+        const els = {
+            details: document.getElementById('details-content'),
+            statsSection: document.getElementById('stats-section')
+        };
+
+        // ==================== VIEW NAVIGATION ====================
+
+        function switchView(viewName) {
+            currentView = viewName;
+            
+            // Update nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.view === viewName);
+            });
+            
+            // Update view containers
+            document.querySelectorAll('.view-container').forEach(container => {
+                container.classList.toggle('active', container.id === `view-${viewName}`);
+            });
+            
+            // Save state
+            localStorage.setItem('xkg_current_view', viewName);
+            
+            // Render current view
+            renderCurrentView();
+        }
+
+        function renderCurrentView() {
+            switch(currentView) {
+                case 'graph': renderGraph(); break;
+                case 'timeline': renderTimeline(); break;
+                case 'taskboard': renderTaskBoard(); break;
+                case 'clusters': renderClusters(); break;
+                case 'conversation': renderConversation(); break;
+                case 'outline': renderOutline(); break;
+            }
+        }
+
+        // ==================== GRAPH VIEW ====================
+
+        const layouts = {
+            force: function(nodes, edges, width, height) {
+                const positions = {};
+                const padding = 60;
+                const areaWidth = width - padding * 2;
+                const areaHeight = height - padding * 2;
+                
+                nodes.forEach((node, i) => {
+                    positions[node.id] = {
+                        x: padding + Math.random() * areaWidth,
+                        y: padding + Math.random() * areaHeight
+                    };
+                });
+                
+                const iterations = 100;
+                const repulsion = 5000;
+                const springLength = 80;
+                const springStrength = 0.05;
+                
+                for (let iter = 0; iter < iterations; iter++) {
+                    nodes.forEach(node1 => {
+                        nodes.forEach(node2 => {
+                            if (node1.id === node2.id) return;
+                            const dx = positions[node1.id].x - positions[node2.id].x;
+                            const dy = positions[node1.id].y - positions[node2.id].y;
+                            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                            const force = repulsion / (dist * dist);
+                            positions[node1.id].x += (dx / dist) * force;
+                            positions[node1.id].y += (dy / dist) * force;
+                        });
+                    });
+                    
+                    edges.forEach(edge => {
+                        if (positions[edge.source] && positions[edge.target]) {
+                            const dx = positions[edge.target].x - positions[edge.source].x;
+                            const dy = positions[edge.target].y - positions[edge.source].y;
+                            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+                            const force = (dist - springLength) * springStrength;
+                            positions[edge.source].x += (dx / dist) * force;
+                            positions[edge.source].y += (dy / dist) * force;
+                            positions[edge.target].x -= (dx / dist) * force;
+                            positions[edge.target].y -= (dy / dist) * force;
+                        }
+                    });
+                    
+                    const centerX = width / 2;
+                    const centerY = height / 2;
+                    nodes.forEach(node => {
+                        positions[node.id].x += (centerX - positions[node.id].x) * 0.01;
+                        positions[node.id].y += (centerY - positions[node.id].y) * 0.01;
+                    });
+                }
+                
+                return positions;
+            },
+            
+            hierarchical: function(nodes, edges, width, height) {
+                const positions = {};
+                const padding = 80;
+                const levels = {};
+                const levelOrder = { topic: 0, action: 1, tweet: 2, user: 3 };
+                
+                nodes.forEach(node => {
+                    const level = levelOrder[node.type] || 2;
+                    if (!levels[level]) levels[level] = [];
+                    levels[level].push(node.id);
+                });
+                
+                const numLevels = Object.keys(levels).length;
+                const levelHeight = (height - padding * 2) / (numLevels - 1 || 1);
+                
+                Object.keys(levels).forEach(level => {
+                    const levelNodes = levels[level];
+                    const levelY = padding + (parseInt(level) * levelHeight);
+                    const nodeSpacing = (width - padding * 2) / (levelNodes.length + 1);
+                    
+                    levelNodes.forEach((nodeId, i) => {
+                        positions[nodeId] = {
+                            x: padding + nodeSpacing * (i + 1),
+                            y: levelY
+                        };
+                    });
+                });
+                
+                return positions;
+            },
+            
+            circular: function(nodes, edges, width, height) {
+                const positions = {};
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const radius = Math.min(width, height) / 3;
+                
+                nodes.forEach((node, i) => {
+                    const angle = (i / nodes.length) * 2 * Math.PI - Math.PI / 2;
+                    positions[node.id] = {
+                        x: centerX + radius * Math.cos(angle),
+                        y: centerY + radius * Math.sin(angle)
+                    };
+                });
+                
+                return positions;
+            },
+            
+            radial: function(nodes, edges, width, height) {
+                const positions = {};
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const topicNodes = nodes.filter(n => n.type === 'topic');
+                const actionNodes = nodes.filter(n => n.type === 'action');
+                const tweetNodes = nodes.filter(n => n.type === 'tweet');
+                
+                const topicRadius = Math.min(width, height) / 6;
+                topicNodes.forEach((node, i) => {
+                    const angle = (i / topicNodes.length) * 2 * Math.PI - Math.PI / 2;
+                    positions[node.id] = {
+                        x: centerX + topicRadius * Math.cos(angle),
+                        y: centerY + topicRadius * Math.sin(angle)
+                    };
+                });
+                
+                const actionRadius = Math.min(width, height) / 3;
+                actionNodes.forEach((node, i) => {
+                    const angle = (i / actionNodes.length) * 2 * Math.PI;
+                    positions[node.id] = {
+                        x: centerX + actionRadius * Math.cos(angle),
+                        y: centerY + actionRadius * Math.sin(angle)
+                    };
+                });
+                
+                const tweetRadius = Math.min(width, height) / 2.2;
+                tweetNodes.forEach((node, i) => {
+                    const angle = (i / tweetNodes.length) * 2 * Math.PI;
+                    positions[node.id] = {
+                        x: centerX + tweetRadius * Math.cos(angle),
+                        y: centerY + tweetRadius * Math.sin(angle)
+                    };
+                });
+                
+                return positions;
+            },
+            
+            grid: function(nodes, edges, width, height) {
+                const positions = {};
+                const padding = 60;
+                const cols = Math.ceil(Math.sqrt(nodes.length));
+                const cellWidth = (width - padding * 2) / cols;
+                const cellHeight = (height - padding * 2) / Math.ceil(nodes.length / cols);
+                
+                nodes.forEach((node, i) => {
+                    const row = Math.floor(i / cols);
+                    const col = i % cols;
+                    positions[node.id] = {
+                        x: padding + col * cellWidth + cellWidth / 2,
+                        y: padding + row * cellHeight + cellHeight / 2
+                    };
+                });
+                
+                return positions;
+            }
+        };
+
+        function renderGraph() {
+            const svg = document.getElementById('graph-svg');
+            const container = document.getElementById('view-graph');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            svg.innerHTML = '';
+
+            if (!graphData.nodes || graphData.nodes.length === 0) {
+                svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">No graph data - Parse an export first</text>';
+                document.getElementById('graph-info').textContent = 'No data loaded';
+                return;
+            }
+
+            const colors = {
+                tweet: '#3498db',
+                action: '#e94560',
+                topic: '#00d9ff',
+                user: '#9b59b6'
+            };
+
+            const sizes = {
+                tweet: 12,
+                action: 10,
+                topic: 30,
+                user: 15
+            };
+
+            // Filter nodes
+            const typeFilter = document.getElementById('node-type-filter').value;
+            let filteredNodes = graphData.nodes;
+            if (typeFilter !== 'all') {
+                filteredNodes = graphData.nodes.filter(n => n.type === typeFilter);
+            }
+            
+            const nodeIds = new Set(filteredNodes.map(n => n.id));
+            const filteredEdges = graphData.edges.filter(e => nodeIds.has(e.source) && nodeIds.has(e.target));
+
+            nodePositions = layouts[currentLayout](filteredNodes, filteredEdges, width, height);
+
+            // Draw edges
+            filteredEdges.forEach(edge => {
+                if (nodePositions[edge.source] && nodePositions[edge.target]) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', nodePositions[edge.source].x);
+                    line.setAttribute('y1', nodePositions[edge.source].y);
+                    line.setAttribute('x2', nodePositions[edge.target].x);
+                    line.setAttribute('y2', nodePositions[edge.target].y);
+                    line.setAttribute('class', 'graph-edge');
+                    svg.appendChild(line);
+                }
+            });
+
+            // Draw nodes
+            filteredNodes.forEach(node => {
+                if (!nodePositions[node.id]) return;
+                const pos = nodePositions[node.id];
+
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.setAttribute('class', 'graph-node');
+                group.setAttribute('data-id', node.id);
+
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', pos.x);
+                circle.setAttribute('cy', pos.y);
+                circle.setAttribute('r', sizes[node.type] || 12);
+                circle.setAttribute('fill', colors[node.type] || '#666');
+                
+                circle.addEventListener('mouseenter', () => {
+                    circle.setAttribute('stroke', '#00d9ff');
+                    circle.setAttribute('stroke-width', '3');
+                    showTooltip(node, pos.x, pos.y);
+                });
+                circle.addEventListener('mouseleave', () => {
+                    circle.setAttribute('stroke', '#fff');
+                    circle.setAttribute('stroke-width', '2');
+                    hideTooltip();
+                });
+                circle.addEventListener('click', () => selectNode(node));
+                circle.addEventListener('dblclick', () => drillDownToNode(node));
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', pos.x);
+                text.setAttribute('y', pos.y + (sizes[node.type] || 12) + 15);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', '#ccc');
+                text.setAttribute('font-size', '10');
+                text.textContent = node.label ? node.label.substring(0, 15) : node.type;
+
+                group.appendChild(circle);
+                group.appendChild(text);
+                svg.appendChild(group);
+            });
+
+            document.getElementById('graph-count').textContent = filteredNodes.length;
+            document.getElementById('graph-info').textContent = 
+                `${filteredNodes.length} nodes • ${filteredEdges.length} edges`;
+        }
+
+        function changeLayout(layout) {
+            currentLayout = layout;
+            renderGraph();
+        }
+
+        function filterNodes() {
+            renderGraph();
+        }
+
+        function searchNodes() {
+            const query = document.getElementById('node-search').value.toLowerCase();
+            document.querySelectorAll('.graph-node').forEach(node => {
+                const id = node.getAttribute('data-id');
+                const nodeData = graphData.nodes.find(n => n.id === id);
+                const visible = !query || (nodeData.label && nodeData.label.toLowerCase().includes(query));
+                node.style.display = visible ? 'block' : 'none';
+            });
+        }
+
+        function zoomIn() { zoomLevel = Math.min(zoomLevel * 1.3, 5); applyZoom(); }
+        function zoomOut() { zoomLevel = Math.max(zoomLevel / 1.3, 0.2); applyZoom(); }
+        function zoomReset() { zoomLevel = 1; applyZoom(); }
+        
+        function applyZoom() {
+            const svg = document.getElementById('graph-svg');
+            svg.style.transform = `scale(${zoomLevel})`;
+            svg.style.transformOrigin = 'center center';
+        }
+
+        // Mouse wheel zoom
+        document.addEventListener('wheel', function(e) {
+            if (currentView === 'graph') {
+                if (e.deltaY < 0) {
+                    zoomIn();
+                } else {
+                    zoomOut();
+                }
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        function fitGraph() {
+            zoomReset();
+            renderGraph();
+        }
+
+        // Drill down to single node (double-click)
+        let drillDownMode = false;
+        let drillDownNodeId = null;
+
+        function drillDownToNode(node) {
+            if (drillDownMode && drillDownNodeId === node.id) {
+                // Exit drill down mode
+                exitDrillDown();
+                return;
+            }
+            
+            drillDownMode = true;
+            drillDownNodeId = node.id;
+            
+            // Find connected nodes
+            const connectedIds = new Set([node.id]);
+            
+            // Find edges connected to this node
+            graphData.edges.forEach(edge => {
+                if (edge.source === node.id) connectedIds.add(edge.target);
+                if (edge.target === node.id) connectedIds.add(edge.source);
+            });
+            
+            // Filter to show only connected nodes
+            document.getElementById('node-type-filter').value = 'all';
+            const filteredNodes = graphData.nodes.filter(n => connectedIds.has(n.id));
+            
+            // Temporarily override graph data for rendering
+            const originalNodes = graphData.nodes;
+            const originalEdges = graphData.edges;
+            graphData.nodes = filteredNodes;
+            graphData.edges = originalEdges.filter(e => connectedIds.has(e.source) && connectedIds.has(e.target));
+            
+            renderGraph();
+            
+            // Restore original data
+            graphData.nodes = originalNodes;
+            graphData.edges = originalEdges;
+            
+            // Show notification
+            showNotification(`Drill down: ${node.label || node.text?.substring(0, 50)} (double-click to exit)`);
+        }
+
+        function exitDrillDown() {
+            drillDownMode = false;
+            drillDownNodeId = null;
+            renderGraph();
+            showNotification('Exited drill down mode');
+        }
+
+        // ==================== DATA PERSISTENCE ====================
+
+        function saveGraphData() {
+            try {
+                localStorage.setItem('xkg_graph_data', JSON.stringify({
+                    nodes: graphData.nodes,
+                    edges: graphData.edges,
+                    timelineData: timelineData,
+                    actions: actions,
+                    topics: topics,
+                    grokTopics: grokTopics,
+                    grokConversations: grokConversations,
+                    conversations: conversations,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {
+                console.warn('Failed to save graph data:', e);
+            }
+        }
+
+        function loadGraphData() {
+            try {
+                const saved = localStorage.getItem('xkg_graph_data');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    // Check if data is less than 24 hours old
+                    if (data.timestamp && (Date.now() - data.timestamp) < 24 * 60 * 60 * 1000) {
+                        graphData.nodes = data.nodes || [];
+                        graphData.edges = data.edges || [];
+                        timelineData = data.timelineData || [];
+                        actions = data.actions || [];
+                        topics = data.topics || {};
+                        grokTopics = data.grokTopics || {};
+                        grokConversations = data.grokConversations || [];
+                        conversations = data.conversations || [];
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to load graph data:', e);
+            }
+            return false;
+        }
+
+        function clearPersistedData() {
+            localStorage.removeItem('xkg_graph_data');
+        }
+
+        function showTooltip(node, x, y) {
+            const tooltip = document.getElementById('node-tooltip');
+            tooltip.querySelector('.node-tooltip-title').textContent = 
+                node.type.charAt(0).toUpperCase() + node.type.slice(1);
+            tooltip.querySelector('.node-tooltip-text').textContent = 
+                node.label || node.text || 'Node ' + node.id;
+            tooltip.style.left = (x + 10) + 'px';
+            tooltip.style.top = (y - 30) + 'px';
+            tooltip.style.display = 'block';
+        }
+
+        function hideTooltip() {
+            document.getElementById('node-tooltip').style.display = 'none';
+        }
+
+        function selectNode(node) {
+            showNodeDetails(node);
+        }
+
+        // ==================== TIMELINE VIEW ====================
+
+        function renderTimeline() {
+            const container = document.getElementById('timeline-stream');
+            
+            if (!timelineData || timelineData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📅</div>
+                        <h3>No Timeline Data</h3>
+                        <p>Load an X export to see your chronological activity stream</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let filtered = [...timelineData];
+            
+            const startDate = document.getElementById('timeline-start').value;
+            const endDate = document.getElementById('timeline-end').value;
+            
+            if (startDate) {
+                filtered = filtered.filter(item => item.date >= startDate);
+            }
+            if (endDate) {
+                filtered = filtered.filter(item => item.date <= endDate);
+            }
+
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            container.innerHTML = filtered.map(item => `
+                <div class="timeline-item type-${item.type}" onclick="selectTimelineItem('${item.id}')">
+                    <div class="timeline-header">
+                        <span class="timeline-time">${formatDate(item.date)}</span>
+                        <span class="timeline-type">${item.type}</span>
+                    </div>
+                    <div class="timeline-content">${item.content}</div>
+                    ${item.meta ? `<div class="timeline-meta">${item.meta}</div>` : ''}
+                </div>
+            `).join('');
+
+            document.getElementById('timeline-visible').textContent = filtered.length;
+            document.getElementById('timeline-total').textContent = timelineData.length;
+
+            renderHeatmap();
+        }
+
+        function filterTimeline() {
+            renderTimeline();
+        }
+
+        function clearTimelineFilter() {
+            document.getElementById('timeline-start').value = '';
+            document.getElementById('timeline-end').value = '';
+            renderTimeline();
+        }
+
+        function renderHeatmap() {
+            const container = document.getElementById('heatmap');
+            const days = 30;
+            let html = '';
+            
+            for (let i = 0; i < days; i++) {
+                const level = Math.floor(Math.random() * 5);
+                html += `<div class="heatmap-day level-${level}"></div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function selectTimelineItem(itemId) {
+            const item = timelineData.find(i => i.id === itemId);
+            if (item) showNodeDetails(item);
+        }
+
+        // ==================== TASK BOARD VIEW ====================
+
+        function renderTaskBoard() {
+            const todoContainer = document.getElementById('tasks-todo');
+            const progressContainer = document.getElementById('tasks-inprogress');
+            const doneContainer = document.getElementById('tasks-done');
+
+            const taskFilter = document.getElementById('task-filter').value;
+            let filteredActions = actions;
+
+            if (taskFilter !== 'all') {
+                filteredActions = actions.filter(a => {
+                    if (taskFilter === 'pending') return a.status !== 'complete';
+                    if (taskFilter === 'in_progress') return a.status === 'in_progress';
+                    if (taskFilter === 'complete') return a.status === 'complete';
+                    return true;
+                });
+            }
+
+            const todo = filteredActions.filter(a => a.status !== 'complete');
+            const inProgress = filteredActions.filter(a => a.status === 'in_progress');
+            const done = filteredActions.filter(a => a.status === 'complete');
+
+            todoContainer.innerHTML = todo.map(a => createTaskCard(a)).join('');
+            progressContainer.innerHTML = inProgress.map(a => createTaskCard(a)).join('');
+            doneContainer.innerHTML = done.map(a => createTaskCard(a)).join('');
+
+            document.getElementById('count-todo').textContent = todo.length;
+            document.getElementById('count-inprogress').textContent = inProgress.length;
+            document.getElementById('count-done').textContent = done.length;
+            document.getElementById('task-count').textContent = filteredActions.length;
+
+            setupDragAndDrop();
+        }
+
+        function createTaskCard(action) {
+            const initial = (action.assignee || 'U')[0].toUpperCase();
+            return `
+                <div class="task-card priority-${action.priority}" 
+                     draggable="true" 
+                     data-action-id="${action.id}"
+                     onclick="selectTask('${action.id}')">
+                    <div class="task-title">${action.text}</div>
+                    <div class="task-meta">
+                        <span class="task-priority-badge">${action.priority}</span>
+                        <div class="task-assignee">
+                            <div class="task-assignee-avatar">${initial}</div>
+                            ${action.assignee || 'Unassigned'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setupDragAndDrop() {
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        function handleDragStart(e) {
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.dataset.actionId);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        async function handleDrop(e, status) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            const actionId = e.dataTransfer.getData('text/plain');
+            
+            const action = actions.find(a => a.id === actionId);
+            if (action) {
+                action.status = status === 'todo' ? 'pending' : status;
+                await updateActionStatus(actionId, action.status);
+                renderTaskBoard();
+            }
+        }
+
+        function filterTasks() {
+            renderTaskBoard();
+        }
+
+        async function updateActionStatus(actionId, status) {
+            try {
+                await fetch(`${API_BASE}/api/actions/${actionId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+            } catch (error) {
+                console.error('Error updating action:', error);
+            }
+        }
+
+        function selectTask(actionId) {
+            const action = actions.find(a => a.id === actionId);
+            if (action) showNodeDetails(action);
+        }
+
+        // ==================== TOPIC CLUSTERS VIEW ====================
+
+        function renderClusters() {
+            const container = document.getElementById('clusters-grid');
+            const topicEntries = Object.entries(topics);
+
+            if (topicEntries.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🏷️</div>
+                        <h3>No Topic Clusters</h3>
+                        <p>Load an X export to see your topics organized by keywords</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = topicEntries.map(([name, topic]) => `
+                <div class="cluster-card" data-cluster="${name}">
+                    <div class="cluster-header" onclick="toggleCluster('${name}')">
+                        <div class="cluster-name">
+                            <span class="cluster-expand-icon">▶</span>
+                            ${name}
+                        </div>
+                        <span class="cluster-count">${topic.action_count || 0}</span>
+                    </div>
+                    <div class="cluster-items hidden" id="cluster-items-${name.replace(/\s/g, '-')}">
+                        ${(topic.items || []).map(item => `
+                            <div class="cluster-item" onclick="selectClusterItem('${item.id}')">
+                                <div class="cluster-item-title">${item.title}</div>
+                                <div class="cluster-item-meta">${item.date || ''}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('cluster-count').textContent = topicEntries.length;
+        }
+
+        function toggleCluster(name) {
+            const card = document.querySelector(`[data-cluster="${name}"]`);
+            const items = document.getElementById(`cluster-items-${name.replace(/\s/g, '-')}`);
+            card.classList.toggle('expanded');
+            items.classList.toggle('hidden');
+        }
+
+        function expandAllClusters() {
+            document.querySelectorAll('.cluster-card').forEach(card => {
+                card.classList.add('expanded');
+                const items = card.querySelector('.cluster-items');
+                items.classList.remove('hidden');
+            });
+        }
+
+        function collapseAllClusters() {
+            document.querySelectorAll('.cluster-card').forEach(card => {
+                card.classList.remove('expanded');
+                const items = card.querySelector('.cluster-items');
+                items.classList.add('hidden');
+            });
+        }
+
+        function searchClusters() {
+            const query = document.getElementById('cluster-search').value.toLowerCase();
+            document.querySelectorAll('.cluster-card').forEach(card => {
+                const name = card.dataset.cluster.toLowerCase();
+                card.style.display = name.includes(query) ? 'block' : 'none';
+            });
+        }
+
+        function selectClusterItem(itemId) {
+            for (const topic of Object.values(topics)) {
+                const item = (topic.items || []).find(i => i.id === itemId);
+                if (item) {
+                    showNodeDetails(item);
+                    return;
+                }
+            }
+        }
+
+        // ==================== CONVERSATION TREE VIEW ====================
+
+        function renderConversation() {
+            // Render the new conversation browser
+            renderConversationBrowser();
+            document.getElementById('conversation-count').textContent = grokConversations.length;
+        }
+
+        function renderConversationBrowser() {
+            const listItems = document.getElementById('conversation-list-items');
+            const content = document.getElementById('conversation-content');
+            
+            if (!grokConversations || grokConversations.length === 0) {
+                listItems.innerHTML = `
+                    <div class="conversation-list-empty">
+                        <p>No Grok conversations found</p>
+                        <p style="font-size: 10px; color: var(--text-secondary);">Load a Grok export to see conversations</p>
+                    </div>
+                `;
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">💬</div>
+                        <h3>No Conversations</h3>
+                        <p>Load a Grok export to see your conversations</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort conversations by date (newest first)
+            const sortedConvs = [...grokConversations].sort((a, b) => 
+                new Date(b.create_time) - new Date(a.create_time)
+            );
+            
+            // Render conversation list
+            listItems.innerHTML = sortedConvs.map(conv => {
+                const date = new Date(conv.create_time);
+                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const msgCount = conv.messages?.length || 0;
+                
+                return `
+                    <div class="conversation-list-item ${selectedConversation === conv.id ? 'active' : ''}" 
+                         onclick="selectConversation('${conv.id}')">
+                        <div class="conversation-list-item-title">${escapeHtml(conv.title || 'Untitled')}</div>
+                        <div class="conversation-list-item-meta">
+                            <span>${dateStr}</span>
+                            <span>${msgCount} messages</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // If there's a selected conversation, render it
+            if (selectedConversation) {
+                renderConversationContent(selectedConversation);
+            } else if (sortedConvs.length > 0) {
+                // Auto-select first conversation
+                selectConversation(sortedConvs[0].id);
+            }
+        }
+
+        function selectConversation(convId) {
+            selectedConversation = convId;
+            
+            // Update active state in list
+            document.querySelectorAll('.conversation-list-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find and activate the clicked item
+            const conv = grokConversations.find(c => c.id === convId);
+            if (conv) {
+                // Update list UI
+                const listItems = document.querySelectorAll('.conversation-list-item');
+                listItems.forEach(item => {
+                    if (item.onclick && item.onclick.toString().includes(convId)) {
+                        item.classList.add('active');
+                    }
+                });
+                
+                // Also try by text content match
+                const items = document.getElementById('conversation-list-items');
+                Array.from(items.children).forEach(item => {
+                    if (item.textContent.includes(convId.substring(0, 8))) {
+                        item.classList.add('active');
+                    }
+                });
+                
+                renderConversationContent(convId);
+            }
+        }
+
+        function renderConversationContent(convId) {
+            const content = document.getElementById('conversation-content');
+            const conv = grokConversations.find(c => c.id === convId);
+            
+            if (!conv) {
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">❓</div>
+                        <h3>Conversation not found</h3>
+                    </div>
+                `;
+                return;
+            }
+            
+            const messages = conv.messages || [];
+            
+            // Sort messages by timestamp
+            const sortedMessages = [...messages].sort((a, b) => {
+                const timeA = parseInt(a.timestamp) || 0;
+                const timeB = parseInt(b.timestamp) || 0;
+                return timeA - timeB;
+            });
+            
+            const date = new Date(conv.create_time);
+            const dateStr = date.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            let html = `
+                <div class="conversation-detail">
+                    <div class="conversation-detail-header">
+                        <h2>${escapeHtml(conv.title || 'Untitled Conversation')}</h2>
+                        <div class="conversation-detail-meta">
+                            <span>Created: ${dateStr}</span>
+                            <span>${messages.length} messages</span>
+                        </div>
+                    </div>
+                    <div class="conversation-messages">
+            `;
+            
+            sortedMessages.forEach(msg => {
+                const roleClass = msg.role === 'user' ? 'user' : 'assistant';
+                const roleLabel = msg.role === 'user' ? 'You' : 'Grok';
+                const avatarInitial = msg.role === 'user' ? 'U' : 'G';
+                
+                // Format timestamp if available
+                let timeStr = '';
+                if (msg.timestamp) {
+                    try {
+                        const ts = parseInt(msg.timestamp);
+                        if (ts > 1000000000) {
+                            const msgDate = new Date(ts * 1000);
+                            timeStr = msgDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                        }
+                    } catch (e) {}
+                }
+                
+                html += `
+                    <div class="conversation-message ${roleClass}">
+                        <div class="message-avatar">${avatarInitial}</div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="message-role">${roleLabel}</span>
+                                ${timeStr ? `<span class="message-time">${timeStr}</span>` : ''}
+                            </div>
+                            <div class="message-text">${escapeHtml(msg.content || '')}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+        }
+
+        function searchConversations() {
+            const query = document.getElementById('conversation-search').value.toLowerCase();
+            document.querySelectorAll('.conversation-list-item').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function expandAllThreads() {
+            document.querySelectorAll('.thread-children').forEach(el => el.classList.remove('collapsed'));
+        }
+
+        function collapseAllThreads() {
+            document.querySelectorAll('.thread-children').forEach(el => el.classList.add('collapsed'));
+        }
+
+        // ==================== OUTLINE VIEW ====================
+
+        function renderOutline() {
+            const container = document.getElementById('outline-content');
+            
+            // Build outline from all data
+            let outlineItems = [];
+            
+            // Add topics as sections
+            for (const [topicName, topic] of Object.entries(topics)) {
+                outlineItems.push({
+                    type: 'topic',
+                    title: `🏷️ ${topicName}`,
+                    children: (topic.items || []).map(item => ({
+                        type: 'action',
+                        title: `[${item.priority?.toUpperCase()}] ${item.text}`,
+                        id: item.id
+                    }))
+                });
+            }
+            
+            // Add tweets as items
+            const tweets = graphData.nodes.filter(n => n.type === 'tweet');
+            if (tweets.length > 0) {
+                outlineItems.push({
+                    type: 'tweets',
+                    title: `🐦 Tweets (${tweets.length})`,
+                    children: tweets.map(t => ({
+                        type: 'tweet',
+                        title: t.label || t.text?.substring(0, 80),
+                        id: t.id
+                    }))
+                });
+            }
+            
+            // Add actions as items
+            if (actions.length > 0) {
+                outlineItems.push({
+                    type: 'actions',
+                    title: `📋 Actions (${actions.length})`,
+                    children: actions.map(a => ({
+                        type: 'action',
+                        title: `[${a.priority?.toUpperCase()}] ${a.text?.substring(0, 100)}`,
+                        id: a.id
+                    }))
+                });
+            }
+            
+            if (outlineItems.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📝</div>
+                        <h3>No Content</h3>
+                        <p>Load an X export to see your outline</p>
+                    </div>
+                `;
+                document.getElementById('outline-count').textContent = '0';
+                return;
+            }
+            
+            // Render outline as nested lists
+            let html = '<div class="outline-tree">';
+            html += renderOutlineItems(outlineItems, 0);
+            html += '</div>';
+            
+            container.innerHTML = html;
+            document.getElementById('outline-count').textContent = outlineItems.reduce((sum, i) => sum + 1 + (i.children?.length || 0), 0);
+        }
+
+        function renderOutlineItems(items, depth) {
+            return items.map(item => {
+                const indent = depth * 24;
+                let html = `
+                    <div class="outline-item" style="padding-left: ${indent}px" onclick="selectOutlineItem('${item.id}')">
+                        <span class="outline-icon">${item.children ? '📁' : '📄'}</span>
+                        <span class="outline-text">${item.title}</span>
+                    </div>
+                `;
+                if (item.children) {
+                    html += renderOutlineItems(item.children, depth + 1);
+                }
+                return html;
+            }).join('');
+        }
+
+        function searchOutline() {
+            const query = document.getElementById('outline-search').value.toLowerCase();
+            document.querySelectorAll('.outline-item').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function selectOutlineItem(itemId) {
+            // Find the node in graphData
+            const node = graphData.nodes.find(n => n.id === itemId);
+            if (node) {
+                showNodeDetails(node);
+            }
+        }
+
+        function copyOutline() {
+            const container = document.getElementById('outline-content');
+            const text = container.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('Outline copied to clipboard!');
+            });
+        }
+
+        function downloadOutline() {
+            const container = document.getElementById('outline-content');
+            const text = `# X Knowledge Graph Outline\nGenerated: ${new Date().toISOString()}\n\n${container.innerText}`;
+            
+            const blob = new Blob([text], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'xkg-outline.md';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ==================== RIGHT PANEL TOGGLE ====================
+
+        let rightPanelVisible = true;
+
+        function toggleRightPanel() {
+            rightPanelVisible = !rightPanelVisible;
+            const panel = document.getElementById('right-panel');
+            const toggleBtn = panel.querySelector('.panel-title button');
+            
+            if (rightPanelVisible) {
+                panel.style.width = '320px';
+                panel.style.display = 'block';
+                toggleBtn.textContent = '─';
+                toggleBtn.title = 'Minimize';
+            } else {
+                panel.style.width = '0';
+                panel.style.display = 'none';
+                toggleBtn.textContent = '▶';
+                toggleBtn.title = 'Expand';
+            }
+        }
+
+        // ==================== DETAILS PANEL ====================
+
+        function showNodeDetails(node) {
+            const typeColors = { tweet: '#3498db', action: '#e94560', topic: '#00d9ff', user: '#9b59b6' };
+            
+            els.details.innerHTML = `
+                <div class="detail-card">
+                    <div class="detail-row">
+                        <div class="detail-label">Type</div>
+                        <div class="detail-value" style="color: ${typeColors[node.type] || '#ccc'}">
+                            ● ${node.type || 'Unknown'}
+                        </div>
+                    </div>
+                    ${node.label ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Label</div>
+                            <div class="detail-value">${node.label}</div>
+                        </div>
+                    ` : ''}
+                    ${node.text ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Content</div>
+                            <div class="detail-value">${node.text.substring(0, 200)}${node.text.length > 200 ? '...' : ''}</div>
+                        </div>
+                    ` : ''}
+                    ${node.topic ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Topic</div>
+                            <div class="detail-value">${node.topic}</div>
+                        </div>
+                    ` : ''}
+                    ${node.priority ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Priority</div>
+                            <div class="detail-value">
+                                <span class="task-priority-badge priority-${node.priority}">${node.priority}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${node.status ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">
+                                <span class="status-badge ${node.status === 'complete' ? 'complete' : 'pending'}">
+                                    ${node.status}
+                                </span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${node.date ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Date</div>
+                            <div class="detail-value">${formatDate(node.date)}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // ==================== API FUNCTIONS ====================
+
+        function toggleFolderInputs() {
+            const exportType = document.querySelector('input[name="export-type"]:checked').value;
+            const xSection = document.getElementById('x-folder-section');
+            const grokSection = document.getElementById('grok-folder-section');
+            const aiSection = document.getElementById('ai-folder-section');
+
+            xSection.style.display = (exportType === 'grok' || exportType === 'ai') ? 'none' : 'block';
+            grokSection.style.display = (exportType === 'x' || exportType === 'ai') ? 'none' : 'block';
+            aiSection.style.display = (exportType === 'ai') ? 'block' : 'none';
+        }
+
+        async function selectFolder(type) {
+            try {
+                await fetch('/api/select-folder', { method: 'POST' });
+
+                let attempts = 0;
+                while (attempts < 100) {
+                    await new Promise(r => setTimeout(r, 100));
+                    const response = await fetch('/api/get-selected-folder');
+                    const result = await response.json();
+
+                    if (result.status === 'done') {
+                        if (result.path) {
+                            if (type === 'ai') {
+                                localStorage.setItem('xkg_ai_path', result.path);
+                                document.getElementById('ai-folder-path').value = result.path;
+                            } else {
+                                const key = type === 'grok' ? 'xkg_grok_path' : 'xkg_export_path';
+                                const inputId = type === 'grok' ? 'grok-folder-path' : 'x-folder-path';
+                                localStorage.setItem(key, result.path);
+                                document.getElementById(inputId).value = result.path;
+                            }
+                        }
+                        return;
+                    }
+                    attempts++;
+                }
+            } catch (error) {
+                if (type === 'ai') {
+                    document.getElementById('ai-folder-input').click();
+                } else {
+                    document.getElementById(type === 'grok' ? 'grok-folder-input' : 'folder-input').click();
+                }
+            }
+        }
+
+        document.getElementById('folder-input').addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                // Try to get the folder path - webkitRelativePath works in Chrome
+                let path = e.target.files[0].webkitRelativePath || e.target.files[0].path;
+                if (path) {
+                    // Extract folder path from file path
+                    path = path.replace(/\\[^\\]+$/, '').replace(/\/[^/]+$/, '');
+                    if (path) {
+                        localStorage.setItem('xkg_export_path', path);
+                        document.getElementById('x-folder-path').value = path;
+                    }
+                }
+            }
+        });
+
+        document.getElementById('grok-folder-input').addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                // Try to get the folder path - webkitRelativePath works in Chrome
+                let path = e.target.files[0].webkitRelativePath || e.target.files[0].path;
+                if (path) {
+                    // Extract folder path from file path
+                    path = path.replace(/\\[^\\]+$/, '').replace(/\/[^/]+$/, '');
+                    if (path) {
+                        localStorage.setItem('xkg_grok_path', path);
+                        document.getElementById('grok-folder-path').value = path;
+                    }
+                }
+            }
+        });
+
+        document.getElementById('ai-folder-input').addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                // Try to get the folder path - webkitRelativePath works in Chrome
+                let path = e.target.files[0].webkitRelativePath || e.target.files[0].path;
+                if (path) {
+                    // Extract folder path from file path
+                    path = path.replace(/\\[^\\]+$/, '').replace(/\/[^/]+$/, '');
+                    if (path) {
+                        localStorage.setItem('xkg_ai_path', path);
+                        document.getElementById('ai-folder-path').value = path;
+                    }
+                }
+            }
+        });
+
+        async function parseExport() {
+            const exportType = document.querySelector('input[name="export-type"]:checked').value;
+            const xPath = localStorage.getItem('xkg_export_path');
+            const grokPath = localStorage.getItem('xkg_grok_path');
+            const aiPath = localStorage.getItem('xkg_ai_path');
+
+            if (exportType === 'x' && !xPath) {
+                alert('Please select an X export folder first');
+                return;
+            }
+            if (exportType === 'grok' && !grokPath) {
+                alert('Please select a Grok export folder first');
+                return;
+            }
+            if (exportType === 'ai' && !aiPath) {
+                alert('Please select an AI export folder first');
+                return;
+            }
+            if (exportType === 'both' && (!xPath || !grokPath)) {
+                alert('Please select both X and Grok export folders');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/parse-export`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        x_path: xPath,
+                        grok_path: grokPath,
+                        ai_path: aiPath,
+                        export_type: exportType
+                    })
+                });
+
+                // Check if response is JSON before parsing
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    throw new Error(`Server returned non-JSON response (${response.status}): ${text.substring(0, 200)}...`);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                document.getElementById('stat-tweets').textContent = data.stats.total_tweets;
+                document.getElementById('stat-actions').textContent = data.stats.total_actions;
+                document.getElementById('stat-topics').textContent = data.stats.topics_count;
+                document.getElementById('stat-conversations').textContent = data.stats.total_conversations;
+                els.statsSection.style.display = 'block';
+
+                actions = data.actions || [];
+                topics = data.topics || {};
+                grokTopics = data.grok_topics || {};
+                grokConversations = data.grok_conversations || [];
+                graphData = data.graph || { nodes: [], edges: [] };
+                
+                timelineData = [];
+                if (graphData.nodes) {
+                    graphData.nodes.forEach(node => {
+                        if (node.date) {
+                            timelineData.push({
+                                id: node.id,
+                                type: node.type,
+                                date: node.date,
+                                content: node.label || node.text || '',
+                                meta: node.topic || ''
+                            });
+                        }
+                    });
+                }
+
+                conversations = [];
+
+                // Save to localStorage for persistence
+                saveGraphData();
+
+                renderCurrentView();
+
+            } catch (error) {
+                alert('Error parsing export: ' + error.message);
+            }
+        }
+
+        function exportData() {
+            window.location.href = `${API_BASE}/api/export`;
+        }
+
+        function clearGraph() {
+            graphData = { nodes: [], edges: [] };
+            timelineData = [];
+            actions = [];
+            topics = {};
+            grokTopics = {};
+            aiTopics = {};
+            grokConversations = [];
+            aiConversations = [];
+            conversations = [];
+            clearPersistedData();
+            document.getElementById('x-folder-path').value = '';
+            document.getElementById('grok-folder-path').value = '';
+            document.getElementById('ai-folder-path').value = '';
+            localStorage.removeItem('xkg_export_path');
+            localStorage.removeItem('xkg_grok_path');
+            localStorage.removeItem('xkg_ai_path');
+            els.statsSection.style.display = 'none';
+            selectedConversation = null;
+            renderCurrentView();
+        }
+
+        function showHelp() {
+            document.getElementById('help-modal').style.display = 'block';
+        }
+
+        function hideHelp() {
+            document.getElementById('help-modal').style.display = 'none';
+        }
+
+        // ==================== EXPORT FUNCTIONS ====================
+
+        function toggleExportMenu() {
+            const menu = document.getElementById('export-menu');
+            menu.classList.toggle('show');
+        }
+
+        // Close export menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.export-dropdown')) {
+                document.getElementById('export-menu').classList.remove('show');
+            }
+        });
+
+        function exportJSON() {
+            const exportData = {
+                graph: graphData,
+                actions: actions,
+                topics: topics,
+                conversations: conversations,
+                exportedAt: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `x-knowledge-graph-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            document.getElementById('export-menu').classList.remove('show');
+        }
+
+        async function exportPDF() {
+            if (!graphData.nodes || graphData.nodes.length === 0) {
+                alert('No data to export. Please load an X export first.');
+                document.getElementById('export-menu').classList.remove('show');
+                return;
+            }
+
+            document.getElementById('export-menu').classList.remove('show');
+
+            // Generate preview content
+            const preview = generateExportPreview();
+
+            document.getElementById('export-preview').innerHTML = preview;
+            document.getElementById('export-modal').style.display = 'block';
+        }
+
+        async function exportPKM(format) {
+            document.getElementById('export-menu').classList.remove('show');
+
+            // Check if there's data to export
+            const hasData = (
+                (graphData.nodes && graphData.nodes.length > 0) ||
+                actions.length > 0 ||
+                Object.keys(topics).length > 0 ||
+                grokConversations.length > 0
+            );
+
+            if (!hasData) {
+                alert('No data to export. Please load an export first.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/export-pkm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ format: format })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert('Export failed: ' + (error.error || 'Unknown error'));
+                    return;
+                }
+
+                // Download the ZIP file
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `xkg-export-${format}-${new Date().toISOString().split('T')[0]}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showNotification(`Exported to ${format.charAt(0).toUpperCase() + format.slice(1)} format!`);
+            } catch (error) {
+                console.error('PKM Export error:', error);
+                alert('Export failed: ' + error.message);
+            }
+        }
+
+        function generateExportPreview() {
+            const stats = {
+                tweets: graphData.nodes.filter(n => n.type === 'tweet').length,
+                grokPosts: graphData.nodes.filter(n => n.type === 'grok').length,
+                actions: actions.length,
+                topics: Object.keys(topics).length,
+                grokTopics: Object.keys(grokTopics).length,
+                conversations: grokConversations.length
+            };
+
+            let html = `
+                <h1>X Knowledge Graph Export</h1>
+                <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 20px;">
+                    Generated: ${new Date().toLocaleString()}
+                </p>
+
+                <div class="export-stats">
+                    <div class="stat-box">
+                        <div class="stat-value">${stats.tweets}</div>
+                        <div class="stat-label">Tweets</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${stats.grokPosts}</div>
+                        <div class="stat-label">Grok Posts</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${stats.actions}</div>
+                        <div class="stat-label">Actions</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${stats.conversations}</div>
+                        <div class="stat-label">Conversations</div>
+                    </div>
+                </div>
+            `;
+
+            // Add Grok Conversations section
+            if (grokConversations && grokConversations.length > 0) {
+                html += '<h2>Grok Conversations</h2><div class="export-section">';
+                
+                // Sort by date
+                const sortedConvs = [...grokConversations].sort((a, b) => 
+                    new Date(b.create_time) - new Date(a.create_time)
+                );
+                
+                sortedConvs.forEach(conv => {
+                    const date = new Date(conv.create_time);
+                    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const msgCount = conv.messages?.length || 0;
+                    
+                    html += `
+                        <div class="export-item">
+                            <div class="item-title">${escapeHtml(conv.title || 'Untitled')}</div>
+                            <div class="item-meta">${dateStr} • ${msgCount} messages</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+
+            // Add Topics section (separate X and Grok topics)
+            html += '<h2>X Topics</h2><div class="export-section">';
+            if (Object.keys(topics).length === 0) {
+                html += '<p style="color: var(--text-secondary);">No X topics found.</p>';
+            } else {
+                Object.entries(topics).forEach(([name, topic]) => {
+                    html += `
+                        <div class="export-item">
+                            <div class="item-title">${name}</div>
+                            <div class="item-meta">${topic.action_count || 0} items</div>
+                        </div>
+                    `;
+                });
+            }
+            html += '</div>';
+            
+            if (grokTopics && Object.keys(grokTopics).length > 0) {
+                html += '<h2>Grok Topics</h2><div class="export-section">';
+                Object.entries(grokTopics).forEach(([name, topic]) => {
+                    html += `
+                        <div class="export-item">
+                            <div class="item-title">${name}</div>
+                            <div class="item-meta">${topic.action_count || 0} items</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+
+            html += '<h2>Recent Actions</h2><div class="export-section">';
+            const recentActions = actions.slice(0, 10);
+            if (recentActions.length === 0) {
+                html += '<p style="color: var(--text-secondary);">No actions found.</p>';
+            } else {
+                recentActions.forEach(action => {
+                    html += `
+                        <div class="export-item">
+                            <div class="item-title">${action.text}</div>
+                            <div class="item-meta">Priority: ${action.priority || 'N/A'} | Source: ${action.source_type || 'N/A'}</div>
+                        </div>
+                    `;
+                });
+            }
+            html += '</div>';
+
+            return html;
+        }
+
+        function closeExportModal() {
+            document.getElementById('export-modal').style.display = 'none';
+        }
+
+        async function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const preview = document.getElementById('export-preview');
+
+            try {
+                // Create PDF
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 15;
+                let yPos = margin;
+
+                // Title
+                pdf.setFontSize(20);
+                pdf.setTextColor(0, 217, 255);
+                pdf.text('X Knowledge Graph Export', pageWidth / 2, yPos, { align: 'center' });
+                yPos += 10;
+
+                // Date
+                pdf.setFontSize(10);
+                pdf.setTextColor(100, 100, 100);
+                pdf.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, yPos, { align: 'center' });
+                yPos += 15;
+
+                // Stats box
+                const stats = {
+                    tweets: graphData.nodes.filter(n => n.type === 'tweet').length,
+                    grokPosts: graphData.nodes.filter(n => n.type === 'grok').length,
+                    actions: actions.length,
+                    conversations: grokConversations.length
+                };
+
+                pdf.setFillColor(240, 240, 250);
+                pdf.roundedRect(margin, yPos, pageWidth - margin * 2, 25, 3, 3, 'F');
+
+                const statWidth = (pageWidth - margin * 2) / 4;
+                const statsData = [
+                    { label: 'Tweets', value: stats.tweets },
+                    { label: 'Grok Posts', value: stats.grokPosts },
+                    { label: 'Actions', value: stats.actions },
+                    { label: 'Conversations', value: stats.conversations }
+                ];
+
+                pdf.setFontSize(14);
+                statsData.forEach((stat, i) => {
+                    const x = margin + (i * statWidth) + statWidth / 2;
+                    pdf.setTextColor(0, 0, 0);
+                    pdf.text(String(stat.value), x, yPos + 8, { align: 'center' });
+                    pdf.setFontSize(8);
+                    pdf.setTextColor(100, 100, 100);
+                    pdf.text(stat.label, x, yPos + 16, { align: 'center' });
+                    pdf.setFontSize(14);
+                });
+
+                yPos += 35;
+
+                // ==================== GROK CONVERSATIONS (Full Content) ====================
+                if (grokConversations && grokConversations.length > 0) {
+                    pdf.setFontSize(16);
+                    pdf.setTextColor(0, 0, 0);
+                    pdf.text('Grok Conversations', margin, yPos);
+                    yPos += 10;
+                    
+                    // Sort by date (newest first)
+                    const sortedConvs = [...grokConversations].sort((a, b) => 
+                        new Date(b.create_time) - new Date(a.create_time)
+                    );
+                    
+                    for (const conv of sortedConvs) {
+                        // Check if we need a new page
+                        if (yPos > pageHeight - 60) {
+                            pdf.addPage();
+                            yPos = margin;
+                        }
+                        
+                        // Conversation title
+                        pdf.setFontSize(12);
+                        pdf.setTextColor(0, 100, 200);
+                        const title = conv.title || 'Untitled Conversation';
+                        const titleLines = pdf.splitTextToSize(title, pageWidth - margin * 2);
+                        pdf.text(titleLines, margin, yPos);
+                        yPos += titleLines.length * 5;
+                        
+                        // Date and message count
+                        const date = new Date(conv.create_time);
+                        const dateStr = date.toLocaleDateString('en-US', { 
+                            month: 'short', day: 'numeric', year: 'numeric' 
+                        });
+                        const msgCount = conv.messages?.length || 0;
+                        
+                        pdf.setFontSize(9);
+                        pdf.setTextColor(100, 100, 100);
+                        pdf.text(`${dateStr} • ${msgCount} messages`, margin, yPos);
+                        yPos += 6;
+                        
+                        // Messages
+                        const messages = conv.messages || [];
+                        const sortedMessages = [...messages].sort((a, b) => {
+                            const timeA = parseInt(a.timestamp) || 0;
+                            const timeB = parseInt(b.timestamp) || 0;
+                            return timeA - timeB;
+                        });
+                        
+                        for (const msg of sortedMessages) {
+                            if (yPos > pageHeight - 30) {
+                                pdf.addPage();
+                                yPos = margin;
+                            }
+                            
+                            // Role label
+                            pdf.setFontSize(9);
+                            const roleLabel = msg.role === 'user' ? 'User:' : 'Grok:';
+                            const roleColor = msg.role === 'user' ? [0, 0, 150] : [150, 0, 100];
+                            pdf.setTextColor(...roleColor);
+                            pdf.text(roleLabel, margin, yPos);
+                            
+                            // Message content
+                            pdf.setTextColor(0, 0, 0);
+                            const content = (msg.content || '').substring(0, 500);  // Limit content length
+                            const contentLines = pdf.splitTextToSize(content, pageWidth - margin * 2 - 20);
+                            pdf.text(contentLines, margin + 20, yPos);
+                            
+                            yPos += contentLines.length * 4 + 3;
+                        }
+                        
+                        yPos += 10;  // Space between conversations
+                    }
+                }
+
+                // ==================== TOPICS SECTION ====================
+                if (yPos > pageHeight - 40) {
+                    pdf.addPage();
+                    yPos = margin;
+                }
+
+                pdf.setFontSize(14);
+                pdf.setTextColor(0, 0, 0);
+                pdf.text('X Topics', margin, yPos);
+                yPos += 8;
+
+                pdf.setFontSize(10);
+                if (Object.keys(topics).length === 0) {
+                    pdf.setTextColor(100, 100, 100);
+                    pdf.text('No X topics found.', margin, yPos);
+                    yPos += 8;
+                } else {
+                    Object.entries(topics).forEach(([name, topic]) => {
+                        if (yPos > pageHeight - 20) {
+                            pdf.addPage();
+                            yPos = margin;
+                        }
+                        pdf.setTextColor(0, 0, 0);
+                        pdf.text(`• ${name}`, margin, yPos);
+                        pdf.setTextColor(100, 100, 100);
+                        pdf.text(`(${topic.action_count || 0} items)`, margin + 80, yPos);
+                        yPos += 6;
+                    });
+                }
+
+                yPos += 10;
+
+                // Grok Topics
+                if (grokTopics && Object.keys(grokTopics).length > 0) {
+                    if (yPos > pageHeight - 40) {
+                        pdf.addPage();
+                        yPos = margin;
+                    }
+
+                    pdf.setFontSize(14);
+                    pdf.setTextColor(0, 0, 0);
+                    pdf.text('Grok Topics', margin, yPos);
+                    yPos += 8;
+
+                    pdf.setFontSize(10);
+                    Object.entries(grokTopics).forEach(([name, topic]) => {
+                        if (yPos > pageHeight - 20) {
+                            pdf.addPage();
+                            yPos = margin;
+                        }
+                        pdf.setTextColor(0, 0, 0);
+                        pdf.text(`• ${name}`, margin, yPos);
+                        pdf.setTextColor(100, 100, 100);
+                        pdf.text(`(${topic.action_count || 0} items)`, margin + 80, yPos);
+                        yPos += 6;
+                    });
+                    
+                    yPos += 10;
+                }
+
+                // ==================== ACTIONS SECTION ====================
+                if (yPos > pageHeight - 40) {
+                    pdf.addPage();
+                    yPos = margin;
+                }
+
+                pdf.setFontSize(14);
+                pdf.setTextColor(0, 0, 0);
+                pdf.text('Recent Actions', margin, yPos);
+                yPos += 8;
+
+                const recentActions = actions.slice(0, 15);
+                pdf.setFontSize(10);
+                if (recentActions.length === 0) {
+                    pdf.setTextColor(100, 100, 100);
+                    pdf.text('No actions found.', margin, yPos);
+                } else {
+                    recentActions.forEach(action => {
+                        if (yPos > pageHeight - 15) {
+                            pdf.addPage();
+                            yPos = margin;
+                        }
+                        const status = action.status === 'complete' ? '✓' : '○';
+                        pdf.setTextColor(0, 0, 0);
+                        const text = `${status} ${action.text}`;
+                        const lines = pdf.splitTextToSize(text, pageWidth - margin * 2 - 40);
+                        pdf.text(lines, margin, yPos);
+                        yPos += lines.length * 5 + 3;
+
+                        pdf.setTextColor(100, 100, 100);
+                        pdf.setFontSize(8);
+                        pdf.text(`Priority: ${action.priority || 'N/A'} | Source: ${action.source_type || 'N/A'}`, margin + 5, yPos);
+                        yPos += 4;
+                        pdf.setFontSize(10);
+                    });
+                }
+
+                // Footer on last page
+                const pageCount = pdf.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    pdf.setPage(i);
+                    pdf.setFontSize(8);
+                    pdf.setTextColor(150, 150, 150);
+                    pdf.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+                }
+
+                // Save PDF
+                pdf.save(`x-knowledge-graph-${new Date().toISOString().split('T')[0]}.pdf`);
+
+                closeExportModal();
+
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF. Please try again.');
+            }
+        }
+
+        // ==================== INITIALIZATION ====================
+
+        const savedView = localStorage.getItem('xkg_current_view');
+        if (savedView) {
+            switchView(savedView);
+        }
+
+        // Load theme preference
+        loadThemePreference();
+
+        window.addEventListener('resize', renderGraph);
+
+        document.getElementById('help-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('help-modal')) {
+                hideHelp();
+            }
+        });
+
+        document.getElementById('topic-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('topic-modal')) {
+                hideTopicModal();
+            }
+        });
+
+        // ==================== TOPIC DRILL-DOWN MODAL ====================
+
+        let currentTopicData = null;
+        let currentModalTab = 'actions';
+
+        function showTopicModal(topicName) {
+            const topic = topics[topicName];
+            if (!topic) return;
+
+            currentTopicData = topic;
+            currentModalTab = 'actions';
+
+            document.getElementById('modal-topic-name').textContent = topicName.toUpperCase();
+            document.getElementById('topic-modal').style.display = 'block';
+
+            // Reset tab styling
+            document.querySelectorAll('.modal-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector('.modal-tab[data-tab="actions"]').classList.add('active');
+
+            renderModalContent();
+        }
+
+        function hideTopicModal() {
+            document.getElementById('topic-modal').style.display = 'none';
+            currentTopicData = null;
+        }
+
+        function switchModalTab(tab) {
+            currentModalTab = tab;
+
+            document.querySelectorAll('.modal-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.tab === tab);
+            });
+
+            renderModalContent();
+        }
+
+        function renderModalContent() {
+            if (!currentTopicData) return;
+
+            const content = document.getElementById('modal-content');
+
+            if (currentModalTab === 'actions') {
+                const items = currentTopicData.items || [];
+                document.getElementById('modal-actions-count').textContent = items.length;
+
+                if (items.length === 0) {
+                    content.innerHTML = `
+                        <div class="modal-empty">
+                            <div class="icon">📋</div>
+                            <p>No actions in this topic</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Sort by date (newest first)
+                const sortedItems = [...items].sort((a, b) =>
+                    new Date(b.created_at || 0) - new Date(a.created_at || 0)
+                );
+
+                content.innerHTML = `
+                    <div class="modal-section-title">
+                        <span>📋</span> Actions in "${currentTopicData.name}"
+                    </div>
+                    ${sortedItems.map(item => `
+                        <div class="modal-action-card" onclick="selectActionItem('${item.id}')">
+                            <div class="modal-action-text">${escapeHtml(item.text)}</div>
+                            <div class="modal-action-meta">
+                                <span class="task-priority-badge priority-${item.priority}">${item.priority}</span>
+                                <span class="status-badge ${item.status === 'complete' ? 'complete' : 'pending'}">${item.status}</span>
+                                <span>${formatDate(item.created_at)}</span>
+                                <span>${item.source_type}</span>
+                                ${item.amazon_link ? `
+                                    <a href="${item.amazon_link}" target="_blank" class="amazon-link" onclick="event.stopPropagation()">
+                                        <span>🛒</span> View on Amazon
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            } else {
+                // Tweets tab - filter graph nodes by topic
+                const topicNodes = (graphData.nodes || []).filter(n =>
+                    n.topic === currentTopicData.name || n.type === 'tweet'
+                );
+                document.getElementById('modal-tweets-count').textContent = topicNodes.length;
+
+                if (topicNodes.length === 0) {
+                    content.innerHTML = `
+                        <div class="modal-empty">
+                            <div class="icon">🐦</div>
+                            <p>No tweets found for this topic</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                content.innerHTML = `
+                    <div class="modal-section-title">
+                        <span>🐦</span> Tweets in "${currentTopicData.name}"
+                    </div>
+                    ${topicNodes.map(node => `
+                        <div class="modal-tweet-card" onclick="selectNodeFromModal('${node.id}')">
+                            <div class="modal-tweet-text">${escapeHtml(node.text || node.label || '')}</div>
+                            <div class="modal-action-meta">
+                                <span>${node.author || 'Unknown'}</span>
+                                <span>${formatDate(node.date || node.created_at)}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            }
+        }
+
+        function selectActionItem(actionId) {
+            const action = actions.find(a => a.id === actionId);
+            if (action) showNodeDetails(action);
+        }
+
+        function selectNodeFromModal(nodeId) {
+            const node = graphData.nodes.find(n => n.id === nodeId);
+            if (node) showNodeDetails(node);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==================== UPDATED CLUSTER RENDER ====================
+
+        // Override renderClusters to add click handlers for drill-down
+        const originalRenderClusters = renderClusters;
+        renderClusters = function() {
+            const container = document.getElementById('clusters-grid');
+            const topicEntries = Object.entries(topics);
+
+            if (topicEntries.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🏷️</div>
+                        <h3>No Topic Clusters</h3>
+                        <p>Load an X export to see your topics organized by keywords</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = topicEntries.map(([name, topic]) => `
+                <div class="cluster-card" data-cluster="${name}">
+                    <div class="cluster-header" onclick="toggleCluster('${name}')">
+                        <div class="cluster-name">
+                            <span class="cluster-expand-icon">▶</span>
+                            ${name}
+                        </div>
+                        <span class="cluster-count">${topic.action_count || 0}</span>
+                    </div>
+                    <div class="cluster-actions">
+                        <button class="btn btn-small" onclick="event.stopPropagation(); showTopicModal('${name}')" title="View details">
+                            👁️
+                        </button>
+                    </div>
+                    <div class="cluster-items hidden" id="cluster-items-${name.replace(/\s/g, '-')}">
+                        ${(topic.items || []).map(item => `
+                            <div class="cluster-item" onclick="selectClusterItem('${item.id}')">
+                                <div class="cluster-item-title">${item.text.substring(0, 60)}${item.text.length > 60 ? '...' : ''}</div>
+                                <div class="cluster-item-meta">
+                                    <span class="task-priority-badge priority-${item.priority}">${item.priority}</span>
+                                    ${item.amazon_link ? '<span style="color: #FF9900;">🛒 Amazon</span>' : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('cluster-count').textContent = topicEntries.length;
+        };
+
+        // Updated task card to show Amazon links
+        const originalCreateTaskCard = createTaskCard;
+        createTaskCard = function(action) {
+            const initial = (action.assignee || 'U')[0].toUpperCase();
+            const amazonLink = action.amazon_link || '';
+
+            return `
+                <div class="task-card priority-${action.priority}"
+                     draggable="true"
+                     data-action-id="${action.id}"
+                     onclick="selectTask('${action.id}')">
+                    <div class="task-title">${action.text}</div>
+                    <div class="task-meta">
+                        <span class="task-priority-badge">${action.priority}</span>
+                        <div class="task-assignee">
+                            <div class="task-assignee-avatar">${initial}</div>
+                            ${action.assignee || 'Unassigned'}
+                        </div>
+                    </div>
+                    ${amazonLink ? `
+                        <div style="margin-top: 8px;">
+                            <a href="${amazonLink}" target="_blank" class="amazon-link" onclick="event.stopPropagation()" style="width: 100%; justify-content: center; box-sizing: border-box;">
+                                <span>🛒</span> View on Amazon
+                            </a>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        };
+
+        // Updated details panel for actions
+        const originalShowNodeDetails = showNodeDetails;
+        showNodeDetails = function(node) {
+            const typeColors = { tweet: '#3498db', action: '#e94560', topic: '#00d9ff', user: '#9b59b6', grok: '#e94560' };
+
+            let detailsHtml = `
+                <div class="detail-card">
+                    <div class="detail-row">
+                        <div class="detail-label">Type</div>
+                        <div class="detail-value" style="color: ${typeColors[node.type] || '#ccc'}">
+                            ● ${node.type || 'Unknown'}
+                        </div>
+                    </div>
+            `;
+
+            if (node.label || node.text) {
+                detailsHtml += `
+                    <div class="detail-row">
+                        <div class="detail-label">Content</div>
+                        <div class="detail-value">${escapeHtml(node.label || node.text)}</div>
+                    </div>
+                `;
+            }
+
+            if (node.topic) {
+                detailsHtml += `
+                    <div class="detail-row">
+                        <div class="detail-label">Topic</div>
+                        <div class="detail-value">
+                            <span style="cursor: pointer; color: var(--accent-primary);" onclick="showTopicModal('${node.topic}')">
+                                ${node.topic} 👁️
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (node.priority) {
+                detailsHtml += `
+                    <div class="detail-row">
+                        <div class="detail-label">Priority</div>
+                        <div class="detail-value">
+                            <span class="task-priority-badge priority-${node.priority}">${node.priority}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (node.status) {
+                detailsHtml += `
+                    <div class="detail-row">
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value">
+                            <span class="status-badge ${node.status === 'complete' ? 'complete' : 'pending'}">
+                                ${node.status}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (node.amazon_link) {
+                detailsHtml += `
+                    <div class="detail-row" style="margin-top: 16px;">
+                        <a href="${node.amazon_link}" target="_blank" class="amazon-link" style="width: 100%; justify-content: center; box-sizing: border-box;">
+                            <span>🛒</span> Search on Amazon
+                        </a>
+                    </div>
+                `;
+            }
+
+            detailsHtml += '</div>';
+            els.details.innerHTML = detailsHtml;
+        };
+
+        // ==================== INSIGHTS/ANALYTICS FUNCTIONS ====================
+
+        let analyticsStats = null;
+
+        async function loadAnalyticsStats() {
+            try {
+                const response = await fetch('/api/analytics/stats');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        analyticsStats = data.stats;
+                        updateAnalyticsOverview(data.stats);
+                        return data.stats;
+                    }
+                }
+                return null;
+            } catch (error) {
+                console.error('Error loading analytics stats:', error);
+                return null;
+            }
+        }
+
+        function updateAnalyticsOverview(stats) {
+            if (!stats) return;
+
+            const overview = stats.overview || {};
+            document.getElementById('stat-nodes').textContent = overview.total_nodes || 0;
+            document.getElementById('stat-edges').textContent = overview.total_edges || 0;
+            document.getElementById('stat-action-rate').textContent = (overview.action_completion_rate || 0) + '%';
+            document.getElementById('stat-conversations').textContent = overview.total_conversations || 0;
+        }
+
+        async function loadChart(chartType, imgElement) {
+            try {
+                // Show loading
+                const loadingId = `loading-${chartType}`;
+                const loadingEl = document.getElementById(loadingId);
+                if (loadingEl) loadingEl.style.display = 'block';
+
+                const response = await fetch(`/api/analytics/chart/${chartType}`);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    
+                    if (imgElement) {
+                        imgElement.src = url;
+                        imgElement.style.display = 'block';
+                    }
+
+                    // Hide loading
+                    if (loadingEl) loadingEl.style.display = 'none';
+                } else {
+                    // Hide loading and show placeholder
+                    if (loadingEl) loadingEl.textContent = 'No data';
+                }
+            } catch (error) {
+                console.error(`Error loading ${chartType} chart:`, error);
+                const loadingEl = document.getElementById(`loading-${chartType}`);
+                if (loadingEl) loadingEl.textContent = 'Error loading';
+            }
+        }
+
+        async function refreshAnalytics() {
+            // First load stats
+            const stats = await loadAnalyticsStats();
+            
+            // Then load all charts
+            const chartTypes = ['activity', 'topics', 'actions', 'sources', 'keywords', 'engagement'];
+            
+            for (const chartType of chartTypes) {
+                const imgElement = document.getElementById(`chart-${chartType}`);
+                if (imgElement) {
+                    imgElement.style.display = 'none';
+                    await loadChart(chartType, imgElement);
+                }
+            }
+
+            showNotification('Analytics refreshed!');
+        }
+
+        // Load analytics when switching to insights view
+        const originalSwitchView = switchView;
+        switchView = function(viewName) {
+            originalSwitchView(viewName);
+            
+            if (viewName === 'insights') {
+                // Check if we have data
+                if (graphData.nodes && graphData.nodes.length > 0) {
+                    refreshAnalytics();
+                } else {
+                    // Show placeholder message
+                    const charts = document.querySelectorAll('.insight-chart-loading');
+                    charts.forEach(el => {
+                        el.textContent = 'Load data to see analytics';
+                        el.style.display = 'block';
+                    });
+                }
+            }
+        };
+
+        // ==================== GLOBAL SEARCH ====================
+
+        let searchTimeout = null;
+        let currentSearchType = 'keyword';
+        let searchResults = [];
+
+        function setSearchType(type) {
+            currentSearchType = type;
+            document.querySelectorAll('.search-type-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === type);
+            });
+
+            // Re-run search with new type
+            const query = document.getElementById('global-search').value.trim();
+            if (query) {
+                performSearch(query);
+            }
+        }
+
+        function handleSearchKeyup(event) {
+            const query = event.target.value.trim();
+
+            // Clear previous timeout
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+
+            if (query.length === 0) {
+                hideSearchResults();
+                return;
+            }
+
+            // Debounce search
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 300);
+        }
+
+        function handleSearchFocus() {
+            const query = document.getElementById('global-search').value.trim();
+            if (query.length > 0) {
+                showSearchResults();
+            }
+        }
+
+        function handleSearchBlur() {
+            // Delay hide to allow click on results
+            setTimeout(() => {
+                const resultsEl = document.getElementById('search-results');
+                if (!resultsEl.matches(':hover')) {
+                    hideSearchResults();
+                }
+            }, 200);
+        }
+
+        async function performSearch(query) {
+            const resultsEl = document.getElementById('search-results');
+            resultsEl.innerHTML = '<div class="search-loading">Searching...</div>';
+            resultsEl.classList.add('show');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: query,
+                        type: currentSearchType,
+                        limit: 10
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    resultsEl.innerHTML = `
+                        <div class="search-empty">
+                            <div class="icon">⚠️</div>
+                            <p>${data.error}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                searchResults = data.results || [];
+
+                if (searchResults.length === 0) {
+                    resultsEl.innerHTML = `
+                        <div class="search-empty">
+                            <div class="icon">🔍</div>
+                            <p>No results found for "${escapeHtml(query)}"</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                renderSearchResults(searchResults, query);
+
+            } catch (error) {
+                resultsEl.innerHTML = `
+                    <div class="search-empty">
+                        <div class="icon">❌</div>
+                        <p>Search error: ${escapeHtml(error.message)}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderSearchResults(results, query) {
+            const resultsEl = document.getElementById('search-results');
+            const typeLabel = currentSearchType === 'semantic' ?
+                '<span class="search-type-label semantic">✨ Semantic</span>' :
+                '<span class="search-type-label">🔤 Keyword</span>';
+
+            resultsEl.innerHTML = `
+                <div class="search-results-header">
+                    <span>${results.length} result${results.length !== 1 ? 's' : ''}</span>
+                    ${typeLabel}
+                </div>
+                ${results.map((result, index) => renderSearchResultItem(result, query, index)).join('')}
+            `;
+        }
+
+        function renderSearchResultItem(result, query, index) {
+            const iconMap = {
+                'tweet': '🐦',
+                'grok': '💬',
+                'action': '✅',
+                'conversation': '💬',
+                'ai_conversation': '🤖',
+                'ai_message': '💬'
+            };
+
+            const icon = iconMap[result.type] || '📄';
+            const typeLabel = result.type.replace('_', ' ');
+
+            return `
+                <div class="search-result-item" onclick="selectSearchResult('${result.id}', '${result.type}')"
+                     onmouseenter="this.classList.add('selected')"
+                     onmouseleave="this.classList.remove('selected')"
+                     data-index="${index}">
+                    <div class="search-result-icon ${result.type}">${icon}</div>
+                    <div class="search-result-content">
+                        <div class="search-result-title">${escapeHtml(result.title || 'Untitled')}</div>
+                        <div class="search-result-snippet">
+                            ${result.highlights && result.highlights.length > 0 ?
+                                result.highlights[0] :
+                                (result.content ? escapeHtml(result.content.substring(0, 150)) + '...' : '')}
+                        </div>
+                        <div class="search-result-meta">
+                            <span class="search-result-score">${Math.round(result.score * 100)}% match</span>
+                            <span>${typeLabel}</span>
+                            ${result.source ? `<span>${result.source.toUpperCase()}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectSearchResult(id, type) {
+            hideSearchResults();
+
+            // Navigate to the appropriate view based on type
+            switch (type) {
+                case 'tweet':
+                case 'grok':
+                    switchView('graph');
+                    setTimeout(() => {
+                        const node = graphData.nodes.find(n => n.id === id);
+                        if (node) selectNode(node);
+                    }, 100);
+                    break;
+
+                case 'action':
+                    switchView('taskboard');
+                    setTimeout(() => {
+                        const action = actions.find(a => a.id === id);
+                        if (action) selectTask(id);
+                    }, 100);
+                    break;
+
+                case 'conversation':
+                case 'ai_conversation':
+                    switchView('conversation');
+                    setTimeout(() => {
+                        // Find and select the conversation
+                        const conv = grokConversations.find(c => c.id === id.replace('conv_', '')) ||
+                                    aiConversations.find(c => c.id === id.replace('ai_', ''));
+                        if (conv) selectConversation(conv.id);
+                    }, 100);
+                    break;
+
+                default:
+                    // Try to find in graph
+                    switchView('graph');
+                    setTimeout(() => {
+                        const node = graphData.nodes.find(n => n.id === id);
+                        if (node) selectNode(node);
+                    }, 100);
+            }
+        }
+
+        function showSearchResults() {
+            const resultsEl = document.getElementById('search-results');
+            if (resultsEl.querySelector('.search-empty') && !document.getElementById('global-search').value.trim()) {
+                resultsEl.innerHTML = '<div class="search-empty"><div class="icon">🔍</div><p>Start typing to search...</p></div>';
+            }
+            resultsEl.classList.add('show');
+        }
+
+        function hideSearchResults() {
+            const resultsEl = document.getElementById('search-results');
+            resultsEl.classList.remove('show');
+        }
+
+        // Keyboard shortcut for search
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+K or Cmd+K
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                const searchInput = document.getElementById('global-search');
+                searchInput.focus();
+                searchInput.select();
+            }
+
+            // Escape to close search results
+            if (e.key === 'Escape') {
+                hideSearchResults();
+                document.getElementById('global-search').blur();
+            }
+
+            // Arrow key navigation in search results
+            if (document.getElementById('search-results').classList.contains('show')) {
+                const items = document.querySelectorAll('.search-result-item');
+                const current = document.querySelector('.search-result-item.selected');
+                const currentIndex = current ? parseInt(current.dataset.index) : -1;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const nextIndex = Math.min(currentIndex + 1, items.length - 1);
+                    if (items[nextIndex]) {
+                        if (current) current.classList.remove('selected');
+                        items[nextIndex].classList.add('selected');
+                        items[nextIndex].scrollIntoView({ block: 'nearest' });
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prevIndex = Math.max(currentIndex - 1, 0);
+                    if (items[prevIndex]) {
+                        if (current) current.classList.remove('selected');
+                        items[prevIndex].classList.add('selected');
+                        items[prevIndex].scrollIntoView({ block: 'nearest' });
+                    }
+                } else if (e.key === 'Enter' && current) {
+                    e.preventDefault();
+                    const id = current.dataset.id;
+                    const type = current.dataset.type;
+                    selectSearchResult(id, type);
+                }
+            }
+        });
+
+        // ==================== IMPORT MODAL ====================
+
+        let selectedImportType = null;
+
+        function showImportModal() {
+            document.getElementById('import-modal').style.display = 'block';
+            resetImportModal();
+        }
+
+        function hideImportModal() {
+            document.getElementById('import-modal').style.display = 'none';
+            selectedImportType = null;
+        }
+
+        function resetImportModal() {
+            // Reset selection
+            document.querySelectorAll('.import-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Hide sections
+            document.getElementById('import-path-section').style.display = 'none';
+            document.getElementById('import-progress').style.display = 'none';
+            document.getElementById('import-stats').style.display = 'none';
+            
+            // Clear input
+            document.getElementById('import-path').value = '';
+            
+            selectedImportType = null;
+        }
+
+        function selectImportType(type) {
+            selectedImportType = type;
+            
+            // Update visual selection
+            document.querySelectorAll('.import-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // Show path input
+            document.getElementById('import-path-section').style.display = 'block';
+            document.getElementById('import-progress').style.display = 'none';
+            document.getElementById('import-stats').style.display = 'none';
+            
+            // Set placeholder based on type
+            const pathInput = document.getElementById('import-path');
+            const importBtn = document.getElementById('import-btn');
+            
+            switch(type) {
+                case 'notion':
+                    pathInput.placeholder = 'Select Notion export folder...';
+                    importBtn.textContent = 'Import Notion';
+                    break;
+                case 'evernote':
+                    pathInput.placeholder = 'Select .enex file...';
+                    importBtn.textContent = 'Import Evernote';
+                    break;
+                case 'markdown':
+                    pathInput.placeholder = 'Select markdown folder...';
+                    importBtn.textContent = 'Import Markdown';
+                    break;
+            }
+        }
+
+        function browseImportPath() {
+            // Use native file picker based on import type
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.webkitdirectory = true;
+            
+            if (selectedImportType === 'evernote') {
+                input.type = 'file';
+                input.accept = '.enex';
+                input.webkitdirectory = false;
+            }
+            
+            input.onchange = function(e) {
+                const path = e.target.files[0]?.path || 
+                            (e.target.files[0]?.webkitRelativePath ? 
+                             e.target.files[0].webkitRelativePath.split('/')[0] : '');
+                if (path) {
+                    document.getElementById('import-path').value = path;
+                }
+            };
+            
+            input.click();
+        }
+
+        async function executeImport() {
+            if (!selectedImportType) return;
+            
+            const path = document.getElementById('import-path').value.trim();
+            if (!path) {
+                alert('Please select a path first');
+                return;
+            }
+            
+            // Show progress
+            document.getElementById('import-path-section').style.display = 'none';
+            document.getElementById('import-progress').style.display = 'block';
+            document.getElementById('import-progress-text').textContent = 'Importing...';
+            
+            try {
+                let endpoint = '';
+                let requestBody = {};
+                
+                switch(selectedImportType) {
+                    case 'notion':
+                        endpoint = '/api/import-notion';
+                        requestBody = { path: path };
+                        break;
+                    case 'evernote':
+                        endpoint = '/api/import-evernote';
+                        requestBody = { path: path };
+                        break;
+                    case 'markdown':
+                        endpoint = '/api/import-markdown';
+                        requestBody = { path: path };
+                        break;
+                }
+                
+                const response = await fetch(API_BASE + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('import-progress').style.display = 'none';
+                
+                if (data.success) {
+                    // Show success stats
+                    document.getElementById('import-stats').style.display = 'block';
+                    
+                    const statsContent = document.getElementById('import-stats-content');
+                    const stats = data.stats || {};
+                    
+                    let statsHtml = '';
+                    Object.entries(stats).forEach(([key, value]) => {
+                        if (key !== 'tags' || typeof value === 'number') {
+                            const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            statsHtml += `
+                                <div class="import-stat-row">
+                                    <span class="import-stat-label">${label}</span>
+                                    <span class="import-stat-value">${typeof value === 'number' ? value : value}</span>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    // Also show node/edge counts
+                    if (data.nodes && data.edges) {
+                        statsHtml += `
+                            <div class="import-stat-row">
+                                <span class="import-stat-label">Nodes Created</span>
+                                <span class="import-stat-value">${data.nodes.length}</span>
+                            </div>
+                            <div class="import-stat-row">
+                                <span class="import-stat-label">Edges Created</span>
+                                <span class="import-stat-value">${data.edges.length}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    statsContent.innerHTML = statsHtml;
+                    
+                    // Refresh graph data
+                    await loadGraphData();
+                    
+                } else {
+                    alert('Import failed: ' + (data.error || data.errors?.join(', ') || 'Unknown error'));
+                    hideImportModal();
+                }
+                
+            } catch (error) {
+                document.getElementById('import-progress').style.display = 'none';
+                alert('Import error: ' + error.message);
+                hideImportModal();
+            }
+        }
+
+        // Close modal on background click
+        document.getElementById('import-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('import-modal')) {
+                hideImportModal();
+            }
+        });
+    </script>
+</body>
+</html>

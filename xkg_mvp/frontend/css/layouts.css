@@ -1,0 +1,92 @@
+/* X Knowledge Graph - Layout Styles with Theme Variables */
+
+/* CSS Custom Properties for Theme Support */
+:root {
+    /* Dark theme (default) */
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-tertiary: #0f0f23;
+    --text-primary: #eee;
+    --text-secondary: #888;
+    --accent-primary: #00d9ff;
+    --accent-success: #00ff88;
+    --accent-warning: #ffc107;
+    --accent-danger: #e94560;
+    --border-color: #2a2a4e;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --drop-zone-bg: #16213e;
+    --drop-zone-border: #2a2a4e;
+    --card-bg: #16213e;
+    --modal-bg: #16213e;
+    --input-bg: #0f0f23;
+    --input-border: #2a2a4e;
+    --btn-bg: #0f0f23;
+    --btn-border: #2a2a4e;
+    --btn-text: #eee;
+    --message-user-bg: #2a2a4e;
+    --message-assistant-bg: #1e3a5f;
+    --modal-body-bg: #1a1a2e;
+}
+
+/* Light theme override */
+[data-theme="light"] {
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e8e8e8;
+    --text-primary: #1a1a2e;
+    --text-secondary: #666;
+    --accent-primary: #0099cc;
+    --accent-success: #00cc66;
+    --accent-warning: #e6a800;
+    --accent-danger: #cc0033;
+    --border-color: #ddd;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --drop-zone-bg: #ffffff;
+    --drop-zone-border: #ccc;
+    --card-bg: #ffffff;
+    --modal-bg: #ffffff;
+    --input-bg: #ffffff;
+    --input-border: #ddd;
+    --btn-bg: #f5f5f5;
+    --btn-border: #ddd;
+    --btn-text: #333;
+    --message-user-bg: #e9ecef;
+    --message-assistant-bg: #e8f4ea;
+    --modal-body-bg: #f5f5f5;
+}
+
+/* Button styles using theme variables */
+.btn {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.btn.primary, .btn-primary {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    border: none;
+}
+
+/* Additional component styles */
+body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.header {
+    background: var(--bg-secondary);
+}
+
+header {
+    background: var(--bg-secondary);
+}
+
+.sidebar {
+    background: var(--bg-secondary);
+}

@@ -201,3 +201,53 @@ class RedditConverter:
             return str(timestamp)
         except:
             return str(timestamp)
+    
+    def to_bookmarks_markdown(self, tweets):
+        """
+        Convert bookmarked tweets to Reddit-style markdown
+        
+        Args:
+            tweets: List of tweet dictionaries
+            
+        Returns:
+            Markdown string with all bookmarks
+        """
+        lines = []
+        
+        # Header
+        lines.append("# X Bookmarks Export")
+        lines.append("")
+        lines.append(f"*Total tweets: {len(tweets)}*")
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+        
+        # Sort by timestamp (newest first)
+        sorted_tweets = sorted(tweets, key=lambda x: x.get('timestamp', ''), reverse=True)
+        
+        for i, tweet in enumerate(sorted_tweets, 1):
+            lines.append(f"## {i}. @{tweet.get('username', 'unknown')}")
+            lines.append("")
+            
+            # Content
+            content = tweet.get('content', '')
+            lines.append(content)
+            lines.append("")
+            
+            # Metadata
+            lines.append(f"❤️ {tweet.get('likes', 0)} · 🔄 {tweet.get('retweets', 0)} · 💬 {tweet.get('replies', 0)}")
+            
+            # Timestamp and URL
+            ts = self.format_timestamp(tweet.get('timestamp', ''))
+            if ts:
+                lines.append(f"*{ts}*")
+            
+            url = tweet.get('url', '')
+            if url:
+                lines.append(f"[View on X]({url})")
+            
+            lines.append("")
+            lines.append("---")
+            lines.append("")
+        
+        return "\n".join(lines)
