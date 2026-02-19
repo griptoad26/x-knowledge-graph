@@ -112,3 +112,7 @@
 [2026-02-18 23:00:14] VPS now running: 
 [2026-02-18 23:30:02] Local: v0.5.4, VPS: v0.5.3
 [2026-02-18 23:30:02] VERSION_MISMATCH - Local: v0.5.4, VPS: v0.5.3
+[2026-02-18 23:30:03] Deploying distributions/x-knowledge-graph-v0.5.0.tar...
+[2026-02-18 23:30:12] VPS now running: 
+[2026-02-19 00:00:02] Local: v0.5.4, VPS: v0.5.3
+[2026-02-19 00:00:02] VERSION_MISMATCH - Local: v0.5.4, VPS: v0.5.3
