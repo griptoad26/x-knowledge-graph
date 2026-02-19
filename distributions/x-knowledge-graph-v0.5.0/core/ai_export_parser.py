@@ -1040,6 +1040,10 @@ def extract_actions_from_text(text: str) -> List[str]:
         r'[-•*]\s*(.+?)(?:\n|$)',    # Bullet lists
     ]
     
+    # Handle None or non-string input
+    if not text or not isinstance(text, str):
+        return []
+    
     text_lower = text.lower()
     
     # Extract actions based on patterns
