@@ -282,8 +282,11 @@ Example output:
             priority = self._infer_priority(text)
             topic = self._infer_topic(text)
             
+            # Handle None text
+            safe_text = text.strip()[:500] if text else ''
+            
             actions.append(ActionItem(
-                text=text.strip()[:500],  # Limit length
+                text=safe_text,
                 priority=priority,
                 topic=topic,
                 confidence=0.85,  # Higher confidence for LLM
@@ -428,8 +431,9 @@ class HybridActionExtractor(ActionExtractor):
         seen_texts = set()
         
         for action in actions:
-            # Normalize text for comparison
-            normalized = re.sub(r'\s+', ' ', action.text.lower().strip())
+            # Normalize text for comparison - handle None text
+            action_text = action.text or ''
+            normalized = re.sub(r'\s+', ' ', action_text.lower().strip())
             
             # Check for similar existing actions
             is_duplicate = False

@@ -1046,8 +1046,13 @@ def extract_actions_from_text(text: str) -> List[str]:
     for pattern in patterns:
         matches = re.findall(pattern, text, re.IGNORECASE | re.DOTALL)
         for match in matches:
-            action = match.strip() if isinstance(match, str) else ' '.join(match).strip()
-            if len(action) > 10 and len(action) < 500:
+            if isinstance(match, str):
+                action = match.strip() if match else ''
+            else:
+                # Handle tuple - join and strip, handling None values
+                joined = ' '.join(str(m).strip() if m else '' for m in match)
+                action = joined.strip()
+            if action and len(action) > 10 and len(action) < 500:
                 actions.append(action)
                 
     return actions
