@@ -35,3 +35,15 @@ Started: 2026-02-10 21:08
 - **Build:** Successfully built with pyinstaller
 - **Commit:** 2287ef8
 - **Learnings:** Theme preference stored in localStorage and applied on page load, button icon changes based on current theme (🌙 for dark, ☀️ for light)
+
+## February 19, 2026, 8:03 AM - US-001: Verify dark mode CSS variables and theme structure
+- Added comprehensive CSS theme variable tests (12 tests) to tests/test_theme.py
+- Tests verify dark theme CSS variables exist in :root selector
+- Tests verify light theme override [data-theme="light"] has color values
+- Tests verify UI components (body, header, sidebar, buttons, cards) use CSS variables
+- Tests verify no hardcoded colors in major components
+- Tests verify scrollbars and interactive elements respect theme
+- All 65 tests pass in the full test suite
+- Build successful with ./build.sh
+- Commit: af4a139
+- **Learnings:** The layouts.css file already has complete dark/light theme implementation. CSS variables follow --bg-primary, --text-primary, etc. pattern. Light theme uses lighter background colors (#f5f5f5, #ffffff) and darker text (#1a1a2e). Components consistently use var() syntax to reference theme variables.
