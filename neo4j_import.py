@@ -46,7 +46,7 @@ class Neo4jConfig:
     password: str = "neo4j_password"
     database: str = "neo4j"
     encrypted: bool = False
-    trust: str = "TRUST_SYSTEM_CA_SIGNED_CERTIFICATES"
+    
 
 
 class Neo4jConnector:
@@ -91,8 +91,7 @@ class Neo4jConnector:
             self._driver = GraphDatabase.driver(
                 self.config.uri,
                 auth=(self.config.user, self.config.password),
-                encrypted=self.config.encrypted,
-                trust=self.config.trust
+                
             )
             # Verify connection
             self._driver.verify_connectivity()
@@ -143,10 +142,10 @@ class Neo4jConnector:
             bool: True if successful
         """
         constraints = [
-            "CREATE CONSTRAINT grok_id IF NOT EXISTS ON (g:Grok) ASSERT g.id IS UNIQUE",
-            "CREATE CONSTRAINT action_id IF NOT EXISTS ON (a:Action) ASSERT a.id IS UNIQUE",
-            "CREATE CONSTRAINT topic_name IF NOT EXISTS ON (t:Topic) ASSERT t.topic IS UNIQUE",
-            "CREATE CONSTRAINT tweet_id IF NOT EXISTS ON (t:Tweet) ASSERT t.id IS UNIQUE",
+            "CREATE CONSTRAINT grok_id IF NOT EXISTS FOR (g:Grok) REQUIRE g.id IS UNIQUE",
+            "CREATE CONSTRAINT action_id IF NOT EXISTS FOR (a:Action) REQUIRE a.id IS UNIQUE",
+            "CREATE CONSTRAINT topic_name IF NOT EXISTS FOR (t:Topic) REQUIRE t.topic IS UNIQUE",
+            "CREATE CONSTRAINT tweet_id IF NOT EXISTS FOR (t:Tweet) REQUIRE t.id IS UNIQUE",
         ]
         
         try:
@@ -166,12 +165,12 @@ class Neo4jConnector:
             bool: True if successful
         """
         indexes = [
-            "CREATE INDEX grok_created IF NOT EXISTS ON :Grok(created_at)",
-            "CREATE INDEX grok_author IF NOT EXISTS ON :Grok(author_id)",
-            "CREATE INDEX action_priority IF NOT EXISTS ON :Action(priority)",
-            "CREATE INDEX action_topic IF NOT EXISTS ON :Action(topic)",
-            "CREATE INDEX action_source IF NOT EXISTS ON :Action(source_id)",
-            "CREATE INDEX topic_created IF NOT EXISTS ON :Topic(created_at)",
+            "CREATE INDEX grok_created IF NOT EXISTS FOR (n:Grok) ON (n.created_at)",
+            "CREATE INDEX grok_author IF NOT EXISTS FOR (n:Grok) ON (n.author_id)",
+            "CREATE INDEX action_priority IF NOT EXISTS FOR (n:Action) ON (n.priority)",
+            "CREATE INDEX action_topic IF NOT EXISTS FOR (n:Action) ON (n.topic)",
+            "CREATE INDEX action_source IF NOT EXISTS FOR (n:Action) ON (n.source_id)",
+            "CREATE INDEX topic_created IF NOT EXISTS FOR (n:Topic) ON (n.created_at)",
         ]
         
         try:
