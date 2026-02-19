@@ -198,6 +198,61 @@ def health():
         version = 'unknown'
     return jsonify({'status': 'ok', 'version': version})
 
+@app.route('/api/nodes')
+def get_nodes():
+    """Get all graph nodes as JSON"""
+    return jsonify(graph_data.get('graph', {}).get('nodes', []))
+
+@app.route('/api/analytics')
+def analytics_usage():
+    """Get analytics usage statistics"""
+    global graph_data, analytics_engine, HAS_ANALYTICS
+    
+    stats = {
+        'has_data': False,
+        'nodes_count': 0,
+        'edges_count': 0,
+        'actions_count': 0,
+        'topics_count': 0,
+        'grok_conversations_count': 0,
+        'ai_conversations_count': 0
+    }
+    
+    graph = graph_data.get('graph', {})
+    if graph.get('nodes'):
+        stats['has_data'] = True
+        stats['nodes_count'] = len(graph.get('nodes', []))
+        stats['edges_count'] = len(graph.get('edges', []))
+    
+    actions = graph_data.get('actions', [])
+    if actions:
+        stats['actions_count'] = len(actions)
+    
+    topics = graph_data.get('topics', {})
+    if topics:
+        stats['topics_count'] = len(topics)
+    
+    grok_conversations = graph_data.get('grok_conversations', [])
+    if grok_conversations:
+        stats['grok_conversations_count'] = len(grok_conversations)
+    
+    ai_conversations = graph_data.get('ai_conversations', [])
+    if ai_conversations:
+        stats['ai_conversations_count'] = len(ai_conversations)
+    
+    # Include analytics engine stats if available
+    if HAS_ANALYTICS and analytics_engine:
+        try:
+            analytics_engine.set_data(graph_data)
+            analytics_stats = analytics_engine.get_stats()
+            stats['analytics'] = analytics_stats
+        except Exception as e:
+            stats['analytics_error'] = str(e)
+    
+    stats['generated_at'] = datetime.now().isoformat()
+    
+    return jsonify(stats)
+
 @app.route('/api/select-folder', methods=['POST'])
 def select_folder():
     """Trigger native folder picker dialog"""

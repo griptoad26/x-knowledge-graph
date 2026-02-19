@@ -14,3 +14,8 @@
 [2026-02-19 00:00:01] Schema has 96 node type entries
 [2026-02-19 00:00:01] neo4j_import.py already exists
 [2026-02-19 00:00:01] Research exploration complete
+[2026-02-19 08:00:01] Starting Neo4j research exploration...
+[2026-02-19 08:00:01] Found schema_for_neo4j.json - analyzing...
+[2026-02-19 08:00:01] Schema has 96 node type entries
+[2026-02-19 08:00:01] neo4j_import.py already exists
+[2026-02-19 08:00:01] Research exploration complete

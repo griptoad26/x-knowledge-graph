@@ -13,6 +13,7 @@ This document defines the feature requirements for XKG v0.5.4, focusing on:
 - Enhanced analytics dashboard capabilities
 - Browser automation for web scraping and interaction
 - Performance benchmarks and optimization targets
+- Content graph visualization improvements for productivity and knowledge graph content
 
 ---
 
@@ -224,7 +225,7 @@ HEADERS = {
   tech:        ████████░░░░░░░░ 30%
   personal:    ████░░░░░░░░░░░░ 15%
   finance:     ██░░░░░░░░░░░░░░  8%
-  other:       █░░░░░░░░░░░░░░░  2%
+  other:       █░░░░░░░░░░░░░░░░  2%
 ```
 
 **Features:**
@@ -258,9 +259,9 @@ HEADERS = {
 ```
 📱 Content Sources
   Twitter/X:    ████████████████  52%
-  Grok:         ████████████░░░░  35%
-  AI Exports:   ████░░░░░░░░░░░░  10%
-  Other:        ██░░░░░░░░░░░░░░   3%
+  Grok:         ████████████░░░░░░  35%
+  AI Exports:   ████░░░░░░░░░░░░░░  10%
+  Other:        ██░░░░░░░░░░░░░░░░   3%
 ```
 
 #### 3.1.6 LLM Extraction Stats
@@ -305,7 +306,7 @@ HEADERS = {
     {"id": "llm_stats", "enabled": True, "position": {"x": 2, "y": 1}},
     {"id": "search_analytics", "enabled": False, "position": {"x": 3, "y": 0}}
   ],
-  "refresh_interval": 300,  # seconds
+  "refresh_interval": 300,
   "theme": "dark|light",
   "date_range": "30d"
 }
@@ -470,39 +471,6 @@ class WebScraper:
         return results
 ```
 
-#### 4.3.3 Authentication Module
-
-```python
-# auth_handler.py
-
-class AuthHandler:
-    """Handle authentication flows"""
-    
-    SUPPORTED_PROVIDERS = ['oauth2', 'basic', 'cookie', 'token']
-    
-    async def login(
-        self,
-        page: Page,
-        provider: str,
-        credentials: Dict
-    ) -> bool:
-        """Perform login with specified provider"""
-        if provider == 'oauth2':
-            return await self._oauth2_login(page, credentials)
-        elif provider == 'basic':
-            return await self._basic_login(page, credentials)
-        elif provider == 'cookie':
-            return await self._cookie_login(page, credentials)
-        return False
-    
-    async def _oauth2_login(self, page, credentials):
-        """OAuth2 login flow"""
-        await page.goto(credentials['auth_url'])
-        await page.fill('input[name="email"]', credentials['email'])
-        await page.click('button[type="submit"]')
-        # Handle OAuth redirect...
-```
-
 ### 4.4 API Endpoints for Browser Automation
 
 ```
@@ -514,44 +482,6 @@ POST   /api/v2/browser/fill-form        # Fill form
 GET    /api/v2/browser/status           # Get browser status
 POST   /api/v2/browser/close            # Close browser
 POST   /api/v2/browser/screenshot/dashboard  # Dashboard screenshot
-```
-
-### 4.5 Use Case Examples
-
-#### 4.5.1 Import Blog Content
-
-```python
-# Extract articles from a blog
-selectors = [
-    Selector(name='title', css='h1.post-title'),
-    Selector(name='content', css='div.post-content'),
-    Selector(name='date', css='time.post-date'),
-    Selector(name='author', css='span.author-name')
-]
-
-results = await scraper.scrape_url(
-    url='https://example-blog.com/articles',
-    selectors=selectors,
-    options=ScrapeOptions(wait_for_selector='div.post-content')
-)
-```
-
-#### 4.5.2 Monitor Competitor Pricing
-
-```python
-# Scrape pricing pages and track changes
-pricing_selectors = [
-    Selector(name='product', css='div.product-name'),
-    Selector(name='price', css='span.price-current'),
-    Selector(name='availability', css='span.in-stock')
-]
-
-async def monitor_pricing(product_urls):
-    for url in product_urls:
-        current = await scraper.scrape_url(url, pricing_selectors)
-        previous = await db.get_last_price(url)
-        if current != previous:
-            await alert_handler.send_price_alert(current, previous)
 ```
 
 ---
@@ -659,135 +589,358 @@ class BenchmarkRunner:
         }
 ```
 
-### 5.3 Performance Monitoring
+---
 
-```python
-# performance_monitor.py
+## 6. Content Graph Visualization Improvements
 
-class PerformanceMonitor:
-    """Continuous performance monitoring"""
-    
-    METRICS = [
-        'cpu_percent',
-        'memory_percent',
-        'response_time',
-        'import_duration',
-        'search_duration'
-    ]
-    
-    def __init__(self, sample_interval=60):
-        self.interval = sample_interval
-        self.metrics_buffer = defaultdict(list)
-    
-    def record_response_time(self, endpoint: str, duration: float):
-        self.metrics_buffer[f'response_time.{endpoint}'].append(duration)
-    
-    def get_report(self) -> Dict:
-        """Generate performance report"""
-        report = {}
-        for metric, values in self.metrics_buffer.items():
-            if values:
-                report[metric] = {
-                    'mean': statistics.mean(values),
-                    'p95': sorted(values)[int(len(values) * 0.95)],
-                    'samples': len(values)
-                }
-        return report
+### 6.1 Target Account Analysis
+
+#### 6.1.1 @tom_doerr Content Patterns (Productivity/Developer Tools)
+
+**Content Characteristics:**
+- Code snippets and repository links
+- Project management and task tracking
+- Developer workflow automation
+- Tool recommendations and comparisons
+- GitHub PRs, issues, and commits
+
+**Graph Visualization Needs:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  @tom_doerr Content Graph Requirements                      │
+├─────────────────────────────────────────────────────────────┤
+│  Node Types:                                                 │
+│  ├── CODE_REPO - GitHub repositories, gists                  │
+│  ├── PROJECT - Projects, milestones                         │
+│  ├── TASK - Action items, TODOs                            │
+│  ├── TOOL - Developer tools, libraries                     │
+│  └── WORKFLOW - Automated processes                        │
+│                                                              │
+│  Edge Types:                                                 │
+│  ├── REPO_IMPLEMENTS - Project uses repository              │
+│  ├── TASK_DEPENDS - Task A depends on Task B               │
+│  ├── TOOL_ENABLES - Tool enables workflow                   │
+│  └── CODE_REFERENCES - Code references other code          │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### 5.4 Optimization Strategies
+**Recommended Visualizations:**
+1. **Code Dependency Graph** - Show relationships between repositories and projects
+2. **Task Progress Tree** - Hierarchical view of project tasks
+3. **Tool-Workflow Matrix** - Visual mapping of tools to workflows
+4. **Timeline View** - Chronological view of commits, PRs, and issues
 
-#### 5.4.1 Caching Layer
+#### 6.1.2 @TheYotg Content Patterns (Knowledge Graphs/Semantic Web)
 
-```python
-# Implement LRU cache for frequently accessed data
-from functools import lru_cache
+**Content Characteristics:**
+- Knowledge graph concepts and methodologies
+- Semantic web standards (RDF, OWL, SPARQL)
+- Graph database technologies
+- Information architecture
+- Ontology design
 
-@lru_cache(maxsize=1000)
-def get_graph_stats_cached(graph_id: str) -> Dict:
-    """Cached graph stats"""
-    return calculate_graph_stats(graph_id)
+**Graph Visualization Needs:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  @TheYotg Content Graph Requirements                        │
+├─────────────────────────────────────────────────────────────┤
+│  Node Types:                                                 │
+│  ├── CONCEPT - Knowledge concepts                           │
+│  ├── ONTOLOGY - Ontology definitions                        │
+│  ├── STANDARD - W3C standards, specifications               │
+│  ├── TOOL - Graph databases, visualization tools           │
+│  └── METHODOLOGY - Analysis methods                         │
+│                                                              │
+│  Edge Types:                                                 │
+│  ├── CONCEPT_RELATES - Semantic relationship between concepts
+│  ├── ONTOLOGY_CONTAINS - Ontology includes concepts         │
+│  ├── STANDARD_GOVERNS - Standard governs domain             │
+│  ├── TOOL_IMPLEMENTS - Tool implements methodology          │
+│  └── CONCEPT_INHERITS - Inheritance relationship            │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-#### 5.4.2 Async Processing
+**Recommended Visualizations:**
+1. **Semantic Network** - Interactive concept relationships
+2. **Ontology Browser** - Hierarchical ontology navigation
+3. **Multi-Hop Explorer** - Traverse related concepts (N hops)
+4. **Graph Metric Dashboard** - Centrality, clustering, density
 
-```python
-# Use async/await for I/O operations
-import asyncio
+### 6.2 Graph Visualization Approaches
 
-async def import_multiple_sources(sources: List[Source]):
-    """Import multiple sources concurrently"""
-    tasks = [import_source(source) for source in sources]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    return results
+#### 6.2.1 Force-Directed Graph Layout
+
+**Best for:** General-purpose visualization, exploring unknown structures
+
+**Implementation:**
+```javascript
+// D3.js Force Layout Configuration
+const forceSimulation = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(edges).id(d => d.id))
+    .force("charge", d3.forceManyBody().strength(-300))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("collision", d3.forceCollide().radius(d => d.radius + 5))
+    .force("x", d3.forceX(width / 2).strength(0.05))
+    .force("y", d3.forceY(height / 2).strength(0.05));
 ```
 
-#### 5.4.3 Database Optimization
+**Customizations for XKG:**
+- Node size based on degree centrality
+- Edge thickness based on relationship strength
+- Color by node type (tweet, grok, action, topic)
+- Animation on load for engagement
 
-```python
-# Add indexes for common queries
-CREATE INDEX idx_actions_priority ON :Action(priority);
-CREATE INDEX idx_actions_status ON :Action(status);
-CREATE INDEX idx_actions_topic ON :Action(topic);
-CREATE INDEX idx_grok_created ON :Grok(created_at);
+#### 6.2.2 Hierarchical Layout
+
+**Best for:** @tom_doerr task trees, @TheYotg ontologies
+
+**Implementation:**
+```javascript
+// D3.js Tree Layout Configuration
+const treeLayout = d3.tree()
+    .node 100])
+    .separation((a, b)Size([200, => (a.parent === b.parent ? 1 : 2) / 1.5);
+
+const root = d3.hierarchy(treeData);
+treeLayout(root);
 ```
+
+**Use Cases:**
+- Project task breakdown
+- Ontology class hierarchy
+- Conversation thread view
+- Folder/file hierarchy
+
+#### 6.2.3 Radial Layout
+
+**Best for:** Exploring relationships from a central node
+
+**Implementation:**
+```javascript
+// D3.js Radial Layout
+const radialLayout = d3.cluster()
+    .size([2 * Math.PI, radius]);
+
+const root = d3.hierarchy(graphData);
+radialLayout(root);
+```
+
+**Use Cases:**
+- Topic-centered exploration
+- Multi-hop neighborhood view
+- Source-centric content browsing
+
+#### 6.2.4 Matrix View
+
+**Best for:** Dense relationship analysis
+
+**Implementation:**
+```javascript
+// Adjacency Matrix for Neo4j integration
+const matrix = new Array(nodes.length);
+for (let i = 0; i < nodes.length; i++) {
+    matrix[i] = new Array(nodes.length);
+    edges.forEach(edge => {
+        matrix[edge.source][edge.target] = 1;
+    });
+}
+```
+
+**Use Cases:**
+- Neo4j relationship analysis
+- Finding cliques and communities
+- Pattern recognition in dense graphs
+
+### 6.3 Multi-Hop Relationship Visualization
+
+#### 6.3.1 Path Highlighting
+
+**Features:**
+- Highlight shortest path between two nodes
+- Show all paths up to N hops
+- Animate path traversal
+- Display path metadata (dates, content)
+
+**Implementation:**
+```javascript
+async function findAndHighlightPath(startId, endId, maxHops = 3) {
+    const paths = await neo4jQuery(`
+        MATCH p = (a)-[*1..${maxHops}]-(b)
+        WHERE a.id = $startId AND b.id = $endId
+        RETURN p
+        LIMIT 10
+    `);
+    
+    paths.forEach(path => {
+        highlightPath(path);
+        animateTraversal(path);
+    });
+}
+```
+
+#### 6.3.2 Neighborhood Expansion
+
+**Features:**
+- Click to expand node neighborhood
+- Layered expansion (1-hop, 2-hop, 3-hop)
+- Filter by edge type during expansion
+- Collapse expanded nodes
+
+**Implementation:**
+```javascript
+function expandNeighborhood(nodeId, hopCount = 1) {
+    const expandedNodes = new Set();
+    
+    for (let i = 0; i < hopCount; i++) {
+        const neighbors = getNeighbors(expandedNodes);
+        expandedNodes.add(...neighbors);
+        renderNodes(neighbors);
+    }
+}
+```
+
+### 6.4 UX Improvements for Content Consumers
+
+#### 6.4.1 Smart Filtering
+
+**Features:**
+- Time range filters
+- Source filters (Twitter, Grok, AI)
+- Topic filters with autocomplete
+- Priority filters for actions
+- Combined filter queries
+
+**UI Mockup:**
+```
+┌─────────────────────────────────────────┐
+│  🔍 Filter Graph                        │
+├─────────────────────────────────────────┤
+│  📅 Date Range:    [ 30 days ▼ ]        │
+│  📱 Source:         [✓] Twitter          │
+│                    [✓] Grok              │
+│                    [✓] AI Export         │
+│  🏷️ Topics:         [#tech ▼]           │
+│  ⚡ Priority:       [All ▼]             │
+│  ─────────────────────────────────────   │
+│  [ Apply Filters ]  [ Clear All ]       │
+└─────────────────────────────────────────┘
+```
+
+#### 6.4.2 Search-Focused Navigation
+
+**Features:**
+- Natural language search
+- Search result highlighting
+- Recent search history
+- Saved searches
+- Search suggestions
+
+**API Integration:**
+```python
+# Enhanced search endpoint
+POST /api/v2/search/graph
+{
+    "query": "project planning tasks from last week",
+    "filters": {
+        "source": ["tweet", "grok"],
+        "topic": "productivity",
+        "date_from": "2026-02-12"
+    },
+    "visualization": "timeline",
+    "highlight": true
+}
+```
+
+#### 6.4.3 Personalization
+
+**Features:**
+- Favorite nodes/graphs
+- Custom views per creator
+- Recent items panel
+- Smart recommendations
+- Reading list
+
+#### 6.4.4 Responsive Design
+
+**Breakpoints:**
+| Breakpoint | Width | Layout |
+|------------|-------|--------|
+| Mobile | < 768px | Single column |
+| Tablet | 768-1024px | Two columns |
+| Desktop | 1024-1440px | Three columns |
+| Wide | > 1440px | Full dashboard |
 
 ---
 
-## 6. Implementation Roadmap
+## 7. Implementation Recommendations
 
-### Phase 1: API Foundation (Week 1)
+### 7.1 Priority Matrix
+
+| Feature | Effort | Impact | Priority |
+|---------|--------|--------|----------|
+| API v2 Graph Endpoints | Medium | High | P1 |
+| Neo4j Integration | High | High | P1 |
+| Enhanced Analytics | Medium | High | P1 |
+| Browser Automation | High | Medium | P2 |
+| Multi-Hop Explorer | High | High | P2 |
+| Performance Optimization | Low | High | P1 |
+| Content Graph Visualization | Medium | High | P1 |
+| Smart Filtering | Low | Medium | P2 |
+
+### 7.2 Implementation Roadmap
+
+#### Phase 1: API Foundation (Week 1)
 - [ ] Design API schema (OpenAPI 3.0)
 - [ ] Implement v2 endpoints for graph operations
 - [ ] Add authentication middleware
 - [ ] Implement rate limiting
 - [ ] Create API documentation
 
-### Phase 2: Analytics Dashboard (Week 2)
+#### Phase 2: Analytics Dashboard (Week 2)
 - [ ] Enhance analytics engine
 - [ ] Add new dashboard widgets
 - [ ] Implement dashboard configuration UI
 - [ ] Add export functionality
 - [ ] Performance optimization
 
-### Phase 3: Browser Automation (Week 3)
+#### Phase 3: Browser Automation (Week 3)
 - [ ] Implement browser controller
 - [ ] Add web scraping module
 - [ ] Implement authentication handling
 - [ ] Create browser API endpoints
 - [ ] Add rate limiting for scraping
 
-### Phase 4: Performance (Week 4)
-- [ ] Implement benchmarking suite
-- [ ] Optimize critical paths
-- [ ] Add caching layer
-- [ ] Performance testing
+#### Phase 4: Visualization & Performance (Week 4)
+- [ ] Implement multi-hop explorer
+- [ ] Add smart filtering UI
+- [ ] Performance benchmarking
+- [ ] Optimization implementation
 - [ ] Documentation updates
 
 ---
 
-## 7. Testing Requirements
+## 8. Testing Requirements
 
-### 7.1 Unit Tests
+### 8.1 Unit Tests
 - API endpoint tests (90% coverage)
 - Analytics calculation tests
 - Browser controller tests
 - Performance benchmark tests
 
-### 7.2 Integration Tests
+### 8.2 Integration Tests
 - Full import workflow tests
 - API authentication tests
 - Browser automation E2E tests
 - Dashboard rendering tests
 
-### 7.3 Performance Tests
+### 8.3 Performance Tests
 - Load testing (100 concurrent users)
 - Stress testing (10x normal load)
 - Endurance testing (24-hour run)
 
 ---
 
-## 8. Dependencies
+## 9. Dependencies
 
 ```txt
 # New dependencies for v0.5.4
@@ -797,11 +950,12 @@ openapi-spec-validator>=0.6.0  # API validation
 pytest-asyncio>=0.21.0     # Async testing
 locust>=2.17.0             # Load testing
 redis>=5.0.0               # Caching layer (optional)
+d3>=7.8.0                  # Graph visualization
 ```
 
 ---
 
-## 9. Security Considerations
+## 10. Security Considerations
 
 1. **API Security**
    - API key rotation
@@ -822,7 +976,7 @@ redis>=5.0.0               # Caching layer (optional)
 
 ---
 
-## 10. Success Criteria
+## 11. Success Criteria
 
 - [ ] All v2 API endpoints functional and documented
 - [ ] Dashboard loads in <500ms
@@ -830,9 +984,11 @@ redis>=5.0.0               # Caching layer (optional)
 - [ ] Performance targets met (see Section 5)
 - [ ] 90% test coverage
 - [ ] API documentation complete
+- [ ] Multi-hop exploration working for Neo4j integration
+- [ ] Smart filtering implemented for content consumers
 
 ---
 
-**Document Version:** 0.1  
+**Document Version:** 0.2  
 **Last Updated:** 2026-02-19  
 **Next Review:** 2026-02-26

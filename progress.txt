@@ -47,3 +47,16 @@ Started: 2026-02-10 21:08
 - Build successful with ./build.sh
 - Commit: af4a139
 - **Learnings:** The layouts.css file already has complete dark/light theme implementation. CSS variables follow --bg-primary, --text-primary, etc. pattern. Light theme uses lighter background colors (#f5f5f5, #ffffff) and darker text (#1a1a2e). Components consistently use var() syntax to reference theme variables.
+
+## February 19, 2026, 8:12 AM - US-002: Verify theme toggle button and JavaScript functions
+- Added comprehensive theme toggle tests (21 new tests) to tests/test_theme.py
+- Tests verify theme toggle button exists with proper ARIA attributes (aria-label, title, aria-hidden)
+- Tests verify toggleTheme() function switches between dark and light
+- Tests verify applyTheme() updates data-theme attribute and icon (🌙 for dark, ☀️ for light)
+- Tests verify loadThemePreference() reads from localStorage with system preference fallback
+- Tests verify saveThemePreference() writes to localStorage
+- Tests verify functions are properly connected (toggleTheme calls applyTheme and saveThemePreference)
+- All 86 tests pass in the full test suite
+- Build successful with ./build.sh
+- Commit: 9562a42
+- **Learnings:** Theme toggle functionality was already implemented in index.html. Tests validate the existing implementation. The theme system uses: localStorage key 'xkg_theme', initial theme is 'dark', system preference fallback via matchMedia('(prefers-color-scheme: light)'), data-theme attribute on documentElement for styling, moon/sun icons for dark/light modes.

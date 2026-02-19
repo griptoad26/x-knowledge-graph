@@ -1,11 +1,11 @@
 6d689a7c2f86cfaeffbb7227c7b31b7a70cc7388c1d62a7b331317b9bb26952c  x-knowledge-graph-v0.5.0/auto-build.py
-86a17fcc3e652259bcc2f513342caf17382b4587e40383132a20b6577eb189a5  x-knowledge-graph-v0.5.0/main.py
+b45d4c61141ff859d97667fc1d7cbace8e2f24fb8961b8f1e2330643a985b17f  x-knowledge-graph-v0.5.0/main.py
 2afece382ac7c7a8112fd1f13570d7a5d83ea7db84302d6b77686dcd9442d8e8  x-knowledge-graph-v0.5.0/requirements.txt
 0320a56da5ef48fe0ec9cc6944fa6d4b51188749fd72adf5b1705a2ef82d6819  x-knowledge-graph-v0.5.0/validate.py
 74f3216c353d2a3ea9bdfd37617388ede8639376b78f3374f12e0776a6d3fc41  x-knowledge-graph-v0.5.0/EXPORT_FORMATS.md
 e28b63a33cfc96127d21f716b0d0cee140dad44d88245f0dd1883ad5c9e58b5e  x-knowledge-graph-v0.5.0/build.bat
 8feb5ef35fed6f522439e2103af68ee8e65a039a9d19449e3d5a7608c9fd1709  x-knowledge-graph-v0.5.0/README.md
-15048083805c4cf4e6f27e56adfff0d57225c6611d83bdba5a61ff63459dc803  x-knowledge-graph-v0.5.0/VERSION.txt
+91602fb47656cdb5021d23c217822edf018a9f7d0afaf0f7175c8740c4e37fcb  x-knowledge-graph-v0.5.0/VERSION.txt
 619894a8058615bd9545428614ec1e2af7e764748a7bf45190a3e5d329443866  x-knowledge-graph-v0.5.0/LAUNCH-READY.md
 c365e8c56c6dda76b84a1ac55db2673df3a8e87c54c1482f65c317190fbe6916  x-knowledge-graph-v0.5.0/core/search_embeddings.db
 47058fece642c66970d64c26429b3a08d53430a5b90563336600c9a87bba8ff6  x-knowledge-graph-v0.5.0/core/pkm_importers.py
