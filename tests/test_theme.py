@@ -240,3 +240,270 @@ class TestCSSThemeVariables:
             f"Variables missing in light theme: {missing_in_light}"
         
         # Light theme might have additional variables, which is okay
+
+
+class TestThemeToggleButton:
+    """Test suite for verifying theme toggle button and JavaScript functions"""
+
+    @pytest.fixture
+    def html_content(self):
+        """Read index.html content"""
+        html_path = Path(__file__).parent.parent / "frontend" / "index.html"
+        with open(html_path, 'r') as f:
+            return f.read()
+
+    @pytest.fixture
+    def js_content(self, html_content):
+        """Extract JavaScript content from index.html"""
+        # Extract the inline JavaScript
+        js_match = re.search(r'<script>\s*(//.*?)\s*</script>', html_content, re.DOTALL)
+        if js_match:
+            return js_match.group(1)
+        return ""
+
+    def test_theme_toggle_button_exists(self, html_content):
+        """Test that theme toggle button exists in header"""
+        # Check for theme-toggle button
+        assert 'id="theme-toggle"' in html_content, \
+            "Theme toggle button with id='theme-toggle' must exist"
+        
+        # Check button is in header area
+        header_match = re.search(r'<header[^>]*>.*?id="theme-toggle".*?</header>', html_content, re.DOTALL)
+        assert header_match is not None, \
+            "Theme toggle button should be inside the header element"
+
+    def test_theme_toggle_button_has_aria_label(self, html_content):
+        """Test that theme toggle button has aria-label attribute"""
+        # Check for aria-label
+        aria_pattern = r'id="theme-toggle"[^>]*aria-label="[^"]*"'
+        aria_match = re.search(aria_pattern, html_content)
+        assert aria_match is not None, \
+            "Theme toggle button must have aria-label attribute"
+        
+        # Verify aria-label content is meaningful
+        aria_match = re.search(r'aria-label="([^"]*)"', html_content)
+        aria_label = aria_match.group(1) if aria_match else ""
+        assert len(aria_label) > 5, \
+            "aria-label should contain a meaningful description"
+
+    def test_theme_toggle_button_has_title(self, html_content):
+        """Test that theme toggle button has title attribute"""
+        # Check for title
+        title_pattern = r'id="theme-toggle"[^>]*title="[^"]*"'
+        title_match = re.search(title_pattern, html_content)
+        assert title_match is not None, \
+            "Theme toggle button must have title attribute"
+        
+        # Verify title content is meaningful
+        title_match = re.search(r'title="([^"]*)"', html_content)
+        title = title_match.group(1) if title_match else ""
+        assert len(title) > 5, \
+            "title should contain a meaningful description"
+
+    def test_theme_icon_exists(self, html_content):
+        """Test that theme icon span exists inside toggle button"""
+        # Check for theme-icon span
+        assert 'id="theme-icon"' in html_content, \
+            "Theme icon span with id='theme-icon' must exist"
+        
+        # Check icon is inside toggle button
+        icon_pattern = r'<button[^>]*id="theme-toggle"[^>]*>.*?id="theme-icon"[^>]*>.*?</span>.*?</button>'
+        icon_match = re.search(icon_pattern, html_content, re.DOTALL)
+        assert icon_match is not None, \
+            "Theme icon should be inside the theme toggle button"
+
+    def test_theme_icon_has_aria_hidden(self, html_content):
+        """Test that theme icon has aria-hidden=true for accessibility"""
+        # Check for aria-hidden on icon
+        aria_hidden_pattern = r'id="theme-icon"[^>]*aria-hidden="true"'
+        aria_hidden_match = re.search(aria_hidden_pattern, html_content)
+        assert aria_hidden_match is not None, \
+            "Theme icon must have aria-hidden='true' for accessibility"
+
+
+class TestThemeJavaScriptFunctions:
+    """Test suite for verifying theme toggle JavaScript functions"""
+
+    @pytest.fixture
+    def html_content(self):
+        """Read index.html content"""
+        html_path = Path(__file__).parent.parent / "frontend" / "index.html"
+        with open(html_path, 'r') as f:
+            return f.read()
+
+    def test_toggleTheme_function_exists(self, html_content):
+        """Test that toggleTheme() function is defined"""
+        # Check for toggleTheme function definition
+        function_pattern = r'function\s+toggleTheme\s*\(\s*\)\s*\{'
+        function_match = re.search(function_pattern, html_content)
+        assert function_match is not None, \
+            "toggleTheme() function must be defined"
+
+    def test_toggleTheme_switches_theme(self, html_content):
+        """Test that toggleTheme() switches between dark and light"""
+        # Check that toggleTheme changes currentTheme
+        toggle_match = re.search(r'currentTheme\s*=\s*currentTheme\s*===\s*[\'"]dark[\'"]\s*\?\s*[\'"]light[\'"]\s*:\s*[\'"]dark[\'"]', html_content)
+        assert toggle_match is not None, \
+            "toggleTheme() must switch currentTheme between 'dark' and 'light'"
+        
+        # Alternatively check for if/else pattern
+        if_pattern = r'if\s*\(\s*currentTheme\s*===\s*[\'"]dark[\'"]\s*\)\s*\{[^}]*currentTheme\s*=\s*[\'"]light[\'"]'
+        assert re.search(if_pattern, html_content) or toggle_match is not None, \
+            "toggleTheme() must have logic to switch theme"
+
+    def test_applyTheme_function_exists(self, html_content):
+        """Test that applyTheme() function is defined"""
+        function_pattern = r'function\s+applyTheme\s*\(\s*\)\s*\{'
+        function_match = re.search(function_pattern, html_content)
+        assert function_match is not None, \
+            "applyTheme() function must be defined"
+
+    def test_applyTheme_updates_data_theme(self, html_content):
+        """Test that applyTheme() sets data-theme attribute on documentElement"""
+        # Check for setAttribute call
+        set_attr_pattern = r'applyTheme\s*\(\s*\)\s*\{[^}]*document\.documentElement\.setAttribute\s*\(\s*[\'"]data-theme[\'"]\s*,\s*currentTheme\s*\)'
+        set_attr_match = re.search(set_attr_pattern, html_content, re.DOTALL)
+        assert set_attr_match is not None, \
+            "applyTheme() must set data-theme attribute on documentElement"
+
+    def test_applyTheme_updates_icon(self, html_content):
+        """Test that applyTheme() updates the theme icon"""
+        # Check for icon update - the actual pattern in the code
+        icon_pattern = r'icon\.textContent\s*=\s*currentTheme\s*===\s*[\'"]dark[\'"]\s*\?\s*[\'"]🌙[\'"]\s*:\s*[\'"]☀️[\'"]'
+        icon_match = re.search(icon_pattern, html_content)
+        assert icon_match is not None, \
+            "applyTheme() must update theme icon based on current theme (moon for dark, sun for light)"
+        
+        # Also check the specific icon emojis are used
+        assert '🌙' in html_content, \
+            "Dark mode moon icon (🌙) should be present"
+        assert '☀️' in html_content, \
+            "Light mode sun icon (☀️) should be present"
+
+    def test_loadThemePreference_function_exists(self, html_content):
+        """Test that loadThemePreference() function is defined"""
+        function_pattern = r'function\s+loadThemePreference\s*\(\s*\)\s*\{'
+        function_match = re.search(function_pattern, html_content)
+        assert function_match is not None, \
+            "loadThemePreference() function must be defined"
+
+    def test_loadThemePreference_reads_localStorage(self, html_content):
+        """Test that loadThemePreference() reads from localStorage"""
+        # Check for localStorage.getItem
+        ls_pattern = r'loadThemePreference\s*\(\s*\)\s*\{[^}]*localStorage\.getItem\s*\(\s*[\'"]xkg_theme[\'"]\s*\)'
+        ls_match = re.search(ls_pattern, html_content, re.DOTALL)
+        assert ls_match is not None, \
+            "loadThemePreference() must read from localStorage with key 'xkg_theme'"
+
+    def test_loadThemePreference_has_fallback(self, html_content):
+        """Test that loadThemePreference() falls back to system preference if no saved value"""
+        # Check for system preference detection
+        assert "matchMedia('(prefers-color-scheme: light)')" in html_content, \
+            "loadThemePreference() should detect system preference as fallback"
+        
+        # Check that there's a validation for saved theme
+        assert "savedTheme === 'light' || savedTheme === 'dark'" in html_content, \
+            "loadThemePreference() should validate saved theme and fall back if invalid"
+
+    def test_saveThemePreference_function_exists(self, html_content):
+        """Test that saveThemePreference() function is defined"""
+        function_pattern = r'function\s+saveThemePreference\s*\(\s*\)\s*\{'
+        function_match = re.search(function_pattern, html_content)
+        assert function_match is not None, \
+            "saveThemePreference() function must be defined"
+
+    def test_saveThemePreference_writes_localStorage(self, html_content):
+        """Test that saveThemePreference() writes to localStorage"""
+        # Check for localStorage.setItem
+        ls_pattern = r'saveThemePreference\s*\(\s*\)\s*\{[^}]*localStorage\.setItem\s*\(\s*[\'"]xkg_theme[\'"]\s*,\s*currentTheme\s*\)'
+        ls_match = re.search(ls_pattern, html_content, re.DOTALL)
+        assert ls_match is not None, \
+            "saveThemePreference() must save currentTheme to localStorage with key 'xkg_theme'"
+
+    def test_theme_functions_are_connected(self, html_content):
+        """Test that theme functions are properly connected"""
+        # toggleTheme should call applyTheme and saveThemePreference
+        toggle_start = html_content.find('function toggleTheme()')
+        toggle_end = html_content.find('function applyTheme()')
+        toggle_body = html_content[toggle_start:toggle_end]
+        
+        assert 'applyTheme();' in toggle_body, \
+            "toggleTheme() should call applyTheme()"
+        assert 'saveThemePreference();' in toggle_body, \
+            "toggleTheme() should call saveThemePreference()"
+        
+        # loadThemePreference should call applyTheme at the end
+        load_start = html_content.find('function loadThemePreference()')
+        load_end = html_content.find('function saveThemePreference()')
+        load_body = html_content[load_start:load_end]
+        
+        assert 'applyTheme();' in load_body, \
+            "loadThemePreference() should call applyTheme() to set the theme on load"
+
+
+class TestThemeIcons:
+    """Test suite for verifying theme icon behavior"""
+
+    @pytest.fixture
+    def html_content(self):
+        """Read index.html content"""
+        html_path = Path(__file__).parent.parent / "frontend" / "index.html"
+        with open(html_path, 'r') as f:
+            return f.read()
+
+    def test_dark_mode_icon_is_moon(self, html_content):
+        """Test that dark mode uses moon emoji (🌙)"""
+        # Check moon emoji is used for dark mode
+        dark_icon_pattern = r'currentTheme\s*===\s*[\'"]dark[\'"].*?🌙|🌙.*?currentTheme\s*===\s*[\'"]dark[\'"]'
+        dark_match = re.search(dark_icon_pattern, html_content, re.DOTALL)
+        assert dark_match is not None, \
+            "Dark mode should display moon emoji (🌙)"
+
+    def test_light_mode_icon_is_sun(self, html_content):
+        """Test that light mode uses sun emoji (☀️)"""
+        # Check sun emoji is used for light mode (ternary: dark ? moon : sun)
+        light_icon_pattern = r'currentTheme\s*===\s*[\'"]dark[\'"]\s*\?\s*[\'"]🌙[\'"]\s*:\s*[\'"]☀️[\'"]'
+        light_match = re.search(light_icon_pattern, html_content)
+        assert light_match is not None, \
+            "Light mode should display sun emoji (☀️)"
+
+    def test_initial_theme_is_dark(self, html_content):
+        """Test that initial theme is set to dark"""
+        # Check initial theme variable
+        initial_pattern = r'let\s+currentTheme\s*=\s*[\'"]dark[\'"]'
+        initial_match = re.search(initial_pattern, html_content)
+        assert initial_match is not None, \
+            "Initial theme should be 'dark'"
+
+
+class TestThemeAccessibility:
+    """Test suite for theme accessibility features"""
+
+    @pytest.fixture
+    def html_content(self):
+        """Read index.html content"""
+        html_path = Path(__file__).parent.parent / "frontend" / "index.html"
+        with open(html_path, 'r') as f:
+            return f.read()
+
+    def test_toggle_button_is_accessible(self, html_content):
+        """Test that theme toggle button has accessibility attributes"""
+        # Check button has role="button" or is a button element
+        button_pattern = r'<button[^>]*id="theme-toggle"'
+        button_match = re.search(button_pattern, html_content)
+        assert button_match is not None, \
+            "Theme toggle should be a <button> element"
+        
+        # Verify all required accessibility attributes
+        assert 'aria-label' in html_content or 'aria-labelledby' in html_content, \
+            "Theme toggle should have aria-label or aria-labelledby"
+        
+        assert 'title=' in html_content, \
+            "Theme toggle should have title attribute"
+
+    def test_icon_is_hidden_from_accessibility_tree(self, html_content):
+        """Test that decorative icon is hidden from screen readers"""
+        aria_hidden_pattern = r'<span[^>]*id="theme-icon"[^>]*aria-hidden="true"'
+        aria_hidden_match = re.search(aria_hidden_pattern, html_content)
+        assert aria_hidden_match is not None, \
+            "Theme icon should have aria-hidden='true' to hide from screen readers"
