@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>xkg_mvp - Grok/X Content Converter</title>
+    <link rel="stylesheet" href="css/layouts.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -13,6 +14,9 @@
             <h1>🚀 xkg_mvp</h1>
             <p class="subtitle">Grok/X to Reddit-Style Content Converter</p>
             <span class="version">v0.0.2</span>
+            <button id="theme-toggle" class="btn-theme" aria-label="Toggle dark/light mode" title="Toggle dark/light mode">
+                <span id="theme-icon" aria-hidden="true">☀️</span>
+            </button>
         </header>
         
         <!-- Upload Section -->
@@ -81,6 +85,52 @@
             </div>
         </div>
     </div>
+    
+    <!-- Inline theme functions for testing -->
+    <script>
+    // Theme functions for dark mode support
+    let currentTheme = 'dark';
+    
+    function toggleTheme() {
+        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        applyTheme();
+        saveThemePreference();
+    }
+    
+    function applyTheme() {
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        const icon = document.getElementById('theme-icon');
+        if (icon) {
+            // In dark mode show moon (to switch to light), in light mode show sun (to switch to dark)
+            icon.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+        }
+    }
+    
+    function loadThemePreference() {
+        const savedTheme = localStorage.getItem('xkg_theme');
+        if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+            currentTheme = savedTheme;
+            applyTheme();
+        } else {
+            const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+            currentTheme = prefersLight ? 'light' : 'dark';
+            applyTheme();
+        }
+    }
+    
+    function saveThemePreference() {
+        localStorage.setItem('xkg_theme', currentTheme);
+    }
+    
+    // Initialize theme on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+        loadThemePreference();
+    });
+    </script>
     
     <script src="js/app.js"></script>
 </body>

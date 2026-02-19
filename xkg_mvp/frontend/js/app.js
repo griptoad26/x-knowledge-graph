@@ -9,7 +9,50 @@ class XkgMvp {
         this.isFolderMode = true;
         
         this.initElements();
+        this.initTheme();
         this.initEvents();
+    }
+    
+    initTheme() {
+        // Theme toggle button
+        this.themeToggle = document.getElementById('theme-toggle');
+        this.themeIcon = document.getElementById('theme-icon');
+        
+        if (this.themeToggle) {
+            this.themeToggle.addEventListener('click', () => this.toggleTheme());
+        }
+        
+        // Load saved theme preference or use system preference
+        this.loadThemePreference();
+    }
+    
+    toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        this.applyTheme(newTheme);
+        this.saveThemePreference(newTheme);
+    }
+    
+    applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (this.themeIcon) {
+            this.themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+    }
+    
+    loadThemePreference() {
+        const savedTheme = localStorage.getItem('xkg-theme');
+        if (savedTheme) {
+            this.applyTheme(savedTheme);
+        } else {
+            // Check system preference
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            this.applyTheme(prefersDark ? 'dark' : 'light');
+        }
+    }
+    
+    saveThemePreference(theme) {
+        localStorage.setItem('xkg-theme', theme);
     }
     
     initElements() {
